@@ -66,7 +66,7 @@ export const BLANK_HEALTH_SCORES: HealthScores = {
  */
 export async function getUserDocument(uid: string): Promise<UserDocument | null> {
   const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
+  const snap = await getDocFromServer(ref);
   if (!snap.exists()) return null;
   return snap.data() as UserDocument;
 }
@@ -82,7 +82,7 @@ export async function initUserDocument(
   companyName = ""
 ): Promise<void> {
   const ref = doc(db, "users", uid);
-  const existing = await getDoc(ref);
+  const existing = await getDocFromServer(ref);
   if (existing.exists()) return; // Don't overwrite
 
   const newUser: Omit<UserDocument, "createdAt"> & { createdAt: unknown } = {
