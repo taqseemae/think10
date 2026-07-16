@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { type Expert, EXPERTS } from "@/data/think10";
 import { useAuth } from "@/context/AuthContext";
+import {
+  saveUserProfile,
+  saveUserPlan,
+  saveOnboardingState,
+  saveHealthScores,
+} from "@/lib/firestore";
 
 export type UserRole = "Free" | "ZynePaid" | "Hybrid" | "Premium" | "Cancelled" | "Enterprise";
 
@@ -271,8 +277,27 @@ const DashboardContext = createContext<DashboardContextType | undefined>(undefin
 
 export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth State — delegated to Firebase AuthContext
-  const { currentUser, logout: firebaseLogout, authLoading } = useAuth();
+  const { currentUser, userDoc, logout: firebaseLogout, authLoading, refreshUserDoc } = useAuth();
   const isLoggedIn = !!currentUser;
+
+  // Sync state with userDoc from Firestore when loaded
+  useEffect(() => {
+    if (userDoc) {
+      if (userDoc.plan?.role) {
+        setRoleState(userDoc.plan.role);
+      }
+      if (userDoc.onboarding) {
+        setOnboardingCompletedState(userDoc.onboarding.completed);
+        setOnboardingStepState(userDoc.onboarding.step);
+      }
+      if (userDoc.profile) {
+        setProfileState(userDoc.profile);
+      }
+      if (userDoc.healthScores) {
+        setHealthScoresState(userDoc.healthScores);
+      }
+    }
+  }, [userDoc]);
 
   // Compatibility shim — components that call setIsLoggedIn(false) will logout via Firebase
   const setIsLoggedIn = (val: boolean) => {
@@ -557,6 +582,10 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     }
 
     addAuditLog("user_plan", role, newRole);
+
+    if (currentUser) {
+      saveUserPlan(currentUser.uid, newRole).catch(console.error);
+    }
     
     setFloatingAlert({
       id: "alert_" + Date.now(),
@@ -609,12 +638,14 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     const oldVal = JSON.stringify(profile[field]);
     const newVal = JSON.stringify(value);
     
-    setProfileState((prev) => {
-      const updated = { ...prev, [field]: value };
-      return updated;
-    });
+    const updatedProfile = { ...profile, [field]: value };
+    setProfileState(updatedProfile);
 
     addAuditLog(`profile.${field}`, oldVal, newVal);
+
+    if (currentUser) {
+      saveUserProfile(currentUser.uid, updatedProfile).catch(console.error);
+    }
   };
 
   // Update Health scores
@@ -633,6 +664,10 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     ]);
 
     addAuditLog("health_scores", JSON.stringify(healthScores), JSON.stringify(newScores));
+
+    if (currentUser) {
+      saveHealthScores(currentUser.uid, newScores).catch(console.error);
+    }
   };
 
   const calculateOverallHealthScore = () => {
@@ -1178,10 +1213,16 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   const setOnboardingCompleted = (val: boolean) => {
     setOnboardingCompletedState(val);
     addAuditLog("onboarding_status", onboardingCompleted ? "complete" : "incomplete", val ? "complete" : "incomplete");
+    if (currentUser) {
+      saveOnboardingState(currentUser.uid, val, onboardingStep).catch(console.error);
+    }
   };
 
   const setOnboardingStep = (step: number) => {
     setOnboardingStepState(step);
+    if (currentUser) {
+      saveOnboardingState(currentUser.uid, onboardingCompleted, step).catch(console.error);
+    }
   };
 
   return (
