@@ -32,6 +32,7 @@ interface AuthContextType {
   currentUser: User | null;
   userDoc: UserDocument | null;
   authLoading: boolean;
+  docLoading: boolean;
 
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (
@@ -113,10 +114,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userDoc, setUserDoc] = useState<UserDocument | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [docLoading, setDocLoading] = useState(false);
 
   const loadUserDoc = useCallback(async (user: User) => {
+    setDocLoading(true);
     const fetched = await fetchUserDocWithRetry(user.uid);
     setUserDoc(fetched);
+    setDocLoading(false);
   }, []);
 
   // ── Listen to Firebase auth state changes (client-only) ────────────────────
@@ -128,12 +132,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsub = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      // Resolve auth loading immediately so router transitions fast
+      setAuthLoading(false);
+
       if (user) {
-        await loadUserDoc(user);
+        // Load the document in the background
+        loadUserDoc(user);
       } else {
         setUserDoc(null);
+        setDocLoading(false);
       }
-      setAuthLoading(false);
     });
     return unsub;
   }, [loadUserDoc]);
@@ -211,6 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentUser,
         userDoc,
         authLoading,
+        docLoading,
         signInWithEmail,
         signUpWithEmail,
         signInWithGoogle,

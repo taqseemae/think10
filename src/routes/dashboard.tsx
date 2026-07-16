@@ -37,7 +37,7 @@ function DashboardLayout() {
     logout,
     isLoggedIn,
   } = useDashboardState();
-  const { authLoading } = useAuth();
+  const { authLoading, docLoading } = useAuth();
 
   const navigate = useNavigate();
 
@@ -153,43 +153,54 @@ function DashboardLayout() {
 
       <main className="flex-grow py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          {onboardingCompleted ? (
-            <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-3 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[color:var(--t10-emerald)] flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5" /> Command Centre — {role} preview
-                </p>
-                {role !== "Free" && role !== "Cancelled" && (
-                  <span className="rounded-full bg-[color:var(--t10-mint)] px-2.5 py-0.5 text-xs font-semibold text-[color:var(--t10-navy)]">
-                    Human credits: {credits}
-                  </span>
-                )}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1 border-t border-[color:var(--t10-border)] pt-3">
-                {NAV_ITEMS.filter((n) => n.show).map(({ to, label, Icon, exact }) => {
-                  const active = exact ? pathname === to : pathname.startsWith(to);
-                  return (
-                    <Link
-                      key={to}
-                      to={to}
-                      className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${active ? "bg-[color:var(--t10-navy)] text-white shadow-sm font-semibold" : "text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)]"}`}
-                    >
-                      <Icon className="h-4 w-4" /> {label}
-                    </Link>
-                  );
-                })}
-              </div>
+          {docLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-sm">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color:var(--t10-navy)] text-white shadow animate-pulse">
+                <span className="h-3 w-3 rounded-full border-2 border-white" />
+              </span>
+              <p className="mt-4 text-xs font-bold text-[color:var(--t10-navy)] tracking-wider uppercase">Loading Command Centre...</p>
             </div>
           ) : (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-center shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center justify-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" /> Complete Onboarding to Unlock Command Centre
-              </p>
-            </div>
+            <>
+              {onboardingCompleted ? (
+                <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-3 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-[color:var(--t10-emerald)] flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5" /> Command Centre — {role} preview
+                    </p>
+                    {role !== "Free" && role !== "Cancelled" && (
+                      <span className="rounded-full bg-[color:var(--t10-mint)] px-2.5 py-0.5 text-xs font-semibold text-[color:var(--t10-navy)]">
+                        Human credits: {credits}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1 border-t border-[color:var(--t10-border)] pt-3">
+                    {NAV_ITEMS.filter((n) => n.show).map(({ to, label, Icon, exact }) => {
+                      const active = exact ? pathname === to : pathname.startsWith(to);
+                      return (
+                        <Link
+                          key={to}
+                          to={to}
+                          className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-all ${active ? "bg-[color:var(--t10-navy)] text-white shadow-sm font-semibold" : "text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)]"}`}
+                        >
+                          <Icon className="h-4 w-4" /> {label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 text-center shadow-sm">
+                  <p className="text-xs font-bold uppercase tracking-wider text-amber-700 flex items-center justify-center gap-2">
+                    <Sparkles className="h-4 w-4 text-amber-500 animate-pulse" /> Complete Onboarding to Unlock Command Centre
+                  </p>
+                </div>
+              )}
+              <div className="mt-6">
+                <Outlet />
+              </div>
+            </>
           )}
-          <div className="mt-6">
-            <Outlet />
-          </div>
         </div>
       </main>
     </div>
