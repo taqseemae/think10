@@ -876,10 +876,12 @@ function Overview() {
             {role} Membership Active
           </p>
           <h2 className="mt-1 text-2xl font-bold font-display">
-            Welcome back, Sarah
+            Welcome back, {currentUser?.displayName || userDoc?.displayName || "Founder"}
           </h2>
           <p className="mt-1 text-sm text-[color:var(--t10-mint)]/70">
-            {profile.businessName} · {profile.stage} · Channels: {profile.channels.join(", ")}
+            {profile.businessName || "Your Business"} 
+            {profile.stage ? ` · ${profile.stage}` : ""} 
+            {profile.channels && profile.channels.length > 0 ? ` · Channels: ${profile.channels.join(", ")}` : ""}
           </p>
         </div>
       </div>
