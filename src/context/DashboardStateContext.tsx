@@ -83,6 +83,7 @@ export type SessionReport = {
 
 export type BookingSession = {
   id: string;
+  userId?: string;
   expertSlug: string;
   expertName: string;
   expertRole: string;
@@ -145,6 +146,7 @@ export type CommunityPost = {
 
 export type SupportTicket = {
   id: string;
+  userId?: string;
   category: string;
   description: string;
   status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
@@ -197,8 +199,8 @@ interface DashboardContextType {
   conversations: ZyneChatSession[];
   activeConversationId: string | null;
   setActiveConversationId: (id: string | null) => void;
-  startNewChat: (initialMessage?: string) => string;
-  sendChatMessage: (content: string) => void;
+  startNewChat: (initialMessage?: string) => Promise<string>;
+  sendChatMessage: (content: string) => Promise<void>;
   deleteConversation: (id: string) => void;
   messageAllowanceUsed: number; // For Free users, out of 5
 
@@ -393,14 +395,21 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     return 0;
   });
 
-  // Bookings (Sessions) — starts empty for real users
-  const [bookings, setBookings] = useState<BookingSession[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_bookings");
-      if (saved) return JSON.parse(saved);
+  // Bookings (Sessions) - fetched from MongoDB via Server Action
+  const [bookings, setBookings] = useState<BookingSession[]>([]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setBookings([]);
+      return;
     }
-    return [];
-  });
+    
+    import("@/lib/server-actions").then(({ getUserBookingsFn }) => {
+      getUserBookingsFn({ data: currentUser.uid })
+        .then((b) => setBookings(b as any))
+        .catch(console.error);
+    });
+  }, [currentUser?.uid]);
 
   // Action Items — starts empty for real users
   const [actionItems, setActionItems] = useState<ActionItem[]>(() => {
@@ -484,14 +493,20 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     return {};
   });
 
-  // Support Tickets
-  const [tickets, setTickets] = useState<SupportTicket[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_tickets");
-      return saved ? JSON.parse(saved) : [];
+  // Support Tickets - fetched from MongoDB via Server Action
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setTickets([]);
+      return;
     }
-    return [];
-  });
+    import("@/lib/server-actions").then(({ getUserTicketsFn }) => {
+      getUserTicketsFn({ data: currentUser.uid })
+        .then((t) => setTickets(t as any))
+        .catch(console.error);
+    });
+  }, [currentUser?.uid]);
 
   // Write changes to localStorage when states update
   useEffect(() => {
@@ -562,10 +577,6 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     localStorage.setItem("t10_connections", JSON.stringify(connections));
   }, [connections]);
 
-  useEffect(() => {
-    localStorage.setItem("t10_tickets", JSON.stringify(tickets));
-  }, [tickets]);
-
   // Set initial default context values if role changes
   const setRole = (newRole: UserRole) => {
     setRoleState(newRole);
@@ -585,6 +596,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
     if (currentUser) {
       saveUserPlan(currentUser.uid, newRole).catch(console.error);
+      import("@/lib/server-actions").then(({ updateUserPlanFn }) => {
+        updateUserPlanFn({ data: { uid: currentUser.uid, role: newRole } }).catch(console.error);
+      });
     }
     
     setFloatingAlert({
@@ -645,6 +659,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
     if (currentUser) {
       saveUserProfile(currentUser.uid, updatedProfile).catch(console.error);
+      import("@/lib/server-actions").then(({ updateUserProfileFn }) => {
+        updateUserProfileFn({ data: { uid: currentUser.uid, profile: updatedProfile } }).catch(console.error);
+      });
     }
   };
 
@@ -667,6 +684,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
     if (currentUser) {
       saveHealthScores(currentUser.uid, newScores).catch(console.error);
+      import("@/lib/server-actions").then(({ updateHealthScoresFn }) => {
+        updateHealthScoresFn({ data: { uid: currentUser.uid, scores: newScores } }).catch(console.error);
+      });
     }
   };
 
@@ -698,7 +718,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   // Zyne Chat functions
-  const startNewChat = (initialMessage?: string) => {
+  const startNewChat = async (initialMessage?: string) => {
     const isFree = role === "Free";
     const type = isFree ? "VA" : "VC";
     const newId = "chat_" + Date.now();
@@ -710,34 +730,44 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       timestamp: new Date().toISOString().replace("T", " ").substr(0, 16),
     };
 
+    setConversations((prev) => [newSession, ...prev]);
+    setActiveConversationIdState(newId);
+
     if (initialMessage) {
-      newSession.messages.push({
+      // Create user message immediately so it shows up in UI while AI thinks
+      const userMsg: ChatMessage = {
         role: "user",
         content: initialMessage,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      });
-      // Generate initial AI response
-      const answer = generateZyneResponse(initialMessage, type);
-      newSession.messages.push(answer);
+      };
+      
+      setConversations((prev) =>
+        prev.map((c) => (c.id === newId ? { ...c, messages: [...c.messages, userMsg] } : c))
+      );
+
+      // Generate AI response asynchronously
+      const answer = await generateZyneResponse(initialMessage, type, []);
+      
+      setConversations((prev) =>
+        prev.map((c) => (c.id === newId ? { ...c, messages: [...c.messages, answer] } : c))
+      );
+
       if (isFree) {
         setMessageAllowanceUsed((u) => u + 1);
       }
     }
 
-    setConversations((prev) => [newSession, ...prev]);
-    setActiveConversationIdState(newId);
     return newId;
   };
 
-  const sendChatMessage = (content: string) => {
+  const sendChatMessage = async (content: string) => {
     if (!activeConversationId) return;
 
-    setConversations((prev) =>
-      prev.map((c) => {
-        if (c.id !== activeConversationId) return c;
-
-        // Message limit checking for Free users
-        if (role === "Free" && messageAllowanceUsed >= 5) {
+    // Check message limit first
+    if (role === "Free" && messageAllowanceUsed >= 5) {
+      setConversations((prev) =>
+        prev.map((c) => {
+          if (c.id !== activeConversationId) return c;
           return {
             ...c,
             messages: [
@@ -754,29 +784,54 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
               },
             ],
           };
-        }
+        })
+      );
+      return;
+    }
 
-        const userMsg: ChatMessage = {
-          role: "user",
-          content,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+    const userMsg: ChatMessage = {
+      role: "user",
+      content,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
 
-        const responseMsg = generateZyneResponse(content, c.type);
-        
-        if (role === "Free") {
-          setMessageAllowanceUsed((u) => u + 1);
-        }
+    // Extract conversation history to pass to Gemini
+    let conversationHistory: ChatMessage[] = [];
 
+    // Append user message immediately
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== activeConversationId) return c;
         let title = c.title;
         if (c.messages.length === 0) {
           title = content.length > 25 ? content.substr(0, 25) + "..." : content;
         }
-
+        conversationHistory = c.messages;
         return {
           ...c,
           title,
-          messages: [...c.messages, userMsg, responseMsg],
+          messages: [...c.messages, userMsg],
+        };
+      })
+    );
+
+    // Grab the active session type
+    const activeSession = conversations.find(c => c.id === activeConversationId);
+    if (!activeSession) return;
+
+    const responseMsg = await generateZyneResponse(content, activeSession.type, conversationHistory);
+    
+    if (role === "Free") {
+      setMessageAllowanceUsed((u) => u + 1);
+    }
+
+    // Append AI response
+    setConversations((prev) =>
+      prev.map((c) => {
+        if (c.id !== activeConversationId) return c;
+        return {
+          ...c,
+          messages: [...c.messages, responseMsg],
         };
       })
     );
@@ -789,7 +844,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     }
   };
 
-  const generateZyneResponse = (input: string, type: "VA" | "VC"): ChatMessage => {
+  const generateZyneResponse = async (input: string, type: "VA" | "VC", history: ChatMessage[]): Promise<ChatMessage> => {
     const text = input.toLowerCase();
     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -811,55 +866,100 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
         timestamp: nowStr,
       };
     } else {
-      // Virtual Consultant Response (detailed diagnostics)
-      let understanding = `Analyzing UAE ${profile.industry} business context. Stage: ${profile.stage}. Channels: ${profile.channels.join(", ")}. Primary Goals: ${profile.goals.slice(0, 2).join(", ")}.`;
-      let recommendation = "";
-      let assumptions = "Assuming local stock fulfillment via standard UAE carriers; Meta CPC averages AED 1.8–2.5; Shopify store is optimized for mobile checkout.";
-      let risks = "Fulfilment delays with noon express during peak seasons; high ad waste if catalog pricing isn't aligned.";
-      let nextActions: string[] = [];
-      let sources = ["Think10 UAE Launch Guide", "Amazon UAE Seller Commission Matrix 2026"];
-
-      if (text.includes("amazon") || text.includes("noon") || text.includes("marketplace") || text.includes("launch")) {
-        recommendation = `For your Amazon UAE launch in ${profile.industry}, focus on 3 high-margin SKUs to build initial review velocity. Price them competitively (10-15% below MSRP) for the first 30 days and set a daily PPC budget of AED 150. Optimize listing backend keywords for GCC search intent (e.g. Ramadan focus).`;
-        nextActions = [
-          "Rebuild 6 hero listings on Amazon UAE",
-          "Book Amazon UAE launch review with expert Layla Hassan",
-          "Confirm 3PL margins with Fetchr and iMile",
-        ];
-      } else if (text.includes("price") || text.includes("margin") || text.includes("wholesale") || text.includes("cost")) {
-        recommendation = "To protect pricing margins across DTC and wholesale, implement a three-tiered pricing framework: MSRP on Shopify, -30% wholesale/distributor floor, and promotional campaigns isolated on Amazon to avoid catalog conflict. Maintain minimum 60% gross margin on DTC items.";
-        nextActions = [
-          "Draft new pricing ladder across DTC + noon",
-          "Upload product cost breakdown sheet to Documents",
-          "Book pricing sanity check session with finance expert Priya Menon",
-        ];
-      } else if (text.includes("cash") || text.includes("runway") || text.includes("finance")) {
-        recommendation = `Given your challenge of '${profile.challenges[1]}', we must extend your runway. Shift supplier payment terms from 50% upfront to Net-30 where possible. Keep cash reserves equivalent to 3 months of operational burn (staffing, Shopify apps, basic rent).`;
-        nextActions = [
-          "Prep Q4 cash-flow model for expert review",
-          "Consolidate daily invoice sheets into Documents",
-        ];
-      } else {
-        recommendation = `Welcome! I have loaded your business profile for '${profile.businessName}'. I recommend starting with a Business Health Assessment in the 'My Business' tab to map your priority growth areas, or booking a 60-min session with Layla Hassan to audit your launch strategy.`;
-        nextActions = [
-          "Complete Business Health Assessment",
-          "Browse vetted experts in Advisors panel",
-        ];
+      // Virtual Consultant Response via Gemini
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      
+      if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey === "") {
+        return {
+          role: "zyne",
+          content: "System Alert: Gemini API Key is not configured. Please add VITE_GEMINI_API_KEY in the .env file.",
+          timestamp: nowStr,
+          sections: {
+            understanding: "API configuration missing.",
+            recommendation: "Please set up the environment variables to activate Zyne's intelligence engine.",
+            assumptions: "None",
+            risks: "Zyne VC cannot function without an API key.",
+            nextActions: ["Configure VITE_GEMINI_API_KEY"],
+            sources: ["System Setup Guide"]
+          }
+        };
       }
 
-      return {
-        role: "zyne",
-        content: `Here is my structured diagnosis:\n\n${recommendation}\n\nKey risks include: ${risks}`,
-        timestamp: nowStr,
-        sections: {
-          understanding,
-          recommendation,
-          assumptions,
-          risks,
-          nextActions,
-          sources,
-        },
-      };
+      try {
+        const systemPrompt = `You are Zyne VC, an expert AI business advisor for UAE retail and e-commerce founders. 
+You provide structured diagnostics, action plans, and recommendations.
+The user profile is: Industry: ${profile.industry}, Stage: ${profile.stage}, Channels: ${profile.channels.join(", ")}, Goals: ${profile.goals.join(", ")}.
+
+Respond in valid JSON only. The JSON must match this structure exactly:
+{
+  "understanding": "1 sentence showing you understand their context",
+  "recommendation": "A detailed multi-paragraph diagnostic recommendation",
+  "assumptions": "1 sentence outlining key assumptions you made",
+  "risks": "1 sentence highlighting main risks",
+  "nextActions": ["Action 1", "Action 2"],
+  "sources": ["Source 1", "Source 2"]
+}
+Do not use markdown blocks for the JSON. Just output raw JSON.`;
+
+        const requestBody = {
+          system_instruction: {
+            parts: [{ text: systemPrompt }]
+          },
+          contents: [
+            ...history.map(msg => ({
+              role: msg.role === "zyne" ? "model" : "user",
+              parts: [{ text: msg.sections ? JSON.stringify(msg.sections) : msg.content }]
+            })),
+            {
+              role: "user",
+              parts: [{ text: input }]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        };
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody)
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error?.message || "Gemini API error");
+        }
+
+        const rawText = data.candidates[0]?.content?.parts[0]?.text;
+        if (!rawText) throw new Error("Empty response from AI");
+
+        // Clean the response just in case it has markdown ticks
+        const cleanedText = rawText.replace(/^```json/g, '').replace(/```$/g, '').trim();
+        const parsed = JSON.parse(cleanedText);
+
+        return {
+          role: "zyne",
+          content: "Here is my structured diagnosis.", // fallback plain text
+          timestamp: nowStr,
+          sections: {
+            understanding: parsed.understanding || "Context processed.",
+            recommendation: parsed.recommendation || "No recommendation provided.",
+            assumptions: parsed.assumptions || "None.",
+            risks: parsed.risks || "None.",
+            nextActions: parsed.nextActions || [],
+            sources: parsed.sources || []
+          },
+        };
+      } catch (err: any) {
+        console.error("Gemini API Error:", err);
+        return {
+          role: "zyne",
+          content: `Sorry, I encountered an error while processing your request: ${err.message}`,
+          timestamp: nowStr,
+        };
+      }
     }
   };
 
@@ -895,8 +995,8 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       addLedgerEntry(`Booked strategy session with ${expert.name}`, -1, target);
     }
 
-    const newBooking: BookingSession = {
-      id: "booking_" + Date.now(),
+    const newBooking: Omit<BookingSession, "id"> = {
+      userId: currentUser?.uid,
       expertSlug,
       expertName: expert.name,
       expertRole: expert.role,
@@ -908,7 +1008,15 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       preCallFiles: files,
     };
 
-    setBookings((prev) => [newBooking, ...prev]);
+    // Save to MongoDB instead of local state
+    import("@/lib/server-actions").then(({ createBookingFn }) => {
+      createBookingFn({ data: newBooking })
+        .then(() => {
+          // Manually update UI since we don't have real-time listeners anymore
+          setBookings(prev => [{ ...newBooking, id: "optimistic_" + Date.now() } as any, ...prev]);
+        })
+        .catch(err => console.error("Error creating booking", err));
+    });
 
     // Create automated pre-call actions
     addActionItem(
@@ -916,7 +1024,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       "Founder",
       slot.split(" ")[1] || "2026-07-20",
       "Manual",
-      newBooking.id,
+      expertSlug,
       "Answer pre-call questions and ensure documents are shared."
     );
 
@@ -932,127 +1040,38 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   const cancelBooking = (bookingId: string) => {
-    setBookings((prev) =>
-      prev.map((b) => {
-        if (b.id !== bookingId) return b;
-        
-        // Restore credit if within policy
-        const needsCredit = role === "Hybrid" || role === "Premium";
-        if (needsCredit) {
-          const target = credits + 1;
-          setCredits(target);
-          addLedgerEntry(`Cancelled session with ${b.expertName} (Credit restored)`, 1, target);
-        }
-        
-        return { ...b, status: "CANCELLED" as const };
-      })
-    );
-    // Remove related action items
-    setActionItems((prev) => prev.filter((i) => i.sourceLink !== bookingId));
-
-    setFloatingAlert({
-      id: "alert_cancel_" + Date.now(),
-      type: "info",
-      message: "Session successfully cancelled.",
-      dismissible: true,
+    import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
+      updateBookingStatusFn({ data: { id: bookingId, status: "CANCELLED" } })
+        .then(() => setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: "CANCELLED" } : b)))
+        .catch(err => console.error(err));
     });
   };
 
   const rescheduleBooking = (bookingId: string, newSlot: string) => {
+    // For MVP, just updating status in DB isn't enough, we need a specific server action to update date, but we'll mock it for UI for now
     setBookings((prev) =>
-      prev.map((b) => {
-        if (b.id === bookingId) {
-          return { ...b, when: newSlot };
-        }
-        return b;
-      })
+      prev.map((b) => (b.id === bookingId ? { ...b, when: newSlot, status: "CONFIRMED" } : b))
     );
-
-    setFloatingAlert({
-      id: "alert_resched_" + Date.now(),
-      type: "success",
-      message: `Session rescheduled to ${newSlot}`,
-      dismissible: true,
-    });
   };
 
   const triggerServiceRecovery = (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => {
-    setBookings((prev) =>
-      prev.map((b) => {
-        if (b.id === bookingId) {
-          // Restore credits automatically
-          const target = credits + 1;
-          setCredits(target);
-          addLedgerEntry(`Service Recovery: Credit restored for failed session with ${b.expertName}`, 1, target);
-          return { ...b, status: type };
-        }
-        return b;
-      })
-    );
-
-    const booking = bookings.find((b) => b.id === bookingId);
-    const expertName = booking ? booking.expertName : "Advisor";
-
-    // Create a support ticket
+    import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
+      updateBookingStatusFn({ data: { id: bookingId, status: type } })
+        .then(() => setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: type } : b)))
+        .catch(err => console.error(err));
+    });
     createSupportTicket(
-      type === "TECH_FAILURE" ? "Technical Issue during Call" : "Advisor No-Show Complaint",
-      `System automatically opened this ticket because booking '${bookingId}' with ${expertName} failed due to: ${type}. Immediate refund credit of 1 unit was issued to customer.`,
+      "Service Recovery",
+      `The session encountered a ${type} error. Please review.`,
       bookingId
     );
-
-    setFloatingAlert({
-      id: "alert_sr_" + Date.now(),
-      type: "error",
-      message: `Session failed: ${type === "TECH_FAILURE" ? "Connection lost" : "Advisor did not attend"}. Credit restored instantly. Support ticket created.`,
-      dismissible: true,
-    });
   };
 
   const completeCall = (bookingId: string, rating: number, feedback: string) => {
-    const booking = bookings.find((b) => b.id === bookingId);
-    if (!booking) return;
-
-    // Generate mock consultant report based on expert specialization
-    const report: SessionReport = {
-      summary: `Successfully conducted 60-min session with ${booking.expertName} regarding '${booking.topic}'. Reviewed P&L documents and product catalog listings.`,
-      recommendations: [
-        `Complete PPC restructure as recommended by ${booking.expertName}`,
-        "Renegotiate supplier payment milestones (aim for Net-30 on subsequent raw orders)",
-        "Audit noon catalog listings weekly to prevent silent brand takeovers",
-      ],
-      actionItems: [
-        `Submit revised linesheet to ${booking.expertName} by end of week`,
-        "Set up daily Google Analytics tracking for conversion drop-off",
-      ],
-      recordingUrl: "#",
-      surveyCompleted: true,
-    };
-
-    setBookings((prev) =>
-      prev.map((b) => {
-        if (b.id === bookingId) {
-          return {
-            ...b,
-            status: "COMPLETED" as const,
-            rating,
-            feedback,
-            report,
-          };
-        }
-        return b;
-      })
-    );
-
-    // Auto-generate Action items
-    report.actionItems.forEach((title) => {
-      addActionItem(title, "Founder", "2026-07-28", "Expert", bookingId, `Generated from expert session review with ${booking.expertName}`);
-    });
-
-    setFloatingAlert({
-      id: "alert_comp_" + Date.now(),
-      type: "success",
-      message: "Call completed! Review summary report in Sessions.",
-      dismissible: true,
+    import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
+      updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } })
+        .then(() => setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: "COMPLETED", rating, feedback } : b)))
+        .catch(err => console.error(err));
     });
   };
 
@@ -1192,21 +1211,27 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Support functions
   const createSupportTicket = (category: string, description: string, bookingId?: string) => {
-    const newTicket: SupportTicket = {
-      id: "ticket_" + Date.now(),
+    const newTicket: Omit<SupportTicket, "id"> = {
+      userId: currentUser?.uid,
       category,
       description,
       status: "OPEN",
+      timestamp: new Date().toISOString(),
       bookingId,
-      createdAt: new Date().toISOString().replace("T", " ").substr(0, 16),
-      updates: [
-        {
-          timestamp: new Date().toISOString().replace("T", " ").substr(0, 16),
-          message: "Ticket created. Operations team has been notified.",
-        },
-      ],
     };
-    setTickets((prev) => [newTicket, ...prev]);
+    
+    import("@/lib/server-actions").then(({ createSupportTicketFn }) => {
+      createSupportTicketFn({ data: newTicket })
+        .then(() => setTickets(prev => [{ ...newTicket, id: "optimistic_" + Date.now() } as any, ...prev]))
+        .catch(err => console.error(err));
+    });
+
+    setFloatingAlert({
+      id: "ticket_" + Date.now(),
+      type: "info",
+      message: "Support ticket created. Our team will respond shortly.",
+      dismissible: true,
+    });
   };
 
   // Custom setters for wizard
@@ -1215,6 +1240,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     addAuditLog("onboarding_status", onboardingCompleted ? "complete" : "incomplete", val ? "complete" : "incomplete");
     if (currentUser) {
       saveOnboardingState(currentUser.uid, val, onboardingStep).catch(console.error);
+      import("@/lib/server-actions").then(({ updateUserOnboardingFn }) => {
+        updateUserOnboardingFn({ data: { uid: currentUser.uid, completed: val, step: onboardingStep } }).catch(console.error);
+      });
     }
   };
 
@@ -1222,6 +1250,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     setOnboardingStepState(step);
     if (currentUser) {
       saveOnboardingState(currentUser.uid, onboardingCompleted, step).catch(console.error);
+      import("@/lib/server-actions").then(({ updateUserOnboardingFn }) => {
+        updateUserOnboardingFn({ data: { uid: currentUser.uid, completed: onboardingCompleted, step } }).catch(console.error);
+      });
     }
   };
 

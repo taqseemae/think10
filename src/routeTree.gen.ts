@@ -27,9 +27,11 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CommandCentreRouteImport } from './routes/command-centre'
 import { Route as BookDiscoveryCallRouteImport } from './routes/book-discovery-call'
 import { Route as AdvisoryAreasRouteImport } from './routes/advisory-areas'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as ExpertsSlugRouteImport } from './routes/experts.$slug'
 import { Route as DashboardZyneRouteImport } from './routes/dashboard.zyne'
@@ -42,6 +44,15 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing
 import { Route as DashboardAdvisorsRouteImport } from './routes/dashboard.advisors'
 import { Route as DashboardActionPlansRouteImport } from './routes/dashboard.action-plans'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminQualityRouteImport } from './routes/admin.quality'
+import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminCrmRouteImport } from './routes/admin.crm'
+import { Route as AdminConsultantsRouteImport } from './routes/admin.consultants'
+import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
+import { Route as AdminAiRouteImport } from './routes/admin.ai'
 
 const ZyneRoute = ZyneRouteImport.update({
   id: '/zyne',
@@ -134,6 +145,11 @@ const AdvisoryAreasRoute = AdvisoryAreasRouteImport.update({
   path: '/advisory-areas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
@@ -148,6 +164,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ResourcesSlugRoute = ResourcesSlugRouteImport.update({
   id: '/$slug',
@@ -210,10 +231,56 @@ const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => AdvisoryAreasRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQualityRoute = AdminQualityRouteImport.update({
+  id: '/quality',
+  path: '/quality',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGrowthRoute = AdminGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConsultantsRoute = AdminConsultantsRouteImport.update({
+  id: '/consultants',
+  path: '/consultants',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiRoute = AdminAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/advisory-areas': typeof AdvisoryAreasRouteWithChildren
   '/book-discovery-call': typeof BookDiscoveryCallRoute
   '/command-centre': typeof CommandCentreRoute
@@ -232,6 +299,15 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/zyne': typeof ZyneRoute
+  '/admin/ai': typeof AdminAiRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/consultants': typeof AdminConsultantsRoute
+  '/admin/crm': typeof AdminCrmRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/growth': typeof AdminGrowthRoute
+  '/admin/quality': typeof AdminQualityRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
@@ -244,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/zyne': typeof DashboardZyneRoute
   '/experts/$slug': typeof ExpertsSlugRoute
   '/resources/$slug': typeof ResourcesSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -266,6 +343,15 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/zyne': typeof ZyneRoute
+  '/admin/ai': typeof AdminAiRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/consultants': typeof AdminConsultantsRoute
+  '/admin/crm': typeof AdminCrmRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/growth': typeof AdminGrowthRoute
+  '/admin/quality': typeof AdminQualityRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
@@ -278,12 +364,14 @@ export interface FileRoutesByTo {
   '/dashboard/zyne': typeof DashboardZyneRoute
   '/experts/$slug': typeof ExpertsSlugRoute
   '/resources/$slug': typeof ResourcesSlugRoute
+  '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/admin': typeof AdminRouteWithChildren
   '/advisory-areas': typeof AdvisoryAreasRouteWithChildren
   '/book-discovery-call': typeof BookDiscoveryCallRoute
   '/command-centre': typeof CommandCentreRoute
@@ -302,6 +390,15 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/zyne': typeof ZyneRoute
+  '/admin/ai': typeof AdminAiRoute
+  '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/consultants': typeof AdminConsultantsRoute
+  '/admin/crm': typeof AdminCrmRoute
+  '/admin/customers': typeof AdminCustomersRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/growth': typeof AdminGrowthRoute
+  '/admin/quality': typeof AdminQualityRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
@@ -314,6 +411,7 @@ export interface FileRoutesById {
   '/dashboard/zyne': typeof DashboardZyneRoute
   '/experts/$slug': typeof ExpertsSlugRoute
   '/resources/$slug': typeof ResourcesSlugRoute
+  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -321,6 +419,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/admin'
     | '/advisory-areas'
     | '/book-discovery-call'
     | '/command-centre'
@@ -339,6 +438,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/zyne'
+    | '/admin/ai'
+    | '/admin/bookings'
+    | '/admin/consultants'
+    | '/admin/crm'
+    | '/admin/customers'
+    | '/admin/finance'
+    | '/admin/growth'
+    | '/admin/quality'
+    | '/admin/settings'
     | '/advisory-areas/$slug'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
@@ -351,6 +459,7 @@ export interface FileRouteTypes {
     | '/dashboard/zyne'
     | '/experts/$slug'
     | '/resources/$slug'
+    | '/admin/'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -373,6 +482,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/zyne'
+    | '/admin/ai'
+    | '/admin/bookings'
+    | '/admin/consultants'
+    | '/admin/crm'
+    | '/admin/customers'
+    | '/admin/finance'
+    | '/admin/growth'
+    | '/admin/quality'
+    | '/admin/settings'
     | '/advisory-areas/$slug'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
@@ -385,11 +503,13 @@ export interface FileRouteTypes {
     | '/dashboard/zyne'
     | '/experts/$slug'
     | '/resources/$slug'
+    | '/admin'
     | '/dashboard'
   id:
     | '__root__'
     | '/'
     | '/about'
+    | '/admin'
     | '/advisory-areas'
     | '/book-discovery-call'
     | '/command-centre'
@@ -408,6 +528,15 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/zyne'
+    | '/admin/ai'
+    | '/admin/bookings'
+    | '/admin/consultants'
+    | '/admin/crm'
+    | '/admin/customers'
+    | '/admin/finance'
+    | '/admin/growth'
+    | '/admin/quality'
+    | '/admin/settings'
     | '/advisory-areas/$slug'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
@@ -420,12 +549,14 @@ export interface FileRouteTypes {
     | '/dashboard/zyne'
     | '/experts/$slug'
     | '/resources/$slug'
+    | '/admin/'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AdvisoryAreasRoute: typeof AdvisoryAreasRouteWithChildren
   BookDiscoveryCallRoute: typeof BookDiscoveryCallRoute
   CommandCentreRoute: typeof CommandCentreRoute
@@ -574,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdvisoryAreasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
@@ -594,6 +732,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/resources/$slug': {
       id: '/resources/$slug'
@@ -679,8 +824,99 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdvisoryAreasSlugRouteImport
       parentRoute: typeof AdvisoryAreasRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quality': {
+      id: '/admin/quality'
+      path: '/quality'
+      fullPath: '/admin/quality'
+      preLoaderRoute: typeof AdminQualityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/growth': {
+      id: '/admin/growth'
+      path: '/growth'
+      fullPath: '/admin/growth'
+      preLoaderRoute: typeof AdminGrowthRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/crm': {
+      id: '/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/consultants': {
+      id: '/admin/consultants'
+      path: '/consultants'
+      fullPath: '/admin/consultants'
+      preLoaderRoute: typeof AdminConsultantsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/bookings': {
+      id: '/admin/bookings'
+      path: '/bookings'
+      fullPath: '/admin/bookings'
+      preLoaderRoute: typeof AdminBookingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ai': {
+      id: '/admin/ai'
+      path: '/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AdminAiRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
+
+interface AdminRouteChildren {
+  AdminAiRoute: typeof AdminAiRoute
+  AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminConsultantsRoute: typeof AdminConsultantsRoute
+  AdminCrmRoute: typeof AdminCrmRoute
+  AdminCustomersRoute: typeof AdminCustomersRoute
+  AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminGrowthRoute: typeof AdminGrowthRoute
+  AdminQualityRoute: typeof AdminQualityRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAiRoute: AdminAiRoute,
+  AdminBookingsRoute: AdminBookingsRoute,
+  AdminConsultantsRoute: AdminConsultantsRoute,
+  AdminCrmRoute: AdminCrmRoute,
+  AdminCustomersRoute: AdminCustomersRoute,
+  AdminFinanceRoute: AdminFinanceRoute,
+  AdminGrowthRoute: AdminGrowthRoute,
+  AdminQualityRoute: AdminQualityRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface AdvisoryAreasRouteChildren {
   AdvisoryAreasSlugRoute: typeof AdvisoryAreasSlugRoute
@@ -750,6 +986,7 @@ const ResourcesRouteWithChildren = ResourcesRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  AdminRoute: AdminRouteWithChildren,
   AdvisoryAreasRoute: AdvisoryAreasRouteWithChildren,
   BookDiscoveryCallRoute: BookDiscoveryCallRoute,
   CommandCentreRoute: CommandCentreRoute,

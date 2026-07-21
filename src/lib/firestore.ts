@@ -9,9 +9,16 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
+  collection,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import type { BusinessProfile, HealthScores, UserRole } from "@/context/DashboardStateContext";
+import type { BusinessProfile, HealthScores, UserRole, BookingSession, SupportTicket } from "@/context/DashboardStateContext";
+import type { AdminRole } from "@/context/AdminStateContext";
 
 // ── User Document Types ────────────────────────────────────────────────────────
 
@@ -30,6 +37,7 @@ export type UserDocument = {
   };
   profile: BusinessProfile;
   healthScores: HealthScores | null;
+  adminRole?: AdminRole;
 };
 
 // ── Default blank values for a new user ───────────────────────────────────────
@@ -139,4 +147,52 @@ export async function saveOnboardingState(
 export async function saveHealthScores(uid: string, scores: HealthScores): Promise<void> {
   const ref = doc(db, "users", uid);
   await updateDoc(ref, { healthScores: scores });
+}
+
+// ── Bookings Operations ───────────────────────────────────────────────────────
+
+export async function createBookingDoc(booking: Omit<BookingSession, "id">): Promise<string> {
+  const colRef = collection(db, "bookings");
+  const docRef = await addDoc(colRef, {
+    ...booking,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function updateBookingStatus(bookingId: string, status: string): Promise<void> {
+  const ref = doc(db, "bookings", bookingId);
+  await updateDoc(ref, { status });
+}
+
+export async function cancelBookingDoc(bookingId: string): Promise<void> {
+  await updateBookingStatus(bookingId, "Cancelled");
+}
+
+export async function rescheduleBookingDoc(bookingId: string, newSlot: string): Promise<void> {
+  const ref = doc(db, "bookings", bookingId);
+  await updateDoc(ref, { date: newSlot, status: "Confirmed" });
+}
+
+// ── Tickets Operations ────────────────────────────────────────────────────────
+
+export async function createSupportTicketDoc(ticket: Omit<SupportTicket, "id">): Promise<string> {
+  const colRef = collection(db, "tickets");
+  const docRef = await addDoc(colRef, {
+    ...ticket,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function updateSupportTicketStatus(ticketId: string, status: "Open" | "In Progress" | "Resolved"): Promise<void> {
+  const ref = doc(db, "tickets", ticketId);
+  await updateDoc(ref, { status });
+}
+
+// ── Admin Utilities ───────────────────────────────────────────────────────────
+
+export async function setAdminRole(uid: string, role: AdminRole): Promise<void> {
+  const ref = doc(db, "users", uid);
+  await updateDoc(ref, { adminRole: role });
 }

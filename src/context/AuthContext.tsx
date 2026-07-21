@@ -24,7 +24,8 @@ import {
   type ConfirmationResult,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { initUserDocument, getUserDocument, type UserDocument } from "@/lib/firestore";
+import { syncUserDoc, getUserDocFn } from "@/lib/server-actions";
+import type { UserDocument } from "@/lib/server-actions";
 
 // ── Context Type ──────────────────────────────────────────────────────────────
 
@@ -54,22 +55,14 @@ async function fetchUserDocWithRetry(uid: string): Promise<UserDocument | null> 
   const MAX_RETRIES = 4;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const result = await getUserDocument(uid);
+      const result = await getUserDocFn({ data: uid });
       return result;
     } catch (err: any) {
-      const isOffline =
-        err?.code === "unavailable" ||
-        (typeof err?.message === "string" &&
-          (err.message.includes("offline") || err.message.includes("Failed to get document")));
-
-      if (isOffline && attempt < MAX_RETRIES - 1) {
-        // Exponential backoff: 500ms, 1s, 2s
+      if (attempt < MAX_RETRIES - 1) {
         await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
         continue;
       }
-
-      // Non-retriable or max retries hit — log silently and return null
-      console.warn("[Think10] Firestore unavailable, skipping doc load:", err?.message ?? err);
+      console.warn("[Think10] MongoDB unavailable, skipping doc load:", err?.message ?? err);
       return null;
     }
   }
@@ -87,19 +80,14 @@ async function initAndFetchDoc(
   const MAX_RETRIES = 4;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      await initUserDocument(uid, email, displayName, companyName);
-      return await getUserDocument(uid);
+      await syncUserDoc({ data: { uid, email, displayName, companyName } });
+      return await getUserDocFn({ data: uid });
     } catch (err: any) {
-      const isOffline =
-        err?.code === "unavailable" ||
-        (typeof err?.message === "string" &&
-          (err.message.includes("offline") || err.message.includes("Failed to get document")));
-
-      if (isOffline && attempt < MAX_RETRIES - 1) {
+      if (attempt < MAX_RETRIES - 1) {
         await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
         continue;
       }
-      console.warn("[Think10] Firestore init failed:", err?.message ?? err);
+      console.warn("[Think10] MongoDB init failed:", err?.message ?? err);
       return null;
     }
   }

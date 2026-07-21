@@ -77,23 +77,23 @@ function Page() {
 
   const activeChat = conversations.find((c) => c.id === activeConversationId);
 
-  const handleSend = (text: string) => {
+  const handleSend = async (text: string) => {
     const t = text.trim();
     if (!t) return;
     
     let currentChatId = activeConversationId;
     if (!currentChatId) {
-      currentChatId = startNewChat(t);
+      setThinking(true);
       setInput("");
+      await startNewChat(t);
+      setThinking(false);
       return;
     }
 
-    sendChatMessage(t);
     setInput("");
     setThinking(true);
-    setTimeout(() => {
-      setThinking(false);
-    }, 800);
+    await sendChatMessage(t);
+    setThinking(false);
   };
 
   const handleSaveToActionPlan = (msgIndex: number, actions: string[]) => {
@@ -369,12 +369,23 @@ function Page() {
                                 </>
                               )}
                             </button>
-                            <Link
-                              to="/dashboard/advisors"
-                              className="inline-flex items-center gap-1 rounded-md border border-[color:var(--t10-navy)] px-2.5 py-1.5 text-[10px] font-bold hover:bg-[color:var(--t10-navy)] hover:text-white transition-all"
-                            >
-                              <Calendar className="h-3.5 w-3.5" /> Book Marketplace Expert
-                            </Link>
+                            {import.meta.env.VITE_CALENDLY_URL && import.meta.env.VITE_CALENDLY_URL !== "YOUR_CALENDLY_LINK_HERE" ? (
+                              <a
+                                href={import.meta.env.VITE_CALENDLY_URL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 rounded-md border border-[color:var(--t10-navy)] px-2.5 py-1.5 text-[10px] font-bold hover:bg-[color:var(--t10-navy)] hover:text-white transition-all"
+                              >
+                                <Calendar className="h-3.5 w-3.5" /> Book Marketplace Expert
+                              </a>
+                            ) : (
+                              <Link
+                                to="/dashboard/advisors"
+                                className="inline-flex items-center gap-1 rounded-md border border-[color:var(--t10-navy)] px-2.5 py-1.5 text-[10px] font-bold hover:bg-[color:var(--t10-navy)] hover:text-white transition-all"
+                              >
+                                <Calendar className="h-3.5 w-3.5" /> Book Marketplace Expert
+                              </Link>
+                            )}
                           </div>
                         </div>
                       ) : (

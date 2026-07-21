@@ -14,17 +14,47 @@ const PRESETS: Record<string, string> = {
     "Tell me about your product, channel and stage. I'll structure a diagnosis and, if it needs deeper judgement, match you to a vetted UAE expert.",
 };
 
-function respond(input: string): Message {
-  const q = input.toLowerCase();
-  let content = PRESETS.default;
-  const meta = "Prototype response — connect Zyne for live guidance.";
-  if (q.includes("amazon") || q.includes("noon") || q.includes("marketplace"))
-    content = PRESETS.amazon;
-  else if (q.includes("price") || q.includes("margin") || q.includes("wholesale"))
-    content = PRESETS.pricing;
-  else if (q.includes("ramadan") || q.includes("launch") || q.includes("calendar"))
-    content = PRESETS.ramadan;
-  return { role: "zyne", content, meta };
+async function respond(input: string, history: Message[]): Promise<Message> {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey === "") {
+    return {
+      role: "zyne",
+      content: "System Alert: Gemini API Key is not configured in .env",
+      meta: "Configuration error"
+    };
+  }
+
+  try {
+    const systemPrompt = `You are Zyne, an AI business advisor for UAE retail and e-commerce. You provide quick, helpful business diagnostics and usually suggest escalating to a vetted human expert if it requires deep judgement. Keep responses concise (2-3 paragraphs max).`;
+
+    const requestBody = {
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents: [
+        ...history.map(msg => ({
+          role: msg.role === "zyne" ? "model" : "user",
+          parts: [{ text: msg.content }]
+        })),
+        { role: "user", parts: [{ text: input }] }
+      ]
+    };
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || "Gemini API error");
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) throw new Error("Empty response");
+
+    return { role: "zyne", content: text, meta: "Live AI response" };
+  } catch (err: any) {
+    console.error("Gemini Error:", err);
+    return { role: "zyne", content: `Error: ${err.message}` };
+  }
 }
 
 const SUGGESTIONS = [
@@ -42,8 +72,19 @@ export function ZyneChat({
 }) {
   const [messages, setMessages] = useState<Message[]>(() => {
     if (!initialQuestion) return [];
-    return [{ role: "user", content: initialQuestion }, respond(initialQuestion)];
+    return [{ role: "user", content: initialQuestion }];
   });
+
+  // Handle initial question fetch on mount
+  useEffect(() => {
+    if (initialQuestion && messages.length === 1) {
+      setThinking(true);
+      respond(initialQuestion, []).then((ans) => {
+        setMessages((m) => [...m, ans]);
+        setThinking(false);
+      });
+    }
+  }, [initialQuestion]);
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -52,16 +93,21 @@ export function ZyneChat({
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, thinking]);
 
-  const send = (text: string) => {
+  const send = async (text: string) => {
     const t = text.trim();
     if (!t) return;
+    
+    // Capture current messages
+    const currentMessages = [...messages];
+    
     setMessages((m) => [...m, { role: "user", content: t }]);
     setInput("");
     setThinking(true);
-    setTimeout(() => {
-      setMessages((m) => [...m, respond(t)]);
-      setThinking(false);
-    }, 700);
+    
+    const ans = await respond(t, currentMessages);
+    
+    setMessages((m) => [...m, ans]);
+    setThinking(false);
   };
 
   return (

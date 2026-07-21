@@ -88,6 +88,12 @@ function AdvisorsPage() {
       setSelectedSlot("");
       setSessionType("");
       setPreCall({ challenge: "", questions: "", additionalDocs: "" });
+      
+      const calendlyUrl = import.meta.env.VITE_CALENDLY_URL;
+      if (calendlyUrl && calendlyUrl !== "YOUR_CALENDLY_LINK_HERE" && calendlyUrl !== "") {
+        window.open(calendlyUrl, "_blank");
+      }
+      
       navigate({ to: "/dashboard/sessions" });
     }
   };
