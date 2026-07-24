@@ -111,7 +111,7 @@ function ConsultantLayout() {
       <aside className="hidden md:flex w-64 flex-col border-r border-neutral-200 bg-white shadow-sm shrink-0 h-full overflow-y-auto z-10 relative">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-neutral-200">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/logo/t10-brand-logo.svg" alt="Think10" className="h-6 w-auto" />
+            <img src="/logo/t10-brand-logo.svg?v=2" alt="Think10" className="h-6 w-auto" />
             <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-semibold border border-neutral-200 rounded px-1.5 py-0.5 ml-1">Consultant</span>
           </Link>
         </div>

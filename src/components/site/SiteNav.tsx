@@ -24,7 +24,7 @@ export function SiteNav() {
     <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/90 backdrop-blur">
       <div className="t10-container flex h-[72px] items-center justify-between gap-4">
         <a href="/#top" className="flex items-center gap-3" aria-label="Think10 home">
-          <img src="/logo/t10-brand-logo.svg" alt="Think10 Premium Advisory" className="h-8 w-auto" />
+          <img src="/logo/t10-brand-logo.svg?v=2" alt="Think10 Premium Advisory" className="h-8 w-auto" />
         </a>
 
         <nav aria-label="Primary" className="hidden lg:block">
