@@ -105,14 +105,9 @@ function DashboardLayout() {
       <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/95 shadow-sm backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/dashboard" className="flex items-center gap-3" aria-label="Think10 dashboard home">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-[color:var(--t10-navy)] text-white shadow-sm">
-              <span className="h-2.5 w-2.5 rounded-full border-2 border-white" />
-            </span>
-            <span className="leading-tight">
-              <span className="block text-[17px] font-bold tracking-tight text-[color:var(--t10-navy)]">
-                Think10
-              </span>
-              <span className="block text-[9px] font-semibold uppercase tracking-[0.22em] text-[color:var(--t10-grey)]">
+            <img src="/logo/t10-brand-logo.svg" alt="Think10 Command Centre" className="h-7 w-auto" />
+            <span className="leading-tight hidden sm:block">
+              <span className="block text-[9px] font-semibold uppercase tracking-[0.22em] text-[color:var(--t10-grey)] mt-1">
                 Command Centre
               </span>
             </span>
