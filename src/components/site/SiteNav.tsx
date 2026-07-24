@@ -24,17 +24,7 @@ export function SiteNav() {
     <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/90 backdrop-blur">
       <div className="t10-container flex h-[72px] items-center justify-between gap-4">
         <a href="/#top" className="flex items-center gap-3" aria-label="Think10 home">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color:var(--t10-emerald)] text-white shadow-sm">
-            <span className="h-3 w-3 rounded-full border-2 border-white" />
-          </span>
-          <span className="leading-tight">
-            <span className="block text-[19px] font-bold tracking-tight text-[color:var(--t10-navy)]">
-              Think10
-            </span>
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.22em] text-[color:var(--t10-grey)]">
-              Premium Advisory
-            </span>
-          </span>
+          <img src="/logo/t10-brand-logo.svg" alt="Think10 Premium Advisory" className="h-8 w-auto" />
         </a>
 
         <nav aria-label="Primary" className="hidden lg:block">
