@@ -3,14 +3,9 @@
   <defs>
     <style>
       .cls-1 {
-        fill: url(#Gradiente_sem_nome_5);
+        fill: #00b979;
       }
     </style>
-    <linearGradient id="Gradiente_sem_nome_5" data-name="Gradiente sem nome 5" x1="863.5" y1="3.34" x2="552.65" y2="153.16" gradientUnits="userSpaceOnUse">
-      <stop offset=".05" stop-color="#87f4cd"/>
-      <stop offset=".39" stop-color="#41ad6c"/>
-      <stop offset=".92" stop-color="#19592d"/>
-    </linearGradient>
   </defs>
   <g id="Camada_1-2" data-name="Camada 1">
     <g>
