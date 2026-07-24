@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
 
 export type AdminRole = 
   | "Super Admin"
@@ -41,6 +42,10 @@ interface AdminContextType {
   users: any[];
   tickets: any[];
   bookings: any[];
+  refreshData: () => void;
+  suspendUser: (uid: string, isSuspended: boolean) => Promise<void>;
+  approveConsultant: (uid: string) => Promise<void>;
+  updateUserRole: (uid: string, role: string) => Promise<void>;
 }
 
 const DEFAULT_METRICS: AdminMetrics = {
@@ -65,12 +70,16 @@ const STATIC_TASKS: Task[] = [
 const AdminStateContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [adminRole, setAdminRoleState] = useState<AdminRole>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("t10_admin_role") as AdminRole) || "Super Admin";
+  const { userDoc } = useAuth();
+  // Use adminRole from userDoc if available, else default to "Super Admin" for dev
+  const [adminRole, setAdminRoleState] = useState<AdminRole>("Super Admin");
+
+  // Sync adminRole from userDoc when it loads
+  useEffect(() => {
+    if (userDoc?.adminRole) {
+      setAdminRoleState(userDoc.adminRole as AdminRole);
     }
-    return "Super Admin";
-  });
+  }, [userDoc?.adminRole]);
 
   const [metrics, setMetrics] = useState<AdminMetrics>(DEFAULT_METRICS);
   const [tasks, setTasks] = useState<Task[]>(STATIC_TASKS);
@@ -78,26 +87,25 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [tickets, setTickets] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
 
-  // Fetch from MongoDB
-  useEffect(() => {
-    let active = true;
-
+  const refreshData = () => {
     import("@/lib/server-actions").then(({ getAllAdminDataFn }) => {
       getAllAdminDataFn()
         .then((data: any) => {
-          if (!active) return;
-          
           setUsers(data.users || []);
           setTickets(data.tickets || []);
           setBookings(data.bookings || []);
           
+          // Real AED pricing as per Think10 plans
           let paidUsers = 0;
           let mrr = 0;
           data.users.forEach((u: any) => {
             const role = u.plan?.role;
-            if (role === "ZynePaid") { paidUsers++; mrr += 99; }
-            if (role === "Hybrid") { paidUsers++; mrr += 499; }
-            if (role === "Premium") { paidUsers++; mrr += 999; }
+            const status = u.plan?.status;
+            if (status === "Suspended") return; // Exclude suspended
+            if (role === "ZynePaid") { paidUsers++; mrr += 290; }    // AED 290/mo
+            if (role === "Hybrid") { paidUsers++; mrr += 950; }      // AED 950/mo
+            if (role === "Premium") { paidUsers++; mrr += 2500; }    // AED 2,500/mo
+            if (role === "Enterprise") { paidUsers++; mrr += 5000; } // AED ~5,000/mo estimate
           });
 
           let openTix = 0;
@@ -124,15 +132,30 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         })
         .catch(err => console.error("Error fetching admin data from MongoDB:", err));
     });
+  };
 
-    return () => {
-      active = false;
-    };
+  // Fetch from MongoDB
+  useEffect(() => {
+    refreshData();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("t10_admin_role", adminRole);
-  }, [adminRole]);
+  const suspendUser = async (uid: string, isSuspended: boolean) => {
+    const { suspendUserFn } = await import("@/lib/server-actions");
+    await suspendUserFn({ data: { uid, isSuspended } });
+    refreshData();
+  };
+
+  const approveConsultant = async (uid: string) => {
+    const { approveConsultantFn } = await import("@/lib/server-actions");
+    await approveConsultantFn({ data: { uid } });
+    refreshData();
+  };
+
+  const updateUserRole = async (uid: string, role: string) => {
+    const { updateUserPlanFn } = await import("@/lib/server-actions");
+    await updateUserPlanFn({ data: { uid, role } });
+    refreshData();
+  };
 
   const resolveTask = (id: string) => {
     if (id.startsWith("t")) {
@@ -161,6 +184,10 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         users,
         tickets,
         bookings,
+        refreshData,
+        suspendUser,
+        approveConsultant,
+        updateUserRole,
       }}
     >
       {children}

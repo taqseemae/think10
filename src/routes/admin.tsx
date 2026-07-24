@@ -1,5 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { AdminStateProvider, useAdminState, type AdminRole } from "@/context/AdminStateContext";
+import { useAuth } from "@/context/AuthContext";
+import { useEffect } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -13,6 +15,11 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -35,6 +42,30 @@ const ADMIN_ROLES: AdminRole[] = [
 ];
 
 function AdminLayoutWrapper() {
+  const { currentUser, userDoc, authLoading, docLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (authLoading || docLoading) return;
+    if (currentUser) {
+      if (!userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
+         navigate({ to: "/" });
+      }
+    }
+  }, [currentUser, userDoc, authLoading, docLoading, navigate]);
+
+  if (authLoading || docLoading) {
+    return <div className="p-8 text-center">Loading Admin...</div>;
+  }
+
+  if (!currentUser) {
+    return <AdminLoginView />;
+  }
+
+  if (!userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
+    return null;
+  }
+
   return (
     <AdminStateProvider>
       <AdminLayout />
@@ -145,6 +176,101 @@ function AdminLayout() {
           <Outlet />
         </div>
       </main>
+    </div>
+  );
+}
+
+function parseFirebaseError(code: string): string {
+  const map: Record<string, string> = {
+    "auth/wrong-password": "Incorrect password. Please try again.",
+    "auth/user-not-found": "No account found with this email.",
+    "auth/invalid-email": "Please enter a valid email address.",
+    "auth/too-many-requests": "Too many attempts. Please wait a few minutes.",
+    "auth/network-request-failed": "Network error. Check your internet connection.",
+  };
+  return map[code] ?? "Something went wrong. Please try again.";
+}
+
+function AdminLoginView() {
+  const { signInWithEmail, loading: contextLoading } = useAuth() as any;
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showLoginPw, setShowLoginPw] = useState(false);
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    if (!loginEmail || !loginPassword) { setErrorMsg("Please fill in all fields."); return; }
+    setLoading(true);
+    try {
+      await signInWithEmail(loginEmail, loginPassword);
+    } catch (err: any) {
+      setErrorMsg(parseFirebaseError(err.code));
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-2xl overflow-hidden p-8 md:p-10">
+        <div className="flex flex-col items-center justify-center space-y-2 mb-6">
+            <img src="/logo/t10-brand-logo.svg" alt="Think10" className="h-10 w-auto mb-2" />
+            <h1 className="text-2xl font-bold text-[color:var(--t10-navy)] font-display text-center">Admin Portal</h1>
+            <p className="text-xs text-[color:var(--t10-grey)] text-center">Authorized personnel only.</p>
+        </div>
+
+        {errorMsg && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-700">{errorMsg}</div>
+        )}
+
+        <form onSubmit={handleEmailLogin} className="space-y-4" noValidate>
+          <label className="block space-y-1.5">
+            <span className="block font-bold text-[10px] text-neutral-400 tracking-wider uppercase">Admin Email</span>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+              <input
+                type="email"
+                value={loginEmail}
+                onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="admin@think10.ae"
+                autoComplete="email"
+                className="w-full rounded-xl border border-[color:var(--t10-border)] bg-neutral-50 py-2.5 pl-9 pr-3 text-sm text-[color:var(--t10-navy)] placeholder:text-neutral-300 outline-none focus:border-[color:var(--t10-navy)] focus:ring-2 focus:ring-[color:var(--t10-navy)]/10 transition-all"
+              />
+            </div>
+          </label>
+          <label className="block space-y-1.5">
+            <span className="block font-bold text-[10px] text-neutral-400 tracking-wider uppercase">Password</span>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+              <input
+                type={showLoginPw ? "text" : "password"}
+                value={loginPassword}
+                onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                className="w-full rounded-xl border border-[color:var(--t10-border)] bg-neutral-50 py-2.5 pl-9 pr-10 text-sm text-[color:var(--t10-navy)] placeholder:text-neutral-300 outline-none focus:border-[color:var(--t10-navy)] focus:ring-2 focus:ring-[color:var(--t10-navy)]/10 transition-all"
+              />
+              <button type="button" onClick={() => setShowLoginPw(!showLoginPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 cursor-pointer" aria-label="Toggle password">
+                {showLoginPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+          </label>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-2 rounded-xl bg-[color:var(--t10-navy)] py-2.5 font-bold text-white hover:bg-neutral-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow text-sm cursor-pointer"
+          >
+            {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : "LOGIN TO ADMIN"}
+          </button>
+        </form>
+      </div>
+      <Link
+        to="/"
+        className="mt-6 flex items-center gap-1.5 text-xs text-[color:var(--t10-grey)] hover:text-[color:var(--t10-navy)] font-semibold transition-colors cursor-pointer"
+      >
+        Back to Think10
+      </Link>
     </div>
   );
 }

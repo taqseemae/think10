@@ -44,7 +44,7 @@ function Overview() {
     documents,
   } = useDashboardState();
 
-  const { currentUser } = useAuth();
+  const { currentUser, userDoc } = useAuth();
   const navigate = useNavigate();
 
   // Onboarding Wizard Local States

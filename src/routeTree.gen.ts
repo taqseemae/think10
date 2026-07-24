@@ -24,6 +24,7 @@ import { Route as ExpertsRouteImport } from './routes/experts'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as ConsultantRouteImport } from './routes/consultant'
 import { Route as CommandCentreRouteImport } from './routes/command-centre'
 import { Route as BookDiscoveryCallRouteImport } from './routes/book-discovery-call'
 import { Route as AdvisoryAreasRouteImport } from './routes/advisory-areas'
@@ -31,6 +32,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as ConsultantIndexRouteImport } from './routes/consultant.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as ExpertsSlugRouteImport } from './routes/experts.$slug'
@@ -43,6 +45,13 @@ import { Route as DashboardBusinessProfileRouteImport } from './routes/dashboard
 import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
 import { Route as DashboardAdvisorsRouteImport } from './routes/dashboard.advisors'
 import { Route as DashboardActionPlansRouteImport } from './routes/dashboard.action-plans'
+import { Route as ConsultantSettingsRouteImport } from './routes/consultant.settings'
+import { Route as ConsultantProfileRouteImport } from './routes/consultant.profile'
+import { Route as ConsultantPerformanceRouteImport } from './routes/consultant.performance'
+import { Route as ConsultantEarningsRouteImport } from './routes/consultant.earnings'
+import { Route as ConsultantConsultationsRouteImport } from './routes/consultant.consultations'
+import { Route as ConsultantClientsRouteImport } from './routes/consultant.clients'
+import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminQualityRouteImport } from './routes/admin.quality'
@@ -130,6 +139,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConsultantRoute = ConsultantRouteImport.update({
+  id: '/consultant',
+  path: '/consultant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CommandCentreRoute = CommandCentreRouteImport.update({
   id: '/command-centre',
   path: '/command-centre',
@@ -164,6 +178,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRoute,
+} as any)
+const ConsultantIndexRoute = ConsultantIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsultantRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -226,6 +245,41 @@ const DashboardActionPlansRoute = DashboardActionPlansRouteImport.update({
   path: '/action-plans',
   getParentRoute: () => DashboardRoute,
 } as any)
+const ConsultantSettingsRoute = ConsultantSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantProfileRoute = ConsultantProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantPerformanceRoute = ConsultantPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantEarningsRoute = ConsultantEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantConsultationsRoute = ConsultantConsultationsRouteImport.update({
+  id: '/consultations',
+  path: '/consultations',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantClientsRoute = ConsultantClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantBookingsRoute = ConsultantBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => ConsultantRoute,
+} as any)
 const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -284,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/advisory-areas': typeof AdvisoryAreasRouteWithChildren
   '/book-discovery-call': typeof BookDiscoveryCallRoute
   '/command-centre': typeof CommandCentreRoute
+  '/consultant': typeof ConsultantRouteWithChildren
   '/contact': typeof ContactRoute
   '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -309,6 +364,13 @@ export interface FileRoutesByFullPath {
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
+  '/consultant/bookings': typeof ConsultantBookingsRoute
+  '/consultant/clients': typeof ConsultantClientsRoute
+  '/consultant/consultations': typeof ConsultantConsultationsRoute
+  '/consultant/earnings': typeof ConsultantEarningsRoute
+  '/consultant/performance': typeof ConsultantPerformanceRoute
+  '/consultant/profile': typeof ConsultantProfileRoute
+  '/consultant/settings': typeof ConsultantSettingsRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
@@ -321,6 +383,7 @@ export interface FileRoutesByFullPath {
   '/experts/$slug': typeof ExpertsSlugRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/consultant/': typeof ConsultantIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
@@ -353,6 +416,13 @@ export interface FileRoutesByTo {
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
+  '/consultant/bookings': typeof ConsultantBookingsRoute
+  '/consultant/clients': typeof ConsultantClientsRoute
+  '/consultant/consultations': typeof ConsultantConsultationsRoute
+  '/consultant/earnings': typeof ConsultantEarningsRoute
+  '/consultant/performance': typeof ConsultantPerformanceRoute
+  '/consultant/profile': typeof ConsultantProfileRoute
+  '/consultant/settings': typeof ConsultantSettingsRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
@@ -365,6 +435,7 @@ export interface FileRoutesByTo {
   '/experts/$slug': typeof ExpertsSlugRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/admin': typeof AdminIndexRoute
+  '/consultant': typeof ConsultantIndexRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -375,6 +446,7 @@ export interface FileRoutesById {
   '/advisory-areas': typeof AdvisoryAreasRouteWithChildren
   '/book-discovery-call': typeof BookDiscoveryCallRoute
   '/command-centre': typeof CommandCentreRoute
+  '/consultant': typeof ConsultantRouteWithChildren
   '/contact': typeof ContactRoute
   '/cookies': typeof CookiesRoute
   '/dashboard': typeof DashboardRouteWithChildren
@@ -400,6 +472,13 @@ export interface FileRoutesById {
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
+  '/consultant/bookings': typeof ConsultantBookingsRoute
+  '/consultant/clients': typeof ConsultantClientsRoute
+  '/consultant/consultations': typeof ConsultantConsultationsRoute
+  '/consultant/earnings': typeof ConsultantEarningsRoute
+  '/consultant/performance': typeof ConsultantPerformanceRoute
+  '/consultant/profile': typeof ConsultantProfileRoute
+  '/consultant/settings': typeof ConsultantSettingsRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
   '/dashboard/billing': typeof DashboardBillingRoute
@@ -412,6 +491,7 @@ export interface FileRoutesById {
   '/experts/$slug': typeof ExpertsSlugRoute
   '/resources/$slug': typeof ResourcesSlugRoute
   '/admin/': typeof AdminIndexRoute
+  '/consultant/': typeof ConsultantIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -423,6 +503,7 @@ export interface FileRouteTypes {
     | '/advisory-areas'
     | '/book-discovery-call'
     | '/command-centre'
+    | '/consultant'
     | '/contact'
     | '/cookies'
     | '/dashboard'
@@ -448,6 +529,13 @@ export interface FileRouteTypes {
     | '/admin/quality'
     | '/admin/settings'
     | '/advisory-areas/$slug'
+    | '/consultant/bookings'
+    | '/consultant/clients'
+    | '/consultant/consultations'
+    | '/consultant/earnings'
+    | '/consultant/performance'
+    | '/consultant/profile'
+    | '/consultant/settings'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
     | '/dashboard/billing'
@@ -460,6 +548,7 @@ export interface FileRouteTypes {
     | '/experts/$slug'
     | '/resources/$slug'
     | '/admin/'
+    | '/consultant/'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -492,6 +581,13 @@ export interface FileRouteTypes {
     | '/admin/quality'
     | '/admin/settings'
     | '/advisory-areas/$slug'
+    | '/consultant/bookings'
+    | '/consultant/clients'
+    | '/consultant/consultations'
+    | '/consultant/earnings'
+    | '/consultant/performance'
+    | '/consultant/profile'
+    | '/consultant/settings'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
     | '/dashboard/billing'
@@ -504,6 +600,7 @@ export interface FileRouteTypes {
     | '/experts/$slug'
     | '/resources/$slug'
     | '/admin'
+    | '/consultant'
     | '/dashboard'
   id:
     | '__root__'
@@ -513,6 +610,7 @@ export interface FileRouteTypes {
     | '/advisory-areas'
     | '/book-discovery-call'
     | '/command-centre'
+    | '/consultant'
     | '/contact'
     | '/cookies'
     | '/dashboard'
@@ -538,6 +636,13 @@ export interface FileRouteTypes {
     | '/admin/quality'
     | '/admin/settings'
     | '/advisory-areas/$slug'
+    | '/consultant/bookings'
+    | '/consultant/clients'
+    | '/consultant/consultations'
+    | '/consultant/earnings'
+    | '/consultant/performance'
+    | '/consultant/profile'
+    | '/consultant/settings'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
     | '/dashboard/billing'
@@ -550,6 +655,7 @@ export interface FileRouteTypes {
     | '/experts/$slug'
     | '/resources/$slug'
     | '/admin/'
+    | '/consultant/'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -560,6 +666,7 @@ export interface RootRouteChildren {
   AdvisoryAreasRoute: typeof AdvisoryAreasRouteWithChildren
   BookDiscoveryCallRoute: typeof BookDiscoveryCallRoute
   CommandCentreRoute: typeof CommandCentreRoute
+  ConsultantRoute: typeof ConsultantRouteWithChildren
   ContactRoute: typeof ContactRoute
   CookiesRoute: typeof CookiesRoute
   DashboardRoute: typeof DashboardRouteWithChildren
@@ -684,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/consultant': {
+      id: '/consultant'
+      path: '/consultant'
+      fullPath: '/consultant'
+      preLoaderRoute: typeof ConsultantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/command-centre': {
       id: '/command-centre'
       path: '/command-centre'
@@ -732,6 +846,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/consultant/': {
+      id: '/consultant/'
+      path: '/'
+      fullPath: '/consultant/'
+      preLoaderRoute: typeof ConsultantIndexRouteImport
+      parentRoute: typeof ConsultantRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -816,6 +937,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/action-plans'
       preLoaderRoute: typeof DashboardActionPlansRouteImport
       parentRoute: typeof DashboardRoute
+    }
+    '/consultant/settings': {
+      id: '/consultant/settings'
+      path: '/settings'
+      fullPath: '/consultant/settings'
+      preLoaderRoute: typeof ConsultantSettingsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/profile': {
+      id: '/consultant/profile'
+      path: '/profile'
+      fullPath: '/consultant/profile'
+      preLoaderRoute: typeof ConsultantProfileRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/performance': {
+      id: '/consultant/performance'
+      path: '/performance'
+      fullPath: '/consultant/performance'
+      preLoaderRoute: typeof ConsultantPerformanceRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/earnings': {
+      id: '/consultant/earnings'
+      path: '/earnings'
+      fullPath: '/consultant/earnings'
+      preLoaderRoute: typeof ConsultantEarningsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/consultations': {
+      id: '/consultant/consultations'
+      path: '/consultations'
+      fullPath: '/consultant/consultations'
+      preLoaderRoute: typeof ConsultantConsultationsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/clients': {
+      id: '/consultant/clients'
+      path: '/clients'
+      fullPath: '/consultant/clients'
+      preLoaderRoute: typeof ConsultantClientsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/bookings': {
+      id: '/consultant/bookings'
+      path: '/bookings'
+      fullPath: '/consultant/bookings'
+      preLoaderRoute: typeof ConsultantBookingsRouteImport
+      parentRoute: typeof ConsultantRoute
     }
     '/advisory-areas/$slug': {
       id: '/advisory-areas/$slug'
@@ -930,6 +1100,32 @@ const AdvisoryAreasRouteWithChildren = AdvisoryAreasRoute._addFileChildren(
   AdvisoryAreasRouteChildren,
 )
 
+interface ConsultantRouteChildren {
+  ConsultantBookingsRoute: typeof ConsultantBookingsRoute
+  ConsultantClientsRoute: typeof ConsultantClientsRoute
+  ConsultantConsultationsRoute: typeof ConsultantConsultationsRoute
+  ConsultantEarningsRoute: typeof ConsultantEarningsRoute
+  ConsultantPerformanceRoute: typeof ConsultantPerformanceRoute
+  ConsultantProfileRoute: typeof ConsultantProfileRoute
+  ConsultantSettingsRoute: typeof ConsultantSettingsRoute
+  ConsultantIndexRoute: typeof ConsultantIndexRoute
+}
+
+const ConsultantRouteChildren: ConsultantRouteChildren = {
+  ConsultantBookingsRoute: ConsultantBookingsRoute,
+  ConsultantClientsRoute: ConsultantClientsRoute,
+  ConsultantConsultationsRoute: ConsultantConsultationsRoute,
+  ConsultantEarningsRoute: ConsultantEarningsRoute,
+  ConsultantPerformanceRoute: ConsultantPerformanceRoute,
+  ConsultantProfileRoute: ConsultantProfileRoute,
+  ConsultantSettingsRoute: ConsultantSettingsRoute,
+  ConsultantIndexRoute: ConsultantIndexRoute,
+}
+
+const ConsultantRouteWithChildren = ConsultantRoute._addFileChildren(
+  ConsultantRouteChildren,
+)
+
 interface DashboardRouteChildren {
   DashboardActionPlansRoute: typeof DashboardActionPlansRoute
   DashboardAdvisorsRoute: typeof DashboardAdvisorsRoute
@@ -990,6 +1186,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdvisoryAreasRoute: AdvisoryAreasRouteWithChildren,
   BookDiscoveryCallRoute: BookDiscoveryCallRoute,
   CommandCentreRoute: CommandCentreRoute,
+  ConsultantRoute: ConsultantRouteWithChildren,
   ContactRoute: ContactRoute,
   CookiesRoute: CookiesRoute,
   DashboardRoute: DashboardRouteWithChildren,

@@ -35,16 +35,17 @@ interface AuthContextType {
   authLoading: boolean;
   docLoading: boolean;
 
-  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string, password: string, defaultRole?: string) => Promise<void>;
   signUpWithEmail: (
     email: string,
     password: string,
     displayName: string,
-    companyName?: string
+    companyName: string,
+    defaultRole?: string
   ) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (defaultRole?: string) => Promise<void>;
   sendPhoneOtp: (phoneNumber: string, recaptchaContainerId: string) => Promise<ConfirmationResult>;
-  confirmPhoneOtp: (confirmationResult: ConfirmationResult, code: string) => Promise<void>;
+  confirmPhoneOtp: (confirmationResult: ConfirmationResult, otp: string, defaultRole?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUserDoc: () => Promise<void>;
 }
@@ -75,12 +76,13 @@ async function initAndFetchDoc(
   uid: string,
   email: string,
   displayName: string,
-  companyName: string
+  companyName: string,
+  role?: string
 ): Promise<UserDocument | null> {
   const MAX_RETRIES = 4;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      await syncUserDoc({ data: { uid, email, displayName, companyName } });
+      await syncUserDoc({ data: { uid, email, displayName, companyName: companyName || '', role } });
       return await getUserDocFn({ data: uid });
     } catch (err: any) {
       if (attempt < MAX_RETRIES - 1) {
@@ -93,6 +95,7 @@ async function initAndFetchDoc(
   }
   return null;
 }
+
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 
@@ -136,25 +139,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // ── Auth operations ───────────────────────────────────────────────────────
 
-  const signInWithEmail = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+  const signInWithEmail = async (email: string, password: string, defaultRole?: string) => {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    // Sync to MongoDB (will not overwrite role if user exists)
+    const fetched = await initAndFetchDoc(
+      user.uid,
+      user.email ?? email,
+      user.displayName ?? '',
+      '',
+      defaultRole
+    );
+    setUserDoc(fetched);
   };
+
 
   const signUpWithEmail = async (
     email: string,
     password: string,
     displayName: string,
-    companyName = ""
+    companyName: string,
+    defaultRole?: string
   ) => {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(user, { displayName });
     // Auto-send email verification link
     try { await sendEmailVerification(user); } catch (_) {}
-    const fetched = await initAndFetchDoc(user.uid, email, displayName, companyName);
+    const fetched = await initAndFetchDoc(user.uid, email, displayName, companyName, defaultRole || 'Free');
     setUserDoc(fetched);
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (defaultRole?: string) => {
     const provider = new GoogleAuthProvider();
     provider.addScope("email");
     provider.addScope("profile");
@@ -163,7 +177,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user.uid,
       user.email ?? "",
       user.displayName ?? "",
-      ""
+      "",
+      defaultRole
     );
     setUserDoc(fetched);
   };
@@ -178,13 +193,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await signInWithPhoneNumber(auth, phoneNumber, recaptcha);
   };
 
-  const confirmPhoneOtp = async (confirmationResult: ConfirmationResult, code: string) => {
-    const { user } = await confirmationResult.confirm(code);
+  const confirmPhoneOtp = async (confirmationResult: ConfirmationResult, otp: string, defaultRole?: string) => {
+    const { user } = await confirmationResult.confirm(otp);
     const fetched = await initAndFetchDoc(
       user.uid,
       user.email ?? "",
       user.displayName ?? user.phoneNumber ?? "",
-      ""
+      "",
+      defaultRole
     );
     setUserDoc(fetched);
   };

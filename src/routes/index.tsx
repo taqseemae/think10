@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useDashboardState } from "@/context/DashboardStateContext";
+import { useAuth } from "@/context/AuthContext";
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from "framer-motion";
 import { SiteShell } from "@/components/site/SiteShell";
 import { ADVISORY_AREAS, EXPERTS, PLANS, FAQS } from "@/data/think10";
@@ -80,11 +81,7 @@ function Home() {
   const { isLoggedIn } = useDashboardState();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isLoggedIn) {
-      navigate({ to: "/dashboard" });
-    }
-  }, [isLoggedIn, navigate]);
+  const { userDoc, authLoading, docLoading } = useAuth();
 
   return (
     <SiteShell>

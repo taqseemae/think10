@@ -1,12 +1,24 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, User } from "lucide-react";
 import { NAV } from "@/data/think10";
 import { useDashboardState } from "@/context/DashboardStateContext";
+import { useAuth } from "@/context/AuthContext";
 
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const { isLoggedIn, logout } = useDashboardState();
+  const { userDoc, currentUser } = useAuth();
+
+  const displayName = userDoc?.displayName || currentUser?.displayName || userDoc?.profile?.businessName || "My Dashboard";
+  
+  // Determine correct dashboard route based on role
+  let dashboardRoute = "/dashboard";
+  if (userDoc?.adminRole) {
+    dashboardRoute = "/admin";
+  } else if (userDoc?.plan?.role === "Consultant" || userDoc?.plan?.role === "ConsultantPending") {
+    dashboardRoute = "/consultant";
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/90 backdrop-blur">
@@ -44,10 +56,13 @@ export function SiteNav() {
           {isLoggedIn ? (
             <>
               <Link
-                to="/dashboard"
-                className="rounded-md px-4 py-2 text-[15px] font-medium text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)]"
+                to={dashboardRoute}
+                className="flex items-center gap-2 rounded-full px-4 py-2 text-[15px] font-medium text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)] transition-colors"
               >
-                Dashboard
+                <div className="bg-[color:var(--t10-emerald)]/10 p-1.5 rounded-full text-[color:var(--t10-emerald)]">
+                  <User className="h-4 w-4" />
+                </div>
+                <span className="truncate max-w-[120px]">{displayName}</span>
               </Link>
               <button
                 type="button"
@@ -103,11 +118,12 @@ export function SiteNav() {
               {isLoggedIn ? (
                 <>
                   <Link
-                    to="/dashboard"
+                    to={dashboardRoute}
                     onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-2 text-sm font-medium text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)]"
+                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)]"
                   >
-                    Dashboard
+                    <User className="h-4 w-4 text-[color:var(--t10-emerald)]" />
+                    <span className="truncate">{displayName}</span>
                   </Link>
                   <button
                     type="button"

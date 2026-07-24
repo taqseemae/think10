@@ -37,21 +37,32 @@ function DashboardLayout() {
     logout,
     isLoggedIn,
   } = useDashboardState();
-  const { authLoading, docLoading } = useAuth();
+  const { authLoading, docLoading, userDoc } = useAuth();
 
   const navigate = useNavigate();
 
   // Route Gating: wait for Firebase to resolve auth state first
   useEffect(() => {
-    if (authLoading) return; // Still loading — don't redirect yet
+    if (authLoading || docLoading) return; // Still loading — don't redirect yet
     if (!isLoggedIn) {
       navigate({ to: "/login" });
       return;
     }
+
+    // Role-based redirection out of the user dashboard
+    if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae") {
+      navigate({ to: "/admin" });
+      return;
+    }
+    if (userDoc?.plan?.role === "Consultant") {
+      navigate({ to: "/consultant" });
+      return;
+    }
+
     if (!onboardingCompleted && pathname !== "/dashboard" && pathname !== "/dashboard/") {
       navigate({ to: "/dashboard" });
     }
-  }, [isLoggedIn, authLoading, onboardingCompleted, pathname, navigate]);
+  }, [isLoggedIn, authLoading, docLoading, onboardingCompleted, pathname, userDoc, navigate]);
 
   const handleLogout = () => {
     logout();

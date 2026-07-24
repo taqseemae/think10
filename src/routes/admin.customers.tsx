@@ -7,7 +7,7 @@ export const Route = createFileRoute("/admin/customers")({
 });
 
 function CustomersAdminPage() {
-  const { users } = useAdminState();
+  const { users, suspendUser, updateUserRole } = useAdminState();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -100,9 +100,31 @@ function CustomersAdminPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-neutral-400 hover:text-neutral-900 transition-colors p-1">
-                        <MoreVertical className="h-5 w-5" />
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        {user.plan?.status === "Suspended" ? (
+                          <button
+                            onClick={() => suspendUser(user.uid, false)}
+                            className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                          >
+                            Unsuspend
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => suspendUser(user.uid, true)}
+                            className="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition-colors"
+                          >
+                            Suspend
+                          </button>
+                        )}
+                        {user.plan?.role !== "Premium" && (
+                          <button
+                            onClick={() => updateUserRole(user.uid, "Premium")}
+                            className="text-[10px] font-bold uppercase tracking-wider text-purple-600 bg-purple-50 px-2 py-1 rounded hover:bg-purple-100 transition-colors"
+                          >
+                            Upgrade
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

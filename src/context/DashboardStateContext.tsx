@@ -286,11 +286,12 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   useEffect(() => {
     if (userDoc) {
       if (userDoc.plan?.role) {
-        setRoleState(userDoc.plan.role);
+        setRoleState(userDoc.plan.role as UserRole);
       }
       if (userDoc.onboarding) {
         setOnboardingCompletedState(userDoc.onboarding.completed);
-        setOnboardingStepState(userDoc.onboarding.step);
+        // Fallback to 1 if step is 0 (legacy accounts or bugged DB entries)
+        setOnboardingStepState(userDoc.onboarding.step || 1);
       }
       if (userDoc.profile) {
         setProfileState(userDoc.profile);
@@ -317,83 +318,25 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   // Role & Simulation State
-  const [role, setRoleState] = useState<UserRole>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("t10_role") as UserRole) || "Free";
-    }
-    return "Free";
-  });
-
+  const [role, setRoleState] = useState<UserRole>("Free");
   const [floatingAlert, setFloatingAlert] = useState<AlertNotification | null>(null);
 
   // Onboarding
-  const [onboardingCompleted, setOnboardingCompletedState] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("t10_onboarding_completed") === "true";
-    }
-    return false;
-  });
-  const [onboardingStep, setOnboardingStepState] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      return parseInt(localStorage.getItem("t10_onboarding_step") || "1");
-    }
-    return 1;
-  });
+  const [onboardingCompleted, setOnboardingCompletedState] = useState<boolean>(false);
+  const [onboardingStep, setOnboardingStepState] = useState<number>(1);
 
   // Business Profile
-  const [profile, setProfileState] = useState<BusinessProfile>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_profile");
-      return saved ? JSON.parse(saved) : DEFAULT_PROFILE;
-    }
-    return DEFAULT_PROFILE;
-  });
-
-  const [profileAuditLogs, setProfileAuditLogs] = useState<AuditLogEntry[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_profile_audit");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
+  const [profile, setProfileState] = useState<BusinessProfile>(DEFAULT_PROFILE);
+  const [profileAuditLogs, setProfileAuditLogs] = useState<AuditLogEntry[]>([]);
 
   // Health Assessment
-  const [healthScores, setHealthScoresState] = useState<HealthScores>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_health_scores");
-      return saved ? JSON.parse(saved) : DEFAULT_SCORES;
-    }
-    return DEFAULT_SCORES;
-  });
-
-  const [healthAssessmentHistory, setHealthAssessmentHistory] = useState<{ timestamp: string; totalScore: number }[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_health_history");
-      return saved ? JSON.parse(saved) : [{ timestamp: "2026-06-15 10:00", totalScore: 57 }];
-    }
-    return [{ timestamp: "2026-06-15 10:00", totalScore: 57 }];
-  });
+  const [healthScores, setHealthScoresState] = useState<HealthScores>(DEFAULT_SCORES);
+  const [healthAssessmentHistory, setHealthAssessmentHistory] = useState<{ timestamp: string; totalScore: number }[]>([]);
 
   // Zyne Chats
-  const [conversations, setConversations] = useState<ZyneChatSession[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_conversations");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
-  const [activeConversationId, setActiveConversationIdState] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("t10_active_chat_id");
-    }
-    return null;
-  });
-  const [messageAllowanceUsed, setMessageAllowanceUsed] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      return parseInt(localStorage.getItem("t10_msg_allowance") || "0");
-    }
-    return 0;
-  });
+  const [conversations, setConversations] = useState<ZyneChatSession[]>([]);
+  const [activeConversationId, setActiveConversationIdState] = useState<string | null>(null);
+  const [messageAllowanceUsed, setMessageAllowanceUsed] = useState<number>(0);
 
   // Bookings (Sessions) - fetched from MongoDB via Server Action
   const [bookings, setBookings] = useState<BookingSession[]>([]);
@@ -411,87 +354,22 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     });
   }, [currentUser?.uid]);
 
-  // Action Items — starts empty for real users
-  const [actionItems, setActionItems] = useState<ActionItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_action_items");
-      if (saved) return JSON.parse(saved);
-    }
-    return [];
-  });
+  // Action Items
+  const [actionItems, setActionItems] = useState<ActionItem[]>([]);
 
-  // Billing & Credits — starts at 0 for real users
-  const [credits, setCredits] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_credits");
-      return saved ? parseInt(saved) : 0;
-    }
-    return 0;
-  });
-
-  const [creditsLedger, setCreditsLedger] = useState<LedgerEntry[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_ledger");
-      if (saved) return JSON.parse(saved);
-    }
-    return [];
-  });
-
+  // Billing & Credits
+  const [credits, setCredits] = useState<number>(0);
+  const [creditsLedger, setCreditsLedger] = useState<LedgerEntry[]>([]);
   const [invoices] = useState<{ id: string; date: string; amount: string; status: string }[]>([]);
 
-  // Documents — starts empty for real users
-  const [documents, setDocuments] = useState<LibraryDocument[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_documents");
-      if (saved) return JSON.parse(saved);
-    }
-    return [];
-  });
+  // Documents
+  const [documents, setDocuments] = useState<LibraryDocument[]>([]);
 
   // Community Posts
-  const [posts, setPosts] = useState<CommunityPost[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_posts");
-      if (saved) return JSON.parse(saved);
-    }
-    return [
-      {
-        id: "p1",
-        space: "Launch",
-        title: "Mainland vs Freezone licensing costs in Dubai",
-        author: "Sarah J.",
-        authorCompany: "Opal Skin",
-        content: "Just spent 3 weeks navigating DED Mainland vs Meydan Freezone. Meydan was significantly cheaper for e-commerce, but mainland lets us hold local stock without a 3PL. Happy to share my DED cost sheet if anyone needs it!",
-        likes: 12,
-        likedByUser: false,
-        timestamp: "2026-07-12 14:00",
-        comments: [
-          { id: "c1", author: "Reem Al M.", content: "Please share! I am in the exact same dilemma.", timestamp: "2026-07-12 15:30" },
-        ],
-      },
-      {
-        id: "p2",
-        space: "Marketing",
-        title: "Meta Ads GCC CPA benchmark - Q2 2026",
-        author: "Layla Hassan",
-        authorCompany: "Advisor",
-        content: "Seeing CPMs climb 15% across UAE & KSA retail beauty sectors this quarter. I highly recommend running broad targeting with custom creator videos rather than micro-interest segments. Happy to discuss in our office hours next Wed.",
-        likes: 24,
-        likedByUser: true,
-        timestamp: "2026-07-10 09:00",
-        comments: [],
-      },
-    ];
-  });
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
 
-  // Connections Record — starts empty for real users
-  const [connections, setConnections] = useState<Record<string, "CONNECT" | "PENDING" | "ACCEPTED" | "BLOCKED">>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("t10_connections");
-      return saved ? JSON.parse(saved) : {};
-    }
-    return {};
-  });
+  // Connections Record
+  const [connections, setConnections] = useState<Record<string, "CONNECT" | "PENDING" | "ACCEPTED" | "BLOCKED">>({});
 
   // Support Tickets - fetched from MongoDB via Server Action
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
@@ -509,73 +387,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   }, [currentUser?.uid]);
 
   // Write changes to localStorage when states update
-  useEffect(() => {
-    localStorage.setItem("t10_role", role);
-  }, [role]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_onboarding_completed", String(onboardingCompleted));
-  }, [onboardingCompleted]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_onboarding_step", String(onboardingStep));
-  }, [onboardingStep]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_profile", JSON.stringify(profile));
-  }, [profile]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_profile_audit", JSON.stringify(profileAuditLogs));
-  }, [profileAuditLogs]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_health_scores", JSON.stringify(healthScores));
-  }, [healthScores]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_health_history", JSON.stringify(healthAssessmentHistory));
-  }, [healthAssessmentHistory]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_conversations", JSON.stringify(conversations));
-  }, [conversations]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_active_chat_id", activeConversationId || "");
-  }, [activeConversationId]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_msg_allowance", String(messageAllowanceUsed));
-  }, [messageAllowanceUsed]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_bookings", JSON.stringify(bookings));
-  }, [bookings]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_action_items", JSON.stringify(actionItems));
-  }, [actionItems]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_credits", String(credits));
-  }, [credits]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_ledger", JSON.stringify(creditsLedger));
-  }, [creditsLedger]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_documents", JSON.stringify(documents));
-  }, [documents]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_posts", JSON.stringify(posts));
-  }, [posts]);
-
-  useEffect(() => {
-    localStorage.setItem("t10_connections", JSON.stringify(connections));
-  }, [connections]);
+  // (Removed for fully MongoDB backed system)
 
   // Set initial default context values if role changes
   const setRole = (newRole: UserRole) => {
@@ -886,20 +698,44 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       }
 
       try {
-        const systemPrompt = `You are Zyne VC, an expert AI business advisor for UAE retail and e-commerce founders. 
-You provide structured diagnostics, action plans, and recommendations.
-The user profile is: Industry: ${profile.industry}, Stage: ${profile.stage}, Channels: ${profile.channels.join(", ")}, Goals: ${profile.goals.join(", ")}.
+        const systemPrompt = `You are Zyne VC, Think10's expert AI business consultant specializing exclusively in Dubai and GCC retail and e-commerce.
 
-Respond in valid JSON only. The JSON must match this structure exactly:
+Your expertise covers:
+- Amazon UAE and noon.com marketplace strategy (listings, PPC, ACOS optimization)
+- UAE retail and Shopify DTC (conversion, AOV, LTV, subscription)
+- GCC market entry strategy (Dubai, Abu Dhabi, KSA, Qatar, Kuwait)
+- UAE import regulations, customs, VAT (5%), and logistics
+- UAE-specific consumer behavior and seasonal campaigns (Ramadan, White Friday, DSF, Eid)
+- B2B wholesale and distributor channels in GCC
+- Cash flow, unit economics, and margin optimization for GCC brands
+- Supply chain and 3PL in UAE (Aramex, Fetchr, Shipa Freight)
+- Digital marketing in UAE (Meta, TikTok, Google Ads, influencer marketing)
+
+Client Business Profile:
+- Business: ${profile.businessName || 'Not specified'}
+- Industry: ${profile.industry || 'Not specified'}
+- Stage: ${profile.stage || 'Not specified'}
+- Active Channels: ${profile.channels.length > 0 ? profile.channels.join(', ') : 'Not specified'}
+- Goals: ${profile.goals.length > 0 ? profile.goals.join(', ') : 'Not specified'}
+- Annual Revenue: ${profile.revenue || 'Not specified'}
+
+Rules:
+- ONLY discuss Dubai/GCC retail and e-commerce topics relevant to this client.
+- If asked about unrelated topics, politely redirect to GCC business matters.
+- Be direct, data-driven, and immediately actionable.
+- Reference UAE-specific platforms, regulations, and market conditions.
+- Suggest escalating to a human Think10 expert when deep judgment or relationship-building is needed.
+
+Respond in valid JSON only with this exact structure:
 {
-  "understanding": "1 sentence showing you understand their context",
-  "recommendation": "A detailed multi-paragraph diagnostic recommendation",
-  "assumptions": "1 sentence outlining key assumptions you made",
+  "understanding": "1 sentence showing you understand their specific GCC context",
+  "recommendation": "A detailed multi-paragraph diagnosis and recommendation",
+  "assumptions": "1 sentence outlining key assumptions",
   "risks": "1 sentence highlighting main risks",
-  "nextActions": ["Action 1", "Action 2"],
-  "sources": ["Source 1", "Source 2"]
+  "nextActions": ["Action 1", "Action 2", "Action 3"],
+  "sources": ["Source or benchmark 1", "Source 2"]
 }
-Do not use markdown blocks for the JSON. Just output raw JSON.`;
+Do not use markdown blocks. Output raw JSON only.`;
 
         const requestBody = {
           system_instruction: {
@@ -1216,7 +1052,8 @@ Do not use markdown blocks for the JSON. Just output raw JSON.`;
       category,
       description,
       status: "OPEN",
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
+      updates: [],
       bookingId,
     };
     
