@@ -14,8 +14,9 @@ export function SiteFooter() {
         <div className="grid gap-12 lg:grid-cols-[1.8fr_1fr_1.2fr_1.2fr] border-b border-slate-100 pb-16">
           {/* Column 1: Info & Brand */}
           <div className="flex flex-col gap-6">
-            <a href="/#top" className="flex items-center gap-3">
-              <img src="/logo/t10-brand-logo.svg" alt="Think10 Premium Advisory" className="h-10 w-auto" />
+            <a href="/#top" className="flex items-center gap-2">
+              <img src="/logo/t10-icon-logo.svg" alt="T10" className="h-10 w-10 shrink-0" />
+              <img src="/logo/t10-brand-logo.svg" alt="Think10 Premium Advisory" className="h-10 w-auto shrink-0" />
             </a>
             <p className="max-w-sm text-sm leading-relaxed text-slate-500 font-light">
               Think10 combines your personal AI Business Advisor with exit-vetted human consultants to solve inventory, marketing, and marketplace challenges in real-time.
