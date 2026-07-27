@@ -23,7 +23,8 @@ import {
   Building,
   ArrowRight,
   Briefcase,
-  ArrowLeft
+  ArrowLeft,
+  Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
