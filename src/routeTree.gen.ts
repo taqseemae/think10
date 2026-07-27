@@ -52,17 +52,20 @@ import { Route as ConsultantEarningsRouteImport } from './routes/consultant.earn
 import { Route as ConsultantConsultationsRouteImport } from './routes/consultant.consultations'
 import { Route as ConsultantClientsRouteImport } from './routes/consultant.clients'
 import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
+import { Route as ConsultantAvailabilityRouteImport } from './routes/consultant.availability'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminQualityRouteImport } from './routes/admin.quality'
 import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
+import { Route as AdminGoogleConnectRouteImport } from './routes/admin.google-connect'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
 import { Route as AdminCrmRouteImport } from './routes/admin.crm'
 import { Route as AdminConsultantsRouteImport } from './routes/admin.consultants'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AuthGoogleCallbackRouteImport } from './routes/auth.google.callback'
 
 const ZyneRoute = ZyneRouteImport.update({
   id: '/zyne',
@@ -281,6 +284,11 @@ const ConsultantBookingsRoute = ConsultantBookingsRouteImport.update({
   path: '/bookings',
   getParentRoute: () => ConsultantRoute,
 } as any)
+const ConsultantAvailabilityRoute = ConsultantAvailabilityRouteImport.update({
+  id: '/availability',
+  path: '/availability',
+  getParentRoute: () => ConsultantRoute,
+} as any)
 const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -304,6 +312,11 @@ const AdminQualityRoute = AdminQualityRouteImport.update({
 const AdminGrowthRoute = AdminGrowthRouteImport.update({
   id: '/growth',
   path: '/growth',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGoogleConnectRoute = AdminGoogleConnectRouteImport.update({
+  id: '/google-connect',
+  path: '/google-connect',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFinanceRoute = AdminFinanceRouteImport.update({
@@ -336,6 +349,11 @@ const AdminAiRoute = AdminAiRouteImport.update({
   path: '/ai',
   getParentRoute: () => AdminRoute,
 } as any)
+const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
+  id: '/auth/google/callback',
+  path: '/auth/google/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -366,11 +384,13 @@ export interface FileRoutesByFullPath {
   '/admin/crm': typeof AdminCrmRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
+  '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
   '/consultant/consultations': typeof ConsultantConsultationsRoute
@@ -392,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/consultant/': typeof ConsultantIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -419,11 +440,13 @@ export interface FileRoutesByTo {
   '/admin/crm': typeof AdminCrmRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
+  '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
   '/consultant/consultations': typeof ConsultantConsultationsRoute
@@ -445,6 +468,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/consultant': typeof ConsultantIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -476,11 +500,13 @@ export interface FileRoutesById {
   '/admin/crm': typeof AdminCrmRoute
   '/admin/customers': typeof AdminCustomersRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
+  '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
   '/consultant/consultations': typeof ConsultantConsultationsRoute
@@ -502,6 +528,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/consultant/': typeof ConsultantIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -534,11 +561,13 @@ export interface FileRouteTypes {
     | '/admin/crm'
     | '/admin/customers'
     | '/admin/finance'
+    | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
+    | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
     | '/consultant/consultations'
@@ -560,6 +589,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/consultant/'
     | '/dashboard/'
+    | '/auth/google/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -587,11 +617,13 @@ export interface FileRouteTypes {
     | '/admin/crm'
     | '/admin/customers'
     | '/admin/finance'
+    | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
+    | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
     | '/consultant/consultations'
@@ -613,6 +645,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/consultant'
     | '/dashboard'
+    | '/auth/google/callback'
   id:
     | '__root__'
     | '/'
@@ -643,11 +676,13 @@ export interface FileRouteTypes {
     | '/admin/crm'
     | '/admin/customers'
     | '/admin/finance'
+    | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
+    | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
     | '/consultant/consultations'
@@ -669,6 +704,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/consultant/'
     | '/dashboard/'
+    | '/auth/google/callback'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -694,6 +730,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   ZyneRoute: typeof ZyneRoute
+  AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -999,6 +1036,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsultantBookingsRouteImport
       parentRoute: typeof ConsultantRoute
     }
+    '/consultant/availability': {
+      id: '/consultant/availability'
+      path: '/availability'
+      fullPath: '/consultant/availability'
+      preLoaderRoute: typeof ConsultantAvailabilityRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
     '/advisory-areas/$slug': {
       id: '/advisory-areas/$slug'
       path: '/$slug'
@@ -1032,6 +1076,13 @@ declare module '@tanstack/react-router' {
       path: '/growth'
       fullPath: '/admin/growth'
       preLoaderRoute: typeof AdminGrowthRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/google-connect': {
+      id: '/admin/google-connect'
+      path: '/google-connect'
+      fullPath: '/admin/google-connect'
+      preLoaderRoute: typeof AdminGoogleConnectRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/finance': {
@@ -1076,6 +1127,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAiRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/auth/google/callback': {
+      id: '/auth/google/callback'
+      path: '/auth/google/callback'
+      fullPath: '/auth/google/callback'
+      preLoaderRoute: typeof AuthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1086,6 +1144,7 @@ interface AdminRouteChildren {
   AdminCrmRoute: typeof AdminCrmRoute
   AdminCustomersRoute: typeof AdminCustomersRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminGoogleConnectRoute: typeof AdminGoogleConnectRoute
   AdminGrowthRoute: typeof AdminGrowthRoute
   AdminQualityRoute: typeof AdminQualityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -1100,6 +1159,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCrmRoute: AdminCrmRoute,
   AdminCustomersRoute: AdminCustomersRoute,
   AdminFinanceRoute: AdminFinanceRoute,
+  AdminGoogleConnectRoute: AdminGoogleConnectRoute,
   AdminGrowthRoute: AdminGrowthRoute,
   AdminQualityRoute: AdminQualityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
@@ -1122,6 +1182,7 @@ const AdvisoryAreasRouteWithChildren = AdvisoryAreasRoute._addFileChildren(
 )
 
 interface ConsultantRouteChildren {
+  ConsultantAvailabilityRoute: typeof ConsultantAvailabilityRoute
   ConsultantBookingsRoute: typeof ConsultantBookingsRoute
   ConsultantClientsRoute: typeof ConsultantClientsRoute
   ConsultantConsultationsRoute: typeof ConsultantConsultationsRoute
@@ -1133,6 +1194,7 @@ interface ConsultantRouteChildren {
 }
 
 const ConsultantRouteChildren: ConsultantRouteChildren = {
+  ConsultantAvailabilityRoute: ConsultantAvailabilityRoute,
   ConsultantBookingsRoute: ConsultantBookingsRoute,
   ConsultantClientsRoute: ConsultantClientsRoute,
   ConsultantConsultationsRoute: ConsultantConsultationsRoute,
@@ -1223,6 +1285,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   ZyneRoute: ZyneRoute,
+  AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

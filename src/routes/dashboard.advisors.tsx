@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { EXPERTS, ADVISORY_AREAS, type Expert } from "@/data/think10";
 import { useState, useMemo } from "react";
+import { BookingCalendarModal } from "@/components/BookingCalendarModal";
 import {
   Search,
   ShieldCheck,
@@ -35,13 +36,6 @@ function AdvisorsPage() {
 
   // Booking Modal State
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState("");
-  const [sessionType, setSessionType] = useState("");
-  const [preCall, setPreCall] = useState({
-    challenge: "",
-    questions: "",
-    additionalDocs: "",
-  });
 
   const languages = Array.from(new Set(EXPERTS.flatMap((e) => e.languages)));
 
@@ -69,33 +63,13 @@ function AdvisorsPage() {
     return EXPERTS.filter((e) => compareSlugs.includes(e.slug));
   }, [compareSlugs]);
 
-  // Handle Booking form submission
-  const handleConfirmBooking = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedExpert || !selectedSlot || !sessionType) return;
-
-    const success = createBooking(
-      selectedExpert.slug,
-      selectedSlot,
-      sessionType,
-      preCall.challenge.substr(0, 40) + "...",
-      preCall,
-      preCall.additionalDocs ? [preCall.additionalDocs] : []
-    );
-
-    if (success) {
+  // Handle booking success from the new modal
+  const handleBookingSuccess = (bookingId: string, meetLink: string) => {
+    // Slight delay so user sees the confirmation screen in modal, then redirect
+    setTimeout(() => {
       setSelectedExpert(null);
-      setSelectedSlot("");
-      setSessionType("");
-      setPreCall({ challenge: "", questions: "", additionalDocs: "" });
-      
-      const calendlyUrl = import.meta.env.VITE_CALENDLY_URL;
-      if (calendlyUrl && calendlyUrl !== "YOUR_CALENDLY_LINK_HERE" && calendlyUrl !== "") {
-        window.open(calendlyUrl, "_blank");
-      }
-      
       navigate({ to: "/dashboard/sessions" });
-    }
+    }, 3000);
   };
 
   return (
@@ -203,10 +177,7 @@ function AdvisorsPage() {
                   <span>{e.experienceYears} Years Exp</span>
                 </div>
                 <button
-                  onClick={() => {
-                    setSelectedExpert(e);
-                    if (e.sessionTypes.length > 0) setSessionType(e.sessionTypes[0]);
-                  }}
+                  onClick={() => setSelectedExpert(e)}
                   className="w-full rounded-lg bg-[color:var(--t10-navy)] py-2 text-center text-xs font-bold text-white hover:bg-neutral-800 transition-colors shadow-sm"
                 >
                   Schedule Session (1 Credit)
@@ -334,157 +305,15 @@ function AdvisorsPage() {
         </div>
       )}
 
-      {/* Booking Form Dialog */}
+      {/* New Calendly-Style Booking Modal */}
       {selectedExpert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm animate-fade-in">
-          <div className="max-w-md w-full rounded-2xl border border-[color:var(--t10-border)] bg-white p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto pr-2">
-            <div className="flex items-center justify-between border-b border-[color:var(--t10-border)] pb-3">
-              <div>
-                <span className="text-[10px] font-bold text-[color:var(--t10-emerald)] uppercase tracking-wider">
-                  Scheduling Strategy Session
-                </span>
-                <h3 className="text-base font-bold text-[color:var(--t10-navy)]">
-                  With {selectedExpert.name}
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedExpert(null)}
-                className="rounded-full p-1 hover:bg-neutral-100"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleConfirmBooking} className="space-y-4 text-xs">
-              {/* Session Type */}
-              <label className="block">
-                <span className="mb-1 block font-semibold text-[color:var(--t10-navy)]">Session type</span>
-                <select
-                  value={sessionType}
-                  onChange={(e) => setSessionType(e.target.value)}
-                  className="w-full rounded-md border border-[color:var(--t10-border)] bg-white px-3 py-2"
-                >
-                  {selectedExpert.sessionTypes.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              {/* Timezone banner */}
-              <div className="flex gap-2 rounded bg-neutral-50 border border-neutral-100 p-2.5 text-[11px] text-[color:var(--t10-grey)]">
-                <Clock className="h-4 w-4 shrink-0 text-[color:var(--t10-emerald)]" />
-                <span>
-                  Confirming Timezone: <strong>Asia/Dubai (GST, UTC+04:00)</strong>. Current local
-                  time shown.
-                </span>
-              </div>
-
-              {/* Slot selection */}
-              <div>
-                <span className="mb-1.5 block font-semibold text-[color:var(--t10-navy)]">
-                  Select available slot
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {selectedExpert.availability.map((slot) => (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setSelectedSlot(slot)}
-                      className={`rounded-md border p-2 text-center transition-all ${selectedSlot === slot ? "border-[color:var(--t10-emerald)] bg-[color:var(--t10-mint)] text-[color:var(--t10-navy)] font-semibold" : "border-[color:var(--t10-border)] hover:border-[color:var(--t10-emerald)] text-[color:var(--t10-grey)]"}`}
-                    >
-                      {slot}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Pre call questions */}
-              <div className="space-y-3 pt-3 border-t border-[color:var(--t10-border)]">
-                <p className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px]">
-                  Zyne Pre-Session Questionnaire
-                </p>
-                <label className="block">
-                  <span className="mb-1 block font-semibold text-[color:var(--t10-navy)]">
-                    What is the primary business challenge for this call?
-                  </span>
-                  <textarea
-                    rows={2}
-                    value={preCall.challenge}
-                    onChange={(e) => setPreCall({ ...preCall, challenge: e.target.value })}
-                    className="w-full rounded-md border border-[color:var(--t10-border)] p-2"
-                    placeholder="e.g. Need to review Amazon launch P&L sheet and PPC ACOS margins."
-                    required
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block font-semibold text-[color:var(--t10-navy)]">
-                    Specific questions you want the expert to address
-                  </span>
-                  <textarea
-                    rows={2}
-                    value={preCall.questions}
-                    onChange={(e) => setPreCall({ ...preCall, questions: e.target.value })}
-                    className="w-full rounded-md border border-[color:var(--t10-border)] p-2"
-                    placeholder="1. What is an acceptable target ACOS? 2. FBA lead time in UAE."
-                  />
-                </label>
-                <label className="block">
-                  <span className="mb-1 block font-semibold text-[color:var(--t10-navy)]">
-                    Simulate Attach Context Document
-                  </span>
-                  <select
-                    value={preCall.additionalDocs}
-                    onChange={(e) => setPreCall({ ...preCall, additionalDocs: e.target.value })}
-                    className="w-full rounded-md border border-[color:var(--t10-border)] bg-white px-3 py-2 text-[11px]"
-                  >
-                    <option value="">No document attached</option>
-                    <option value="Q3 P&L.pdf">Q3 P&L.pdf</option>
-                    <option value="Brand guidelines v2.pdf">Brand guidelines v2.pdf</option>
-                    <option value="Amazon UAE listing plan.xlsx">Amazon UAE listing plan.xlsx</option>
-                  </select>
-                </label>
-              </div>
-
-              {/* Price / credits checks */}
-              <div className="rounded-xl border border-[color:var(--t10-border)] bg-neutral-50 p-3 space-y-1 mt-4">
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-[color:var(--t10-grey)] font-medium">Session Duration:</span>
-                  <span className="font-bold text-[color:var(--t10-navy)]">60 Minutes</span>
-                </div>
-                <div className="flex justify-between text-[11px]">
-                  <span className="text-[color:var(--t10-grey)] font-medium">Payment Cost:</span>
-                  <span className="font-bold text-[color:var(--t10-navy)]">1 Membership Credit</span>
-                </div>
-                <div className="flex justify-between text-[11px] pt-1.5 border-t border-neutral-200">
-                  <span className="text-[color:var(--t10-grey)] font-semibold">Your Credit Balance:</span>
-                  <span className={`font-bold ${credits > 0 ? "text-[color:var(--t10-navy)]" : "text-red-500"}`}>
-                    {credits} Credits
-                  </span>
-                </div>
-              </div>
-
-              {role === "Free" && (
-                <div className="flex gap-2 rounded bg-amber-50 border border-amber-200 p-2.5 text-[10px] text-amber-800 leading-tight">
-                  <Info className="h-4 w-4 shrink-0 text-amber-600" />
-                  <span>
-                    Note: As a Free preview member, booking this call requires pay-per-session checkout (AED 450). We recommend upgrading to a Hybrid plan.
-                  </span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!selectedSlot || (role !== "Free" && credits <= 0)}
-                className="w-full rounded-lg bg-[color:var(--t10-emerald)] py-2.5 text-center text-xs font-bold text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-all shadow"
-              >
-                Confirm booking & deduct credit
-              </button>
-            </form>
-          </div>
-        </div>
+        <BookingCalendarModal
+          expert={selectedExpert}
+          onClose={() => setSelectedExpert(null)}
+          onSuccess={handleBookingSuccess}
+        />
       )}
     </div>
   );
 }
+

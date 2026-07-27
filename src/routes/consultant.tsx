@@ -97,6 +97,7 @@ function ConsultantLayout() {
   const NAV_ITEMS = [
     { to: "/consultant", icon: LayoutDashboard, label: "Home" },
     { to: "/consultant/bookings", icon: CalendarRange, label: "Bookings" },
+    { to: "/consultant/availability", icon: Clock, label: "My Availability" },
     { to: "/consultant/consultations", icon: MonitorPlay, label: "Consultations" },
     { to: "/consultant/clients", icon: Users, label: "Clients" },
     { to: "/consultant/performance", icon: BarChart2, label: "Performance" },

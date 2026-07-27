@@ -75,6 +75,7 @@ function AdminLayout() {
     { to: "/admin/crm", icon: Building2, label: "Enterprise CRM" },
     { to: "/admin/growth", icon: TrendingUp, label: "Growth & Content" },
     { to: "/admin/users", icon: UserCog, label: "System Users" },
+    { to: "/admin/google-connect", icon: Settings, label: "Google Calendar" },
     { to: "/admin/settings", icon: Settings, label: "Reports & Settings" },
   ];
 
