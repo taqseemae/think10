@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, X, ArrowUpRight, User } from "lucide-react";
 import { NAV } from "@/data/think10";
@@ -8,14 +8,18 @@ import { useAuth } from "@/context/AuthContext";
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const iconRef = useRef<HTMLImageElement>(null);
   const { isLoggedIn, logout } = useDashboardState();
   const { userDoc, currentUser } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
+      if (iconRef.current) {
+        iconRef.current.style.transform = `rotate(${window.scrollY * 0.3}deg)`;
+      }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -33,7 +37,12 @@ export function SiteNav() {
     <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/90 backdrop-blur">
       <div className="t10-container flex h-[72px] items-center justify-between gap-4">
         <a href="/#top" className="flex items-center gap-2" aria-label="Think10 home">
-          <img src="/logo/t10-icon-logo.svg" alt="T10" className="h-10 w-10 shrink-0" />
+          <img 
+            ref={iconRef}
+            src="/logo/t10-icon-logo.svg" 
+            alt="T10" 
+            className="h-10 w-10 shrink-0 transition-transform duration-75 ease-linear" 
+          />
           <div className={`overflow-hidden transition-all duration-300 ${scrolled ? 'w-0 opacity-0' : 'w-[125px] opacity-100'}`}>
             <img src="/logo/t10-brand-logo.svg?v=2" alt="Think10 Premium Advisory" className="h-7 w-[125px] shrink-0 object-contain object-left" />
           </div>
