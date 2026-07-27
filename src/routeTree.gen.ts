@@ -53,6 +53,7 @@ import { Route as ConsultantConsultationsRouteImport } from './routes/consultant
 import { Route as ConsultantClientsRouteImport } from './routes/consultant.clients'
 import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminQualityRouteImport } from './routes/admin.quality'
 import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
@@ -285,6 +286,11 @@ const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => AdvisoryAreasRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -363,6 +369,7 @@ export interface FileRoutesByFullPath {
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -415,6 +422,7 @@ export interface FileRoutesByTo {
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -471,6 +479,7 @@ export interface FileRoutesById {
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -528,6 +537,7 @@ export interface FileRouteTypes {
     | '/admin/growth'
     | '/admin/quality'
     | '/admin/settings'
+    | '/admin/users'
     | '/advisory-areas/$slug'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -580,6 +590,7 @@ export interface FileRouteTypes {
     | '/admin/growth'
     | '/admin/quality'
     | '/admin/settings'
+    | '/admin/users'
     | '/advisory-areas/$slug'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -635,6 +646,7 @@ export interface FileRouteTypes {
     | '/admin/growth'
     | '/admin/quality'
     | '/admin/settings'
+    | '/admin/users'
     | '/advisory-areas/$slug'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -994,6 +1006,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdvisoryAreasSlugRouteImport
       parentRoute: typeof AdvisoryAreasRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -1070,6 +1089,7 @@ interface AdminRouteChildren {
   AdminGrowthRoute: typeof AdminGrowthRoute
   AdminQualityRoute: typeof AdminQualityRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -1083,6 +1103,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGrowthRoute: AdminGrowthRoute,
   AdminQualityRoute: AdminQualityRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

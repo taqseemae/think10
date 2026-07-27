@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState } from "@/context/AdminStateContext";
 import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock } from "lucide-react";
+import { useState } from "react";
+import { GenericCallModal } from "@/components/GenericCallModal";
 
 export const Route = createFileRoute("/admin/bookings")({
   component: BookingsAdminPage,
@@ -8,6 +10,7 @@ export const Route = createFileRoute("/admin/bookings")({
 
 function BookingsAdminPage() {
   const { bookings } = useAdminState();
+  const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -84,9 +87,19 @@ function BookingsAdminPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-neutral-400 hover:text-neutral-900 transition-colors p-1">
-                        <MoreHorizontal className="h-5 w-5" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {booking.status === 'CONFIRMED' && (
+                          <button
+                            onClick={() => setActiveCallSession(booking)}
+                            className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors flex items-center gap-1"
+                          >
+                            <Video className="w-3 h-3" /> Audit Call
+                          </button>
+                        )}
+                        <button className="text-neutral-400 hover:text-neutral-900 transition-colors p-1">
+                          <MoreHorizontal className="h-5 w-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -95,6 +108,15 @@ function BookingsAdminPage() {
           </table>
         </div>
       </div>
+
+      {activeCallSession && (
+        <GenericCallModal
+          expertName={activeCallSession.expertName || "Expert"}
+          expertRole={activeCallSession.expertRole || "Advisor"}
+          topic={activeCallSession.topic || "Strategy Session"}
+          onClose={() => setActiveCallSession(null)}
+        />
+      )}
     </div>
   );
 }

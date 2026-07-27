@@ -20,26 +20,13 @@ import {
   Eye,
   EyeOff,
   RefreshCw,
+  UserCog,
 } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayoutWrapper,
 });
-
-const ADMIN_ROLES: AdminRole[] = [
-  "Super Admin",
-  "Founder / Executive",
-  "Operations Manager",
-  "Consultant Verification",
-  "Quality & Compliance",
-  "Finance",
-  "Customer Support",
-  "Enterprise Sales / CRM",
-  "Marketing / Content",
-  "AI Operations",
-  "Data / Analyst"
-];
 
 function AdminLayoutWrapper() {
   const { currentUser, userDoc, authLoading, docLoading } = useAuth();
@@ -74,9 +61,8 @@ function AdminLayoutWrapper() {
 }
 
 function AdminLayout() {
-  const { adminRole, setAdminRole } = useAdminState();
+  const { adminRole } = useAdminState();
   const navigate = useNavigate();
-  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const NAV_ITEMS = [
     { to: "/admin", icon: LayoutDashboard, label: "Command Centre" },
@@ -88,6 +74,7 @@ function AdminLayout() {
     { to: "/admin/quality", icon: ShieldAlert, label: "Quality, Risk & Support" },
     { to: "/admin/crm", icon: Building2, label: "Enterprise CRM" },
     { to: "/admin/growth", icon: TrendingUp, label: "Growth & Content" },
+    { to: "/admin/users", icon: UserCog, label: "System Users" },
     { to: "/admin/settings", icon: Settings, label: "Reports & Settings" },
   ];
 
@@ -135,38 +122,10 @@ function AdminLayout() {
           </div>
           
           <div className="flex items-center gap-6">
-            <div className="text-xs text-neutral-400">
-              Environment: <span className="font-mono text-[color:var(--t10-emerald)]">Production</span>
-            </div>
-            
             <div className="relative">
-              <button 
-                onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 transition-colors"
-              >
+              <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-700">
                 Role: {adminRole}
-                <ChevronDown className="h-3 w-3 text-neutral-400" />
-              </button>
-              
-              {showRoleDropdown && (
-                <div className="absolute right-0 mt-2 w-56 rounded-lg border border-neutral-200 bg-white p-2 shadow-xl z-50">
-                  <div className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
-                    Simulate RBAC View
-                  </div>
-                  {ADMIN_ROLES.map(role => (
-                    <button
-                      key={role}
-                      onClick={() => {
-                        setAdminRole(role);
-                        setShowRoleDropdown(false);
-                      }}
-                      className={`block w-full rounded-md px-3 py-2 text-left text-xs transition-colors ${role === adminRole ? "bg-[color:var(--t10-mint)] text-[color:var(--t10-emerald)] font-bold" : "text-neutral-700 hover:bg-neutral-50"}`}
-                    >
-                      {role}
-                    </button>
-                  ))}
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </header>

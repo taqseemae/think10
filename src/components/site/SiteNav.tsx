@@ -13,14 +13,36 @@ export function SiteNav() {
   const { userDoc, currentUser } = useAuth();
 
   useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
+      
       if (iconRef.current) {
+        // Remove transition while scrolling for immediate tracking
+        iconRef.current.style.transition = "none";
         iconRef.current.style.transform = `rotate(${window.scrollY * 0.3}deg)`;
       }
+
+      // Clear any existing timeout to detect scroll stop
+      clearTimeout(scrollTimeout);
+
+      // Set timeout to reset rotation when scrolling stops
+      scrollTimeout = setTimeout(() => {
+        if (iconRef.current) {
+          // Add transition back for a smooth return to 0
+          iconRef.current.style.transition = "transform 0.5s ease-out";
+          iconRef.current.style.transform = "rotate(0deg)";
+        }
+      }, 150); // 150ms after scroll stops
     };
+
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, []);
 
   const displayName = userDoc?.displayName || currentUser?.displayName || userDoc?.profile?.businessName || "My Dashboard";

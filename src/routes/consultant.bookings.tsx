@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calendar, Filter, Clock, Users, ArrowUpRight, CheckCircle2, XCircle } from "lucide-react";
+import { Calendar, Filter, Clock, Users, ArrowUpRight, CheckCircle2, XCircle, Video } from "lucide-react";
 import { useConsultantState } from "@/context/ConsultantStateContext";
+import { useState } from "react";
+import { GenericCallModal } from "@/components/GenericCallModal";
 
 export const Route = createFileRoute("/consultant/bookings")({
   component: ConsultantBookings,
@@ -8,6 +10,7 @@ export const Route = createFileRoute("/consultant/bookings")({
 
 function ConsultantBookings() {
   const { bookings, updateBookingStatus } = useConsultantState();
+  const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       
@@ -92,9 +95,12 @@ function ConsultantBookings() {
                     </div>
                     {booking.meetLink && (
                       <div className="mt-2">
-                        <a href={booking.meetLink} target="_blank" rel="noreferrer" className="text-sm font-medium text-blue-600 hover:underline">
-                          Join Google Meet
-                        </a>
+                        <button
+                          onClick={() => setActiveCallSession(booking)}
+                          className="text-sm font-medium text-[color:var(--t10-emerald)] hover:underline flex items-center gap-1"
+                        >
+                          <Video className="w-4 h-4" /> Join Secure Session
+                        </button>
                       </div>
                     )}
                   </div>
@@ -127,6 +133,18 @@ function ConsultantBookings() {
         </div>
       </div>
 
+      {activeCallSession && (
+        <GenericCallModal
+          expertName="Client User" // In consultant view, the other person is the client
+          expertRole="Client"
+          topic={activeCallSession.topic || "Strategy Session"}
+          onClose={() => setActiveCallSession(null)}
+          onComplete={(rating, feedback) => {
+             updateBookingStatus(activeCallSession.id, "COMPLETED");
+             setActiveCallSession(null);
+          }}
+        />
+      )}
     </div>
   );
 }

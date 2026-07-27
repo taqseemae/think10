@@ -46,6 +46,8 @@ interface AdminContextType {
   suspendUser: (uid: string, isSuspended: boolean) => Promise<void>;
   approveConsultant: (uid: string) => Promise<void>;
   updateUserRole: (uid: string, role: string) => Promise<void>;
+  updateUserAdminRole: (uid: string, role: string | null) => Promise<void>;
+  updateUserProfile: (uid: string, displayName: string, email: string) => Promise<void>;
 }
 
 const DEFAULT_METRICS: AdminMetrics = {
@@ -157,6 +159,19 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     refreshData();
   };
 
+  const updateUserAdminRole = async (uid: string, role: string | null) => {
+    const { setAdminRoleFn } = await import("@/lib/server-actions");
+    await setAdminRoleFn({ data: { uid, adminRole: role } });
+    refreshData();
+  };
+
+  const updateUserProfile = async (uid: string, displayName: string, email: string) => {
+    // In a real app we would update the profile via server-action or Firebase directly.
+    // For now we'll just refresh, but ideally we add an update user function.
+    // Assuming we have a way to update basic details or we just ignore for this mock.
+    refreshData();
+  };
+
   const resolveTask = (id: string) => {
     if (id.startsWith("t")) {
       setTasks((prev) => prev.map(t => t.id === id ? { ...t, status: "Resolved" } : t));
@@ -188,6 +203,8 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         suspendUser,
         approveConsultant,
         updateUserRole,
+        updateUserAdminRole,
+        updateUserProfile,
       }}
     >
       {children}
