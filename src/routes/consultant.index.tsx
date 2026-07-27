@@ -37,11 +37,23 @@ function ConsultantDashboardHome() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
+  // Helper to safely parse dates
+  const safeDate = (dateStr: any) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
   // Upcoming confirmed bookings sorted by date
   const upcomingBookings = useMemo(() => {
     return bookings
       .filter((b: any) => b.status === "CONFIRMED" || b.status === "Confirmed")
-      .sort((a: any, b: any) => new Date(a.when || a.date).getTime() - new Date(b.when || b.date).getTime());
+      .filter((b: any) => safeDate(b.when || b.date) !== null)
+      .sort((a: any, b: any) => {
+        const da = safeDate(a.when || a.date);
+        const db = safeDate(b.when || b.date);
+        return (da ? da.getTime() : 0) - (db ? db.getTime() : 0);
+      });
   }, [bookings]);
 
   const nextBooking = upcomingBookings[0];
@@ -49,15 +61,23 @@ function ConsultantDashboardHome() {
   // Today's bookings count
   const todayStr = new Date().toISOString().split("T")[0];
   const todayBookings = bookings.filter((b: any) => {
-    const bDate = (b.when || b.date || "").toString().substring(0, 10);
+    const d = safeDate(b.when || b.date);
+    if (!d) return false;
+    // Format to local date string to match todayStr
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const bDate = `${d.getFullYear()}-${month}-${day}`;
     return bDate === todayStr;
   }).length;
 
   // Completed sessions this month
   const completedThisMonth = bookings.filter((b: any) => {
-    const bDate = (b.when || b.date || "").toString().substring(0, 10);
+    const d = safeDate(b.when || b.date);
+    if (!d) return false;
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const bMonth = `${d.getFullYear()}-${month}`;
     const thisMonth = new Date().toISOString().substring(0, 7);
-    return b.status === "COMPLETED" && bDate.startsWith(thisMonth);
+    return b.status === "COMPLETED" && bMonth === thisMonth;
   }).length;
 
   // Pending payout: completed * 450 AED
@@ -70,11 +90,19 @@ function ConsultantDashboardHome() {
     for (let i = 0; i < 7; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
-      const dateStr = d.toISOString().split("T")[0];
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const dayStr = String(d.getDate()).padStart(2, '0');
+      const dateStr = `${d.getFullYear()}-${month}-${dayStr}`;
+      
       const dayBookings = bookings.filter((b: any) => {
-        const bDate = (b.when || b.date || "").toString().substring(0, 10);
+        const bd = safeDate(b.when || b.date);
+        if (!bd) return false;
+        const bMonth = String(bd.getMonth() + 1).padStart(2, '0');
+        const bDay = String(bd.getDate()).padStart(2, '0');
+        const bDate = `${bd.getFullYear()}-${bMonth}-${bDay}`;
         return bDate === dateStr && (b.status === "CONFIRMED" || b.status === "Confirmed");
       }).length;
+      
       days.push({
         day: d.toLocaleDateString("en-US", { weekday: "short" }),
         date: d.getDate().toString(),
@@ -142,9 +170,9 @@ function ConsultantDashboardHome() {
                 "No Upcoming Sessions"
               )}
             </span>
-            {nextBooking && (
+            {nextBooking && safeDate(nextBooking.when || nextBooking.date) && (
               <span className="text-xs text-[color:var(--t10-grey)]">
-                {new Date(nextBooking.when || nextBooking.date).toLocaleDateString("en-AE", {
+                {safeDate(nextBooking.when || nextBooking.date)!.toLocaleDateString("en-AE", {
                   weekday: "short",
                   month: "short",
                   day: "numeric",
@@ -163,14 +191,16 @@ function ConsultantDashboardHome() {
                     <p className="text-neutral-500 flex items-center gap-2 mt-2">
                       <Video className="w-4 h-4" /> Client ID: {nextBooking.userId?.substring(0, 8) || "Unknown"}
                     </p>
-                    <p className="text-neutral-500 flex items-center gap-2 mt-1">
-                      <Clock className="w-4 h-4" />{" "}
-                      {new Date(nextBooking.when || nextBooking.date).toLocaleString("en-AE", {
-                        weekday: "long",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                    {safeDate(nextBooking.when || nextBooking.date) && (
+                      <p className="text-neutral-500 flex items-center gap-2 mt-1">
+                        <Clock className="w-4 h-4" />{" "}
+                        {safeDate(nextBooking.when || nextBooking.date)!.toLocaleString("en-AE", {
+                          weekday: "long",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
                   </div>
                   <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                     {nextBooking.status}

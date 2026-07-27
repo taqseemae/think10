@@ -204,68 +204,7 @@ export type Expert = {
   initials: string;
 };
 
-export const EXPERTS: Expert[] = [
-  {
-    slug: "layla-hassan",
-    name: "Layla Hassan",
-    role: "E-commerce & Marketplace Strategist",
-    bio: "Former marketplace lead at a UAE retail group. Helps founders launch and scale on Amazon UAE, noon and Shopify with a P&L-first approach.",
-    experienceYears: 14,
-    areas: ["ecommerce-marketplaces", "marketing-sales", "finance-pricing"],
-    languages: ["English", "Arabic"],
-    location: "Dubai, UAE",
-    sessionTypes: ["60-min strategy call", "Listing audit", "Ongoing advisory"],
-    pricePlaceholder: "From AED — / session",
-    availability: ["Mon 10:00", "Tue 15:00", "Thu 11:00"],
-    verified: true,
-    initials: "LH",
-  },
-  {
-    slug: "omar-khalil",
-    name: "Omar Khalil",
-    role: "Retail & Wholesale Advisor",
-    bio: "12+ years across department stores and concept retail in the GCC. Supports founders on buyer readiness, store economics and expansion.",
-    experienceYears: 12,
-    areas: ["retail-operations", "brand-product", "business-launch"],
-    languages: ["English", "Arabic"],
-    location: "Abu Dhabi, UAE",
-    sessionTypes: ["60-min strategy call", "Buyer-pitch review"],
-    pricePlaceholder: "From AED — / session",
-    availability: ["Wed 13:00", "Thu 16:00", "Sat 10:00"],
-    verified: true,
-    initials: "OK",
-  },
-  {
-    slug: "noor-al-mansoori",
-    name: "Noor Al Mansoori",
-    role: "Brand & Product Strategist",
-    bio: "Worked with beauty, fashion and F&B brands across the UAE. Focused on brand systems, product architecture and pricing.",
-    experienceYears: 11,
-    areas: ["brand-product", "marketing-sales"],
-    languages: ["English", "Arabic", "French"],
-    location: "Dubai, UAE",
-    sessionTypes: ["Brand clinic", "60-min strategy call"],
-    pricePlaceholder: "From AED — / session",
-    availability: ["Mon 14:00", "Wed 11:00"],
-    verified: true,
-    initials: "NA",
-  },
-  {
-    slug: "priya-menon",
-    name: "Priya Menon",
-    role: "Finance, Pricing & Cash Flow",
-    bio: "CFO-turned-advisor for founder-led retail and e-commerce brands. Builds pricing models, forecasts and cash-flow guardrails.",
-    experienceYears: 16,
-    areas: ["finance-pricing", "supply-chain-logistics", "people-systems-automation"],
-    languages: ["English", "Hindi", "Malayalam"],
-    location: "Dubai, UAE",
-    sessionTypes: ["Finance clinic", "Pricing review", "Ongoing advisory"],
-    pricePlaceholder: "From AED — / session",
-    availability: ["Tue 09:00", "Fri 10:00"],
-    verified: true,
-    initials: "PM",
-  },
-];
+export const EXPERTS: Expert[] = [];
 
 export type Resource = {
   slug: string;

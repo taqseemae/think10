@@ -69,7 +69,7 @@ function parseFirebaseError(code: string): string {
 }
 
 function ConsultantLayout() {
-  const { currentUser, userDoc, authLoading, docLoading } = useAuth();
+  const { currentUser, userDoc, authLoading, docLoading, logout } = useAuth() as any;
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -132,11 +132,15 @@ function ConsultantLayout() {
 
         <div className="p-4 border-t border-neutral-200">
           <button 
-            onClick={() => navigate({ to: "/" })}
+            onClick={async () => {
+              // we can use the logout provided by useAuth above
+              await logout();
+              navigate({ to: "/" });
+            }}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors"
           >
             <LogOut className="h-5 w-5" />
-            Sign Out
+            Logout
           </button>
         </div>
       </aside>

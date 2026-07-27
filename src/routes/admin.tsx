@@ -62,6 +62,7 @@ function AdminLayoutWrapper() {
 
 function AdminLayout() {
   const { adminRole } = useAdminState();
+  const { logout } = useAuth() as any;
   const navigate = useNavigate();
 
   const NAV_ITEMS = [
@@ -105,11 +106,14 @@ function AdminLayout() {
 
         <div className="p-4 border-t border-neutral-200">
           <button 
-            onClick={() => navigate({ to: "/" })}
+            onClick={async () => {
+              await logout();
+              navigate({ to: "/" });
+            }}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            Exit Admin
+            Logout
           </button>
         </div>
       </aside>

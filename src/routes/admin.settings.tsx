@@ -70,7 +70,7 @@ function SettingsAdminPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden mt-6">
             <div className="p-4 border-b border-neutral-200 bg-neutral-50">
               <h3 className="font-bold text-[color:var(--t10-navy)]">API Configuration</h3>
             </div>
@@ -84,6 +84,41 @@ function SettingsAdminPage() {
                 <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">MongoDB URI</label>
                 <input type="password" defaultValue="************************" className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-400 focus:outline-none" readOnly />
                 <p className="text-xs text-neutral-400 mt-1">Connected to Production Cluster.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Admin Profile block */}
+          <div className="bg-white border border-neutral-200 rounded-xl shadow-sm overflow-hidden mt-6">
+            <div className="p-4 border-b border-neutral-200 bg-neutral-50 flex items-center justify-between">
+              <h3 className="font-bold text-[color:var(--t10-navy)]">Admin Profile & Security</h3>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Admin Email</label>
+                <input type="email" defaultValue="admin@think10.ae" className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm focus:outline-none bg-neutral-50 text-neutral-500" readOnly />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Account Security</label>
+                <p className="text-xs text-neutral-500 mb-3">
+                  To keep your admin account fully secured, you can reset your password. 
+                  A password reset link will be sent to the admin email address.
+                </p>
+                <button
+                  onClick={async () => {
+                    const { sendPasswordResetEmail } = await import('firebase/auth');
+                    const { auth } = await import('@/lib/firebase');
+                    try {
+                      await sendPasswordResetEmail(auth, "admin@think10.ae");
+                      alert("Password reset email sent to admin@think10.ae.");
+                    } catch(err) {
+                      alert("Error sending password reset email.");
+                    }
+                  }}
+                  className="px-4 py-2 bg-neutral-100 text-[color:var(--t10-navy)] border border-neutral-200 rounded-lg text-sm font-bold hover:bg-neutral-200 transition-colors"
+                >
+                  Send Password Reset Email
+                </button>
               </div>
             </div>
           </div>
