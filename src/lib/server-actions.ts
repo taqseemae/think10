@@ -295,8 +295,12 @@ export const getUserBookingsFn = createServerFn({ method: 'GET' })
   .validator((d: string) => d)
   .handler(async ({ data: uid }) => {
     const db = await getDb();
-    const docs = await db.collection('bookings').find({ userId: uid }).sort({ when: -1 }).toArray();
-    return docs.map(d => ({ ...d, id: d._id.toString() })) as unknown as BookingSession[];
+    const docs = await db.collection('bookings').find({ userId: uid }).sort({ createdAt: -1 }).toArray();
+    return docs.map(d => ({ 
+      ...d, 
+      id: d._id.toString(),
+      when: d.when || (d.startTime ? new Date(d.startTime).toLocaleString('en-AE', { timeZone: 'Asia/Dubai' }) : 'Unknown Date')
+    })) as unknown as BookingSession[];
   });
 
 export const getConsultantBookingsFn = createServerFn({ method: 'GET' })
@@ -310,7 +314,11 @@ export const getConsultantBookingsFn = createServerFn({ method: 'GET' })
         { expertSlug: consultantId },
       ]
     }).sort({ createdAt: -1 }).toArray();
-    return docs.map(d => ({ ...d, id: d._id.toString() })) as unknown as BookingSession[];
+    return docs.map(d => ({ 
+      ...d, 
+      id: d._id.toString(),
+      when: d.when || (d.startTime ? new Date(d.startTime).toLocaleString('en-AE', { timeZone: 'Asia/Dubai' }) : 'Unknown Date')
+    })) as unknown as BookingSession[];
   });
 
 // --- Tickets ---

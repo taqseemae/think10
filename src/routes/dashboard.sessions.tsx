@@ -199,12 +199,23 @@ function Page() {
                   </div>
 
                   <div className="flex gap-2 text-xs">
-                    <button
-                      onClick={() => handleJoinCall(b)}
-                      className="inline-flex items-center gap-1.5 rounded bg-[color:var(--t10-emerald)] px-3 py-1.5 font-bold text-white hover:bg-[color:var(--t10-green)] transition-all shadow-sm"
-                    >
-                      <Video className="h-3.5 w-3.5" /> Join call room
-                    </button>
+                    {b.meetLink ? (
+                      <a
+                        href={b.meetLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded bg-[color:var(--t10-emerald)] px-3 py-1.5 font-bold text-white hover:bg-[color:var(--t10-green)] transition-all shadow-sm"
+                      >
+                        <Video className="h-3.5 w-3.5" /> Join Google Meet
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => handleJoinCall(b)}
+                        className="inline-flex items-center gap-1.5 rounded bg-[color:var(--t10-emerald)] px-3 py-1.5 font-bold text-white hover:bg-[color:var(--t10-green)] transition-all shadow-sm"
+                      >
+                        <Video className="h-3.5 w-3.5" /> Join call room
+                      </button>
+                    )}
                     <button
                       onClick={() => cancelBooking(b.id)}
                       className="rounded border border-[color:var(--t10-border)] px-3 py-1.5 font-semibold text-[color:var(--t10-grey)] hover:bg-neutral-50 transition-colors"

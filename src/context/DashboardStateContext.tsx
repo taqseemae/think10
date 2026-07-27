@@ -98,6 +98,7 @@ export type BookingSession = {
   };
   preCallFiles?: string[];
   report?: SessionReport;
+  meetLink?: string;
   rating?: number;
   feedback?: string;
 };
@@ -218,6 +219,7 @@ interface DashboardContextType {
   rescheduleBooking: (bookingId: string, newSlot: string) => void;
   triggerServiceRecovery: (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => void;
   completeCall: (bookingId: string, rating: number, feedback: string) => void;
+  fetchBookings: () => void;
 
   // Action Items
   actionItems: ActionItem[];
@@ -341,17 +343,17 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   // Bookings (Sessions) - fetched from MongoDB via Server Action
   const [bookings, setBookings] = useState<BookingSession[]>([]);
 
-  useEffect(() => {
-    if (!currentUser?.uid) {
-      setBookings([]);
-      return;
-    }
-    
+  const fetchBookings = () => {
+    if (!currentUser?.uid) return;
     import("@/lib/server-actions").then(({ getUserBookingsFn }) => {
       getUserBookingsFn({ data: currentUser.uid })
         .then((b) => setBookings(b as any))
         .catch(console.error);
     });
+  };
+
+  useEffect(() => {
+    fetchBookings();
   }, [currentUser?.uid]);
 
   // Action Items
@@ -1128,6 +1130,7 @@ Do not use markdown blocks. Output raw JSON only.`;
         rescheduleBooking,
         triggerServiceRecovery,
         completeCall,
+        fetchBookings,
         actionItems,
         addActionItem,
         toggleActionItem,

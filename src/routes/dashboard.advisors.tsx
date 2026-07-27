@@ -22,7 +22,7 @@ export const Route = createFileRoute("/dashboard/advisors")({
 });
 
 function AdvisorsPage() {
-  const { credits, createBooking, role } = useDashboardState();
+  const { credits, createBooking, role, fetchBookings } = useDashboardState();
   const navigate = useNavigate();
 
   // Search & Filter state
@@ -65,6 +65,9 @@ function AdvisorsPage() {
 
   // Handle booking success from the new modal
   const handleBookingSuccess = (bookingId: string, meetLink: string) => {
+    // Refresh the local bookings state from server so it appears in "My Bookings"
+    fetchBookings();
+    
     // Slight delay so user sees the confirmation screen in modal, then redirect
     setTimeout(() => {
       setSelectedExpert(null);
