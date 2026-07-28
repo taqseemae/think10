@@ -1,15 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState } from "@/context/AdminStateContext";
-import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock } from "lucide-react";
+import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban } from "lucide-react";
 import { useState } from "react";
 import { GenericCallModal } from "@/components/GenericCallModal";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/admin/bookings")({
   component: BookingsAdminPage,
 });
 
 function BookingsAdminPage() {
-  const { bookings } = useAdminState();
+  const { bookings, updateBookingStatus, cancelBooking } = useAdminState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
 
   return (
@@ -96,9 +97,37 @@ function BookingsAdminPage() {
                             <Video className="w-3 h-3" /> Audit Call
                           </button>
                         )}
-                        <button className="text-neutral-400 hover:text-neutral-900 transition-colors p-1">
-                          <MoreHorizontal className="h-5 w-5" />
-                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="text-neutral-400 hover:text-neutral-900 transition-colors p-1">
+                              <MoreHorizontal className="h-5 w-5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-40">
+                            {booking.status !== "COMPLETED" && (
+                              <DropdownMenuItem
+                                onClick={() => updateBookingStatus(booking.id, "COMPLETED")}
+                                className="cursor-pointer text-[color:var(--t10-emerald)] font-medium flex items-center"
+                              >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Mark Completed
+                              </DropdownMenuItem>
+                            )}
+                            {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  if (window.confirm("Are you sure you want to cancel this booking?")) {
+                                    cancelBooking(booking.id);
+                                  }
+                                }}
+                                className="cursor-pointer text-red-600 font-medium flex items-center"
+                              >
+                                <Ban className="mr-2 h-4 w-4" />
+                                Cancel Session
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>

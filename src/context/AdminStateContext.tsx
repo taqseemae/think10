@@ -48,6 +48,8 @@ interface AdminContextType {
   updateUserRole: (uid: string, role: string) => Promise<void>;
   updateUserAdminRole: (uid: string, role: string | null) => Promise<void>;
   updateUserProfile: (uid: string, displayName: string, email: string) => Promise<void>;
+  updateBookingStatus: (id: string, status: string) => Promise<void>;
+  cancelBooking: (id: string) => Promise<void>;
 }
 
 const DEFAULT_METRICS: AdminMetrics = {
@@ -172,6 +174,18 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     refreshData();
   };
 
+  const updateBookingStatus = async (id: string, status: string) => {
+    const { updateBookingStatusFn } = await import("@/lib/server-actions");
+    await updateBookingStatusFn({ data: { id, status } });
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+  };
+
+  const cancelBooking = async (id: string) => {
+    const { cancelBookingFn } = await import("@/lib/server-actions");
+    await cancelBookingFn({ data: { bookingId: id, cancelledBy: "admin" } });
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "CANCELLED" } : b));
+  };
+
   const resolveTask = (id: string) => {
     if (id.startsWith("t")) {
       setTasks((prev) => prev.map(t => t.id === id ? { ...t, status: "Resolved" } : t));
@@ -205,6 +219,8 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         updateUserRole,
         updateUserAdminRole,
         updateUserProfile,
+        updateBookingStatus,
+        cancelBooking,
       }}
     >
       {children}

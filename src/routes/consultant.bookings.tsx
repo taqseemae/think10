@@ -9,7 +9,7 @@ export const Route = createFileRoute("/consultant/bookings")({
 });
 
 function ConsultantBookings() {
-  const { bookings, updateBookingStatus } = useConsultantState();
+  const { bookings, updateBookingStatus, cancelBooking } = useConsultantState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -107,9 +107,17 @@ function ConsultantBookings() {
 
                   {/* Actions Column */}
                   <div className="flex flex-row sm:flex-col items-center sm:items-end justify-center sm:justify-start gap-2 shrink-0 border-t sm:border-t-0 border-neutral-100 pt-4 sm:pt-0">
-                    <button className="w-full sm:w-auto px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 transition-colors">
-                      Reschedule
-                    </button>
+                    {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
+                      <button 
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to cancel this booking?")) {
+                            cancelBooking(booking.id);
+                          }
+                        }}
+                        className="w-full sm:w-auto px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-medium text-red-600 hover:bg-neutral-50 transition-colors">
+                        Cancel Session
+                      </button>
+                    )}
                     {booking.status !== "COMPLETED" && (
                       <button 
                         onClick={() => updateBookingStatus(booking.id, "COMPLETED")}

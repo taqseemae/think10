@@ -14,6 +14,8 @@ interface ConsultantContextType {
   bookings: any[];
   refreshData: () => void;
   updateBookingStatus: (id: string, status: string) => Promise<void>;
+  cancelBooking: (id: string) => Promise<void>;
+  rescheduleBooking: (id: string, newStartTime: string, newEndTime: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -37,21 +39,9 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
     if (!currentUser || !userDoc) return;
     setLoading(true);
 
-    import("@/lib/server-actions").then(({ getAllAdminDataFn }) => {
-      getAllAdminDataFn()
-        .then((data: any) => {
-          // Match bookings where expertSlug matches consultant uid, displayName, or companyName
-          // This allows both hardcoded EXPERTS and real DB-registered consultants to match
-          const consultantName = userDoc.displayName || currentUser.displayName || "";
-          const consultantUid = currentUser.uid;
-
-          const myBookings = data.bookings.filter((b: any) =>
-            b.consultantId === consultantUid ||
-            b.expertSlug === consultantUid ||
-            (consultantName && b.expertName === consultantName) ||
-            b.userId === consultantUid // fallback for legacy
-          );
-
+    import("@/lib/server-actions").then(({ getConsultantBookingsFn }) => {
+      getConsultantBookingsFn({ data: currentUser.uid })
+        .then((myBookings: any[]) => {
           // Unique clients
           const uniqueClientIds = new Set(myBookings.map((b: any) => b.userId).filter(Boolean));
 
@@ -98,9 +88,28 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
   const updateBookingStatus = async (id: string, status: string) => {
     const { updateBookingStatusFn } = await import("@/lib/server-actions");
     await updateBookingStatusFn({ data: { id, status } });
-    // Optimistically update UI
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
-    // Recalculate metrics after status update
+    setTimeout(() => refreshData(), 300);
+  };
+
+  const cancelBooking = async (id: string) => {
+    const { cancelBookingFn } = await import("@/lib/server-actions");
+    await cancelBookingFn({ data: { bookingId: id, cancelledBy: "consultant" } });
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "CANCELLED" } : b));
+    setTimeout(() => refreshData(), 300);
+  };
+
+  const rescheduleBooking = async (id: string, newStartTime: string, newEndTime: string) => {
+    const { rescheduleBookingFn } = await import("@/lib/server-actions");
+    await rescheduleBookingFn({ 
+      data: { 
+        bookingId: id, 
+        newStartTime, 
+        newEndTime, 
+        timezone: "Asia/Dubai" 
+      } 
+    });
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, startTime: newStartTime, endTime: newEndTime, when: newStartTime, status: "CONFIRMED" } : b));
     setTimeout(() => refreshData(), 300);
   };
 
@@ -111,6 +120,8 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
         bookings,
         refreshData,
         updateBookingStatus,
+        cancelBooking,
+        rescheduleBooking,
         loading,
       }}
     >

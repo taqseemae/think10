@@ -9,87 +9,142 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ZyneRouteImport } from './routes/zyne'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as ResourcesRouteImport } from './routes/resources'
-import { Route as RecordingConfidentialityRouteImport } from './routes/recording-confidentiality'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PremiumAdvisoryRouteImport } from './routes/premium-advisory'
-import { Route as PlansRouteImport } from './routes/plans'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as HowItWorksRouteImport } from './routes/how-it-works'
-import { Route as ExpertsRouteImport } from './routes/experts'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CookiesRouteImport } from './routes/cookies'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as ConsultantRouteImport } from './routes/consultant'
-import { Route as CommandCentreRouteImport } from './routes/command-centre'
-import { Route as BookDiscoveryCallRouteImport } from './routes/book-discovery-call'
-import { Route as AdvisoryAreasRouteImport } from './routes/advisory-areas'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
-import { Route as ConsultantIndexRouteImport } from './routes/consultant.index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdvisoryAreasRouteImport } from './routes/advisory-areas'
+import { Route as BookDiscoveryCallRouteImport } from './routes/book-discovery-call'
+import { Route as CommandCentreRouteImport } from './routes/command-centre'
+import { Route as ConsultantRouteImport } from './routes/consultant'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ExpertsRouteImport } from './routes/experts'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PlansRouteImport } from './routes/plans'
+import { Route as PremiumAdvisoryRouteImport } from './routes/premium-advisory'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RecordingConfidentialityRouteImport } from './routes/recording-confidentiality'
+import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ZyneRouteImport } from './routes/zyne'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
-import { Route as ExpertsSlugRouteImport } from './routes/experts.$slug'
-import { Route as DashboardZyneRouteImport } from './routes/dashboard.zyne'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
-import { Route as DashboardSessionsRouteImport } from './routes/dashboard.sessions'
-import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
-import { Route as DashboardCommunityRouteImport } from './routes/dashboard.community'
-import { Route as DashboardBusinessProfileRouteImport } from './routes/dashboard.business-profile'
-import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
-import { Route as DashboardAdvisorsRouteImport } from './routes/dashboard.advisors'
-import { Route as DashboardActionPlansRouteImport } from './routes/dashboard.action-plans'
-import { Route as ConsultantSettingsRouteImport } from './routes/consultant.settings'
-import { Route as ConsultantProfileRouteImport } from './routes/consultant.profile'
-import { Route as ConsultantPerformanceRouteImport } from './routes/consultant.performance'
-import { Route as ConsultantEarningsRouteImport } from './routes/consultant.earnings'
-import { Route as ConsultantConsultationsRouteImport } from './routes/consultant.consultations'
-import { Route as ConsultantClientsRouteImport } from './routes/consultant.clients'
-import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
-import { Route as ConsultantAvailabilityRouteImport } from './routes/consultant.availability'
-import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
-import { Route as AdminQualityRouteImport } from './routes/admin.quality'
-import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
-import { Route as AdminGoogleConnectRouteImport } from './routes/admin.google-connect'
-import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
-import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
-import { Route as AdminCrmRouteImport } from './routes/admin.crm'
-import { Route as AdminConsultantsRouteImport } from './routes/admin.consultants'
-import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAiRouteImport } from './routes/admin.ai'
+import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
+import { Route as AdminConsultantsRouteImport } from './routes/admin.consultants'
+import { Route as AdminCrmRouteImport } from './routes/admin.crm'
+import { Route as AdminCustomersRouteImport } from './routes/admin.customers'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
+import { Route as AdminGoogleConnectRouteImport } from './routes/admin.google-connect'
+import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
+import { Route as AdminQualityRouteImport } from './routes/admin.quality'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
+import { Route as ConsultantIndexRouteImport } from './routes/consultant.index'
+import { Route as ConsultantAvailabilityRouteImport } from './routes/consultant.availability'
+import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
+import { Route as ConsultantClientsRouteImport } from './routes/consultant.clients'
+import { Route as ConsultantConsultationsRouteImport } from './routes/consultant.consultations'
+import { Route as ConsultantEarningsRouteImport } from './routes/consultant.earnings'
+import { Route as ConsultantPerformanceRouteImport } from './routes/consultant.performance'
+import { Route as ConsultantProfileRouteImport } from './routes/consultant.profile'
+import { Route as ConsultantSettingsRouteImport } from './routes/consultant.settings'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as DashboardActionPlansRouteImport } from './routes/dashboard.action-plans'
+import { Route as DashboardAdvisorsRouteImport } from './routes/dashboard.advisors'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing'
+import { Route as DashboardBusinessProfileRouteImport } from './routes/dashboard.business-profile'
+import { Route as DashboardCommunityRouteImport } from './routes/dashboard.community'
+import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
+import { Route as DashboardSessionsRouteImport } from './routes/dashboard.sessions'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
+import { Route as DashboardZyneRouteImport } from './routes/dashboard.zyne'
+import { Route as ExpertsSlugRouteImport } from './routes/experts.$slug'
+import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth.google.callback'
 
-const ZyneRoute = ZyneRouteImport.update({
-  id: '/zyne',
-  path: '/zyne',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
+const AdvisoryAreasRoute = AdvisoryAreasRouteImport.update({
+  id: '/advisory-areas',
+  path: '/advisory-areas',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ResourcesRoute = ResourcesRouteImport.update({
-  id: '/resources',
-  path: '/resources',
+const BookDiscoveryCallRoute = BookDiscoveryCallRouteImport.update({
+  id: '/book-discovery-call',
+  path: '/book-discovery-call',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommandCentreRoute = CommandCentreRouteImport.update({
+  id: '/command-centre',
+  path: '/command-centre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsultantRoute = ConsultantRouteImport.update({
+  id: '/consultant',
+  path: '/consultant',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpertsRoute = ExpertsRouteImport.update({
+  id: '/experts',
+  path: '/experts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlansRoute = PlansRouteImport.update({
+  id: '/plans',
+  path: '/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumAdvisoryRoute = PremiumAdvisoryRouteImport.update({
+  id: '/premium-advisory',
+  path: '/premium-advisory',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecordingConfidentialityRoute =
@@ -98,134 +153,159 @@ const RecordingConfidentialityRoute =
     path: '/recording-confidentiality',
     getParentRoute: () => rootRouteImport,
   } as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PremiumAdvisoryRoute = PremiumAdvisoryRouteImport.update({
-  id: '/premium-advisory',
-  path: '/premium-advisory',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PlansRoute = PlansRouteImport.update({
-  id: '/plans',
-  path: '/plans',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HowItWorksRoute = HowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
+const ZyneRoute = ZyneRouteImport.update({
+  id: '/zyne',
+  path: '/zyne',
   getParentRoute: () => rootRouteImport,
-} as any)
-const ExpertsRoute = ExpertsRouteImport.update({
-  id: '/experts',
-  path: '/experts',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiesRoute = CookiesRouteImport.update({
-  id: '/cookies',
-  path: '/cookies',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConsultantRoute = ConsultantRouteImport.update({
-  id: '/consultant',
-  path: '/consultant',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CommandCentreRoute = CommandCentreRouteImport.update({
-  id: '/command-centre',
-  path: '/command-centre',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BookDiscoveryCallRoute = BookDiscoveryCallRouteImport.update({
-  id: '/book-discovery-call',
-  path: '/book-discovery-call',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdvisoryAreasRoute = AdvisoryAreasRouteImport.update({
-  id: '/advisory-areas',
-  path: '/advisory-areas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const ConsultantIndexRoute = ConsultantIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => ConsultantRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const ResourcesSlugRoute = ResourcesSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ResourcesRoute,
+const AdminAiRoute = AdminAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
+  getParentRoute: () => AdminRoute,
 } as any)
-const ExpertsSlugRoute = ExpertsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ExpertsRoute,
+const AdminBookingsRoute = AdminBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AdminRoute,
 } as any)
-const DashboardZyneRoute = DashboardZyneRouteImport.update({
-  id: '/zyne',
-  path: '/zyne',
-  getParentRoute: () => DashboardRoute,
+const AdminConsultantsRoute = AdminConsultantsRouteImport.update({
+  id: '/consultants',
+  path: '/consultants',
+  getParentRoute: () => AdminRoute,
 } as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+const AdminCrmRoute = AdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCustomersRoute = AdminCustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGoogleConnectRoute = AdminGoogleConnectRouteImport.update({
+  id: '/google-connect',
+  path: '/google-connect',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminGrowthRoute = AdminGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminQualityRoute = AdminQualityRouteImport.update({
+  id: '/quality',
+  path: '/quality',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => AdvisoryAreasRoute,
+} as any)
+const ConsultantIndexRoute = ConsultantIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantAvailabilityRoute = ConsultantAvailabilityRouteImport.update({
+  id: '/availability',
+  path: '/availability',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantBookingsRoute = ConsultantBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantClientsRoute = ConsultantClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantConsultationsRoute = ConsultantConsultationsRouteImport.update({
+  id: '/consultations',
+  path: '/consultations',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantEarningsRoute = ConsultantEarningsRouteImport.update({
+  id: '/earnings',
+  path: '/earnings',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantPerformanceRoute = ConsultantPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantProfileRoute = ConsultantProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const ConsultantSettingsRoute = ConsultantSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => ConsultantRoute,
+} as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
-  id: '/sessions',
-  path: '/sessions',
+const DashboardActionPlansRoute = DashboardActionPlansRouteImport.update({
+  id: '/action-plans',
+  path: '/action-plans',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
+const DashboardAdvisorsRoute = DashboardAdvisorsRouteImport.update({
+  id: '/advisors',
+  path: '/advisors',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardCommunityRoute = DashboardCommunityRouteImport.update({
-  id: '/community',
-  path: '/community',
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardBusinessProfileRoute =
@@ -234,120 +314,40 @@ const DashboardBusinessProfileRoute =
     path: '/business-profile',
     getParentRoute: () => DashboardRoute,
   } as any)
-const DashboardBillingRoute = DashboardBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
+const DashboardCommunityRoute = DashboardCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardAdvisorsRoute = DashboardAdvisorsRouteImport.update({
-  id: '/advisors',
-  path: '/advisors',
+const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardActionPlansRoute = DashboardActionPlansRouteImport.update({
-  id: '/action-plans',
-  path: '/action-plans',
+const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
+  id: '/sessions',
+  path: '/sessions',
   getParentRoute: () => DashboardRoute,
 } as any)
-const ConsultantSettingsRoute = ConsultantSettingsRouteImport.update({
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => ConsultantRoute,
+  getParentRoute: () => DashboardRoute,
 } as any)
-const ConsultantProfileRoute = ConsultantProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => ConsultantRoute,
+const DashboardZyneRoute = DashboardZyneRouteImport.update({
+  id: '/zyne',
+  path: '/zyne',
+  getParentRoute: () => DashboardRoute,
 } as any)
-const ConsultantPerformanceRoute = ConsultantPerformanceRouteImport.update({
-  id: '/performance',
-  path: '/performance',
-  getParentRoute: () => ConsultantRoute,
-} as any)
-const ConsultantEarningsRoute = ConsultantEarningsRouteImport.update({
-  id: '/earnings',
-  path: '/earnings',
-  getParentRoute: () => ConsultantRoute,
-} as any)
-const ConsultantConsultationsRoute = ConsultantConsultationsRouteImport.update({
-  id: '/consultations',
-  path: '/consultations',
-  getParentRoute: () => ConsultantRoute,
-} as any)
-const ConsultantClientsRoute = ConsultantClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
-  getParentRoute: () => ConsultantRoute,
-} as any)
-const ConsultantBookingsRoute = ConsultantBookingsRouteImport.update({
-  id: '/bookings',
-  path: '/bookings',
-  getParentRoute: () => ConsultantRoute,
-} as any)
-const ConsultantAvailabilityRoute = ConsultantAvailabilityRouteImport.update({
-  id: '/availability',
-  path: '/availability',
-  getParentRoute: () => ConsultantRoute,
-} as any)
-const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
+const ExpertsSlugRoute = ExpertsSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
-  getParentRoute: () => AdvisoryAreasRoute,
+  getParentRoute: () => ExpertsRoute,
 } as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminQualityRoute = AdminQualityRouteImport.update({
-  id: '/quality',
-  path: '/quality',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGrowthRoute = AdminGrowthRouteImport.update({
-  id: '/growth',
-  path: '/growth',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminGoogleConnectRoute = AdminGoogleConnectRouteImport.update({
-  id: '/google-connect',
-  path: '/google-connect',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminFinanceRoute = AdminFinanceRouteImport.update({
-  id: '/finance',
-  path: '/finance',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCustomersRoute = AdminCustomersRouteImport.update({
-  id: '/customers',
-  path: '/customers',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminCrmRoute = AdminCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminConsultantsRoute = AdminConsultantsRouteImport.update({
-  id: '/consultants',
-  path: '/consultants',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminBookingsRoute = AdminBookingsRouteImport.update({
-  id: '/bookings',
-  path: '/bookings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminAiRoute = AdminAiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
-  getParentRoute: () => AdminRoute,
+const ResourcesSlugRoute = ResourcesSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ResourcesRoute,
 } as any)
 const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
   id: '/auth/google/callback',
@@ -735,144 +735,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/zyne': {
-      id: '/zyne'
-      path: '/zyne'
-      fullPath: '/zyne'
-      preLoaderRoute: typeof ZyneRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resources': {
-      id: '/resources'
-      path: '/resources'
-      fullPath: '/resources'
-      preLoaderRoute: typeof ResourcesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recording-confidentiality': {
-      id: '/recording-confidentiality'
-      path: '/recording-confidentiality'
-      fullPath: '/recording-confidentiality'
-      preLoaderRoute: typeof RecordingConfidentialityRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/premium-advisory': {
-      id: '/premium-advisory'
-      path: '/premium-advisory'
-      fullPath: '/premium-advisory'
-      preLoaderRoute: typeof PremiumAdvisoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/plans': {
-      id: '/plans'
-      path: '/plans'
-      fullPath: '/plans'
-      preLoaderRoute: typeof PlansRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-it-works': {
-      id: '/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof HowItWorksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/experts': {
-      id: '/experts'
-      path: '/experts'
-      fullPath: '/experts'
-      preLoaderRoute: typeof ExpertsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookies': {
-      id: '/cookies'
-      path: '/cookies'
-      fullPath: '/cookies'
-      preLoaderRoute: typeof CookiesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/consultant': {
-      id: '/consultant'
-      path: '/consultant'
-      fullPath: '/consultant'
-      preLoaderRoute: typeof ConsultantRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/command-centre': {
-      id: '/command-centre'
-      path: '/command-centre'
-      fullPath: '/command-centre'
-      preLoaderRoute: typeof CommandCentreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/book-discovery-call': {
-      id: '/book-discovery-call'
-      path: '/book-discovery-call'
-      fullPath: '/book-discovery-call'
-      preLoaderRoute: typeof BookDiscoveryCallRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/advisory-areas': {
-      id: '/advisory-areas'
-      path: '/advisory-areas'
-      fullPath: '/advisory-areas'
-      preLoaderRoute: typeof AdvisoryAreasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -882,26 +749,145 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
+    '/advisory-areas': {
+      id: '/advisory-areas'
+      path: '/advisory-areas'
+      fullPath: '/advisory-areas'
+      preLoaderRoute: typeof AdvisoryAreasRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/consultant/': {
-      id: '/consultant/'
-      path: '/'
-      fullPath: '/consultant/'
-      preLoaderRoute: typeof ConsultantIndexRouteImport
-      parentRoute: typeof ConsultantRoute
+    '/book-discovery-call': {
+      id: '/book-discovery-call'
+      path: '/book-discovery-call'
+      fullPath: '/book-discovery-call'
+      preLoaderRoute: typeof BookDiscoveryCallRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/command-centre': {
+      id: '/command-centre'
+      path: '/command-centre'
+      fullPath: '/command-centre'
+      preLoaderRoute: typeof CommandCentreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consultant': {
+      id: '/consultant'
+      path: '/consultant'
+      fullPath: '/consultant'
+      preLoaderRoute: typeof ConsultantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/experts': {
+      id: '/experts'
+      path: '/experts'
+      fullPath: '/experts'
+      preLoaderRoute: typeof ExpertsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/plans': {
+      id: '/plans'
+      path: '/plans'
+      fullPath: '/plans'
+      preLoaderRoute: typeof PlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium-advisory': {
+      id: '/premium-advisory'
+      path: '/premium-advisory'
+      fullPath: '/premium-advisory'
+      preLoaderRoute: typeof PremiumAdvisoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recording-confidentiality': {
+      id: '/recording-confidentiality'
+      path: '/recording-confidentiality'
+      fullPath: '/recording-confidentiality'
+      preLoaderRoute: typeof RecordingConfidentialityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zyne': {
+      id: '/zyne'
+      path: '/zyne'
+      fullPath: '/zyne'
+      preLoaderRoute: typeof ZyneRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/': {
       id: '/admin/'
@@ -910,207 +896,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/resources/$slug': {
-      id: '/resources/$slug'
-      path: '/$slug'
-      fullPath: '/resources/$slug'
-      preLoaderRoute: typeof ResourcesSlugRouteImport
-      parentRoute: typeof ResourcesRoute
-    }
-    '/experts/$slug': {
-      id: '/experts/$slug'
-      path: '/$slug'
-      fullPath: '/experts/$slug'
-      preLoaderRoute: typeof ExpertsSlugRouteImport
-      parentRoute: typeof ExpertsRoute
-    }
-    '/dashboard/zyne': {
-      id: '/dashboard/zyne'
-      path: '/zyne'
-      fullPath: '/dashboard/zyne'
-      preLoaderRoute: typeof DashboardZyneRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/sessions': {
-      id: '/dashboard/sessions'
-      path: '/sessions'
-      fullPath: '/dashboard/sessions'
-      preLoaderRoute: typeof DashboardSessionsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/documents': {
-      id: '/dashboard/documents'
-      path: '/documents'
-      fullPath: '/dashboard/documents'
-      preLoaderRoute: typeof DashboardDocumentsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/community': {
-      id: '/dashboard/community'
-      path: '/community'
-      fullPath: '/dashboard/community'
-      preLoaderRoute: typeof DashboardCommunityRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/business-profile': {
-      id: '/dashboard/business-profile'
-      path: '/business-profile'
-      fullPath: '/dashboard/business-profile'
-      preLoaderRoute: typeof DashboardBusinessProfileRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/billing': {
-      id: '/dashboard/billing'
-      path: '/billing'
-      fullPath: '/dashboard/billing'
-      preLoaderRoute: typeof DashboardBillingRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/advisors': {
-      id: '/dashboard/advisors'
-      path: '/advisors'
-      fullPath: '/dashboard/advisors'
-      preLoaderRoute: typeof DashboardAdvisorsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/action-plans': {
-      id: '/dashboard/action-plans'
-      path: '/action-plans'
-      fullPath: '/dashboard/action-plans'
-      preLoaderRoute: typeof DashboardActionPlansRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/consultant/settings': {
-      id: '/consultant/settings'
-      path: '/settings'
-      fullPath: '/consultant/settings'
-      preLoaderRoute: typeof ConsultantSettingsRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/profile': {
-      id: '/consultant/profile'
-      path: '/profile'
-      fullPath: '/consultant/profile'
-      preLoaderRoute: typeof ConsultantProfileRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/performance': {
-      id: '/consultant/performance'
-      path: '/performance'
-      fullPath: '/consultant/performance'
-      preLoaderRoute: typeof ConsultantPerformanceRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/earnings': {
-      id: '/consultant/earnings'
-      path: '/earnings'
-      fullPath: '/consultant/earnings'
-      preLoaderRoute: typeof ConsultantEarningsRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/consultations': {
-      id: '/consultant/consultations'
-      path: '/consultations'
-      fullPath: '/consultant/consultations'
-      preLoaderRoute: typeof ConsultantConsultationsRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/clients': {
-      id: '/consultant/clients'
-      path: '/clients'
-      fullPath: '/consultant/clients'
-      preLoaderRoute: typeof ConsultantClientsRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/bookings': {
-      id: '/consultant/bookings'
-      path: '/bookings'
-      fullPath: '/consultant/bookings'
-      preLoaderRoute: typeof ConsultantBookingsRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/consultant/availability': {
-      id: '/consultant/availability'
-      path: '/availability'
-      fullPath: '/consultant/availability'
-      preLoaderRoute: typeof ConsultantAvailabilityRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
-    '/advisory-areas/$slug': {
-      id: '/advisory-areas/$slug'
-      path: '/$slug'
-      fullPath: '/advisory-areas/$slug'
-      preLoaderRoute: typeof AdvisoryAreasSlugRouteImport
-      parentRoute: typeof AdvisoryAreasRoute
-    }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/quality': {
-      id: '/admin/quality'
-      path: '/quality'
-      fullPath: '/admin/quality'
-      preLoaderRoute: typeof AdminQualityRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/growth': {
-      id: '/admin/growth'
-      path: '/growth'
-      fullPath: '/admin/growth'
-      preLoaderRoute: typeof AdminGrowthRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/google-connect': {
-      id: '/admin/google-connect'
-      path: '/google-connect'
-      fullPath: '/admin/google-connect'
-      preLoaderRoute: typeof AdminGoogleConnectRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/finance': {
-      id: '/admin/finance'
-      path: '/finance'
-      fullPath: '/admin/finance'
-      preLoaderRoute: typeof AdminFinanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/customers': {
-      id: '/admin/customers'
-      path: '/customers'
-      fullPath: '/admin/customers'
-      preLoaderRoute: typeof AdminCustomersRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/crm': {
-      id: '/admin/crm'
-      path: '/crm'
-      fullPath: '/admin/crm'
-      preLoaderRoute: typeof AdminCrmRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/consultants': {
-      id: '/admin/consultants'
-      path: '/consultants'
-      fullPath: '/admin/consultants'
-      preLoaderRoute: typeof AdminConsultantsRouteImport
+    '/admin/ai': {
+      id: '/admin/ai'
+      path: '/ai'
+      fullPath: '/admin/ai'
+      preLoaderRoute: typeof AdminAiRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/bookings': {
@@ -1120,12 +910,222 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBookingsRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/ai': {
-      id: '/admin/ai'
-      path: '/ai'
-      fullPath: '/admin/ai'
-      preLoaderRoute: typeof AdminAiRouteImport
+    '/admin/consultants': {
+      id: '/admin/consultants'
+      path: '/consultants'
+      fullPath: '/admin/consultants'
+      preLoaderRoute: typeof AdminConsultantsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/crm': {
+      id: '/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AdminCrmRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/customers': {
+      id: '/admin/customers'
+      path: '/customers'
+      fullPath: '/admin/customers'
+      preLoaderRoute: typeof AdminCustomersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/google-connect': {
+      id: '/admin/google-connect'
+      path: '/google-connect'
+      fullPath: '/admin/google-connect'
+      preLoaderRoute: typeof AdminGoogleConnectRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/growth': {
+      id: '/admin/growth'
+      path: '/growth'
+      fullPath: '/admin/growth'
+      preLoaderRoute: typeof AdminGrowthRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/quality': {
+      id: '/admin/quality'
+      path: '/quality'
+      fullPath: '/admin/quality'
+      preLoaderRoute: typeof AdminQualityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/advisory-areas/$slug': {
+      id: '/advisory-areas/$slug'
+      path: '/$slug'
+      fullPath: '/advisory-areas/$slug'
+      preLoaderRoute: typeof AdvisoryAreasSlugRouteImport
+      parentRoute: typeof AdvisoryAreasRoute
+    }
+    '/consultant/': {
+      id: '/consultant/'
+      path: '/'
+      fullPath: '/consultant/'
+      preLoaderRoute: typeof ConsultantIndexRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/availability': {
+      id: '/consultant/availability'
+      path: '/availability'
+      fullPath: '/consultant/availability'
+      preLoaderRoute: typeof ConsultantAvailabilityRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/bookings': {
+      id: '/consultant/bookings'
+      path: '/bookings'
+      fullPath: '/consultant/bookings'
+      preLoaderRoute: typeof ConsultantBookingsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/clients': {
+      id: '/consultant/clients'
+      path: '/clients'
+      fullPath: '/consultant/clients'
+      preLoaderRoute: typeof ConsultantClientsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/consultations': {
+      id: '/consultant/consultations'
+      path: '/consultations'
+      fullPath: '/consultant/consultations'
+      preLoaderRoute: typeof ConsultantConsultationsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/earnings': {
+      id: '/consultant/earnings'
+      path: '/earnings'
+      fullPath: '/consultant/earnings'
+      preLoaderRoute: typeof ConsultantEarningsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/performance': {
+      id: '/consultant/performance'
+      path: '/performance'
+      fullPath: '/consultant/performance'
+      preLoaderRoute: typeof ConsultantPerformanceRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/profile': {
+      id: '/consultant/profile'
+      path: '/profile'
+      fullPath: '/consultant/profile'
+      preLoaderRoute: typeof ConsultantProfileRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/consultant/settings': {
+      id: '/consultant/settings'
+      path: '/settings'
+      fullPath: '/consultant/settings'
+      preLoaderRoute: typeof ConsultantSettingsRouteImport
+      parentRoute: typeof ConsultantRoute
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/action-plans': {
+      id: '/dashboard/action-plans'
+      path: '/action-plans'
+      fullPath: '/dashboard/action-plans'
+      preLoaderRoute: typeof DashboardActionPlansRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/advisors': {
+      id: '/dashboard/advisors'
+      path: '/advisors'
+      fullPath: '/dashboard/advisors'
+      preLoaderRoute: typeof DashboardAdvisorsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/business-profile': {
+      id: '/dashboard/business-profile'
+      path: '/business-profile'
+      fullPath: '/dashboard/business-profile'
+      preLoaderRoute: typeof DashboardBusinessProfileRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/community': {
+      id: '/dashboard/community'
+      path: '/community'
+      fullPath: '/dashboard/community'
+      preLoaderRoute: typeof DashboardCommunityRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/documents': {
+      id: '/dashboard/documents'
+      path: '/documents'
+      fullPath: '/dashboard/documents'
+      preLoaderRoute: typeof DashboardDocumentsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/sessions': {
+      id: '/dashboard/sessions'
+      path: '/sessions'
+      fullPath: '/dashboard/sessions'
+      preLoaderRoute: typeof DashboardSessionsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/zyne': {
+      id: '/dashboard/zyne'
+      path: '/zyne'
+      fullPath: '/dashboard/zyne'
+      preLoaderRoute: typeof DashboardZyneRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/experts/$slug': {
+      id: '/experts/$slug'
+      path: '/$slug'
+      fullPath: '/experts/$slug'
+      preLoaderRoute: typeof ExpertsSlugRouteImport
+      parentRoute: typeof ExpertsRoute
+    }
+    '/resources/$slug': {
+      id: '/resources/$slug'
+      path: '/$slug'
+      fullPath: '/resources/$slug'
+      preLoaderRoute: typeof ResourcesSlugRouteImport
+      parentRoute: typeof ResourcesRoute
     }
     '/auth/google/callback': {
       id: '/auth/google/callback'

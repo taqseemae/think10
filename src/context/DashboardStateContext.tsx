@@ -878,18 +878,34 @@ Do not use markdown blocks. Output raw JSON only.`;
   };
 
   const cancelBooking = (bookingId: string) => {
-    import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
-      updateBookingStatusFn({ data: { id: bookingId, status: "CANCELLED" } })
+    import("@/lib/server-actions").then(({ cancelBookingFn }) => {
+      cancelBookingFn({ data: { bookingId, cancelledBy: "user" } })
         .then(() => setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: "CANCELLED" } : b)))
-        .catch(err => console.error(err));
+        .catch(err => console.error("Error cancelling booking:", err));
     });
   };
 
   const rescheduleBooking = (bookingId: string, newSlot: string) => {
-    // For MVP, just updating status in DB isn't enough, we need a specific server action to update date, but we'll mock it for UI for now
-    setBookings((prev) =>
-      prev.map((b) => (b.id === bookingId ? { ...b, when: newSlot, status: "CONFIRMED" } : b))
-    );
+    // Basic reschedule assuming 1 hr duration in GST
+    const newStart = new Date(newSlot);
+    const newEnd = new Date(newStart.getTime() + 60 * 60 * 1000);
+    
+    import("@/lib/server-actions").then(({ rescheduleBookingFn }) => {
+      rescheduleBookingFn({ 
+        data: { 
+          bookingId, 
+          newStartTime: newStart.toISOString(),
+          newEndTime: newEnd.toISOString(),
+          timezone: "Asia/Dubai"
+        } 
+      })
+      .then(() => {
+        setBookings((prev) =>
+          prev.map((b) => (b.id === bookingId ? { ...b, when: newSlot, status: "CONFIRMED" } : b))
+        );
+      })
+      .catch(err => console.error("Error rescheduling booking:", err));
+    });
   };
 
   const triggerServiceRecovery = (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => {
