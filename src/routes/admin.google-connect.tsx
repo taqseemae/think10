@@ -150,7 +150,10 @@ function GoogleConnectPage() {
           The Google account you connect here will be the "host" of all booking events. It will appear as the organizer in Google Calendar invites. We recommend using a dedicated <strong>bookings@think10.ae</strong> Google Workspace account rather than a personal account.
         </p>
         <p className="text-xs text-amber-700 leading-relaxed">
-          For local development, make sure <code className="bg-amber-100 px-1 rounded">http://localhost:8080/api/auth/google/callback</code> is added as an authorized redirect URI in your Google Cloud Console OAuth credentials.
+          For production, make sure <code className="bg-amber-100 px-1 rounded">https://think10.ae/auth/google/callback</code> is added as an authorized redirect URI in your Google Cloud Console.
+        </p>
+        <p className="text-xs text-amber-700 leading-relaxed">
+          For local development, make sure <code className="bg-amber-100 px-1 rounded">http://localhost:8080/auth/google/callback</code> is added as an authorized redirect URI in your Google Cloud Console OAuth credentials.
         </p>
       </div>
     </div>
