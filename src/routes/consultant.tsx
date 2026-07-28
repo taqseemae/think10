@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/context/AuthContext";
 import { ConsultantStateProvider } from "@/context/ConsultantStateContext";
 import {
@@ -70,8 +70,8 @@ function parseFirebaseError(code: string): string {
 }
 
 function ConsultantLayout() {
-  const { currentUser, userDoc, authLoading, docLoading, logout } = useAuth() as any;
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -79,9 +79,13 @@ function ConsultantLayout() {
     if (currentUser) {
       if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
          navigate({ to: "/" });
+         return;
+      }
+      if (userDoc?.plan?.role === "Consultant" && userDoc?.onboarding?.completed === false && pathname !== "/consultant" && pathname !== "/consultant/") {
+        navigate({ to: "/consultant" });
       }
     }
-  }, [currentUser, userDoc, authLoading, docLoading, navigate]);
+  }, [currentUser, userDoc, authLoading, docLoading, pathname, navigate]);
 
   if (authLoading || docLoading) {
     return <div className="p-8 text-center">Loading Consultant Workspace...</div>;
@@ -95,17 +99,20 @@ function ConsultantLayout() {
     return null;
   }
 
+  const { logout } = useAuth() as any;
+  const isOnboarded = userDoc?.onboarding?.completed !== false || userDoc?.adminRole || userDoc?.email === "admin@think10.ae";
+
   const NAV_ITEMS = [
     { to: "/consultant", icon: LayoutDashboard, label: "Home" },
-    { to: "/consultant/bookings", icon: CalendarRange, label: "Bookings" },
-    { to: "/consultant/availability", icon: Clock, label: "My Availability" },
-    { to: "/consultant/consultations", icon: MonitorPlay, label: "Consultations" },
-    { to: "/consultant/clients", icon: Users, label: "Clients" },
-    { to: "/consultant/performance", icon: BarChart2, label: "Performance" },
-    { to: "/consultant/earnings", icon: CircleDollarSign, label: "Earnings" },
-    { to: "/consultant/profile", icon: UserCircle, label: "Profile" },
-    { to: "/consultant/settings", icon: Settings, label: "Help & Settings" },
-  ];
+    { to: "/consultant/bookings", icon: CalendarRange, label: "Bookings", show: isOnboarded },
+    { to: "/consultant/availability", icon: Clock, label: "My Availability", show: isOnboarded },
+    { to: "/consultant/consultations", icon: MonitorPlay, label: "Consultations", show: isOnboarded },
+    { to: "/consultant/clients", icon: Users, label: "Clients", show: isOnboarded },
+    { to: "/consultant/performance", icon: BarChart2, label: "Performance", show: isOnboarded },
+    { to: "/consultant/earnings", icon: CircleDollarSign, label: "Earnings", show: isOnboarded },
+    { to: "/consultant/profile", icon: UserCircle, label: "Profile", show: isOnboarded },
+    { to: "/consultant/settings", icon: Settings, label: "Help & Settings", show: isOnboarded },
+  ].filter(item => item.show !== false);
 
   return (
     <div className="flex h-screen w-full bg-neutral-100 font-sans text-neutral-900">
@@ -176,12 +183,16 @@ function ConsultantLayout() {
             </button>
             
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center text-white text-xs font-bold">
-                DA
+              <div className="h-8 w-8 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center text-white text-xs font-bold uppercase">
+                {(userDoc?.displayName || currentUser?.displayName || "CO").split(" ").map((n: string) => n[0]).join("").substring(0, 2)}
               </div>
               <div className="hidden flex-col md:flex">
-                <span className="text-xs font-semibold leading-none text-neutral-900">Dr. Amina H.</span>
-                <span className="text-[10px] leading-none text-[color:var(--t10-emerald)]">Available</span>
+                <span className="text-xs font-semibold leading-none text-neutral-900">
+                  {userDoc?.displayName || currentUser?.displayName || "Consultant"}
+                </span>
+                <span className="text-[10px] leading-none text-[color:var(--t10-emerald)] mt-1">
+                  {userDoc?.consultantProfile?.title || "Think10 Expert"}
+                </span>
               </div>
             </div>
           </div>

@@ -14,6 +14,12 @@ export type UserDocument = {
   profile: BusinessProfile;
   healthScores: HealthScores | null;
   adminRole?: AdminRole;
+  consultantProfile?: {
+    title: string;
+    bio: string;
+    primaryArea: string;
+    topics: string[];
+  };
 };
 
 // ─── USERS ────────────────────────────────────────────────────────────────────
@@ -682,5 +688,24 @@ export const updateUserProfileByAdminFn = createServerFn({ method: 'POST' })
     if (data.email) updates.email = data.email;
     if (data.planRole) updates['plan.role'] = data.planRole;
     await db.collection('users').updateOne({ uid: data.uid }, { $set: updates });
+    return true;
+  });
+
+export const updateConsultantProfileFn = createServerFn({ method: 'POST' })
+  .validator((d: { 
+    uid: string; 
+    profile: { 
+      title: string; 
+      bio: string; 
+      primaryArea: string; 
+      topics: string[]; 
+    } 
+  }) => d)
+  .handler(async ({ data }) => {
+    const db = await getDb();
+    await db.collection('users').updateOne(
+      { uid: data.uid },
+      { $set: { consultantProfile: data.profile } }
+    );
     return true;
   });

@@ -14,7 +14,7 @@ import {
   CircleDollarSign,
   RefreshCcw,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 export const Route = createFileRoute("/consultant/")({
   component: ConsultantDashboardHome,
@@ -23,6 +23,24 @@ export const Route = createFileRoute("/consultant/")({
 function ConsultantDashboardHome() {
   const { currentUser, userDoc } = useAuth();
   const { metrics, bookings, refreshData } = useConsultantState();
+
+  const [onboardingStep, setOnboardingStep] = useState(1);
+  const [title, setTitle] = useState(userDoc?.consultantProfile?.title || "");
+  const [bio, setBio] = useState(userDoc?.consultantProfile?.bio || "");
+  const [primaryArea, setPrimaryArea] = useState(userDoc?.consultantProfile?.primaryArea || "Supply Chain & Logistics");
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>(userDoc?.consultantProfile?.topics || []);
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (userDoc?.consultantProfile) {
+      setTitle(userDoc.consultantProfile.title || "");
+      setBio(userDoc.consultantProfile.bio || "");
+      setPrimaryArea(userDoc.consultantProfile.primaryArea || "Supply Chain & Logistics");
+      setTags(userDoc.consultantProfile.topics || []);
+    }
+  }, [userDoc]);
 
   // Real display name from userDoc or Firebase auth
   const displayName =
@@ -114,6 +132,316 @@ function ConsultantDashboardHome() {
     }
     return days;
   }, [bookings]);
+
+  // Pending reports (completed bookings without a report)
+  const pendingReports = bookings.filter(
+    (b: any) => b.status === "COMPLETED" && !b.report
+  ).length;
+
+  if (userDoc?.onboarding?.completed === false) {
+    return (
+      <div className="max-w-3xl mx-auto py-8">
+        <div className="bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-[color:var(--t10-navy)] p-6 md:p-8 text-white relative">
+            <div className="absolute top-0 right-0 h-32 w-32 rounded-full bg-white/5 -mr-8 -mt-8" />
+            <div className="relative z-10 space-y-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[color:var(--t10-emerald)]">Consultant Setup</span>
+              <h2 className="text-2xl font-bold font-display">Configure Your Expert Profile</h2>
+              <p className="text-xs text-white/80">Complete these simple steps to activate your Think10 advisory account.</p>
+            </div>
+            {/* Step indicator */}
+            <div className="mt-6 flex items-center justify-between gap-3 text-xs font-semibold text-white/60">
+              <span>Step {onboardingStep} of 4</span>
+              <div className="flex-1 max-w-[200px] h-1 bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[color:var(--t10-emerald)] transition-all duration-300"
+                  style={{ width: `${(onboardingStep / 4) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8 space-y-6">
+            {errorMsg && (
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800">
+                {errorMsg}
+              </div>
+            )}
+
+            {/* STEP 1: Personal Details */}
+            {onboardingStep === 1 && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 1: Public Identity</h3>
+                  <p className="text-xs text-neutral-500">Provide the basic title and biography clients will see when booking.</p>
+                </div>
+                <div className="space-y-4 pt-2">
+                  <label className="block space-y-1.5">
+                    <span className="block text-xs font-bold text-neutral-600 uppercase tracking-wider">Full Name</span>
+                    <input 
+                      type="text" 
+                      value={userDoc?.displayName || currentUser?.displayName || ""} 
+                      disabled
+                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-500 cursor-not-allowed"
+                    />
+                  </label>
+                  <label className="block space-y-1.5">
+                    <span className="block text-xs font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Professional Title / Role *</span>
+                    <input 
+                      type="text" 
+                      value={title} 
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g. Supply Chain & Logistics Advisor"
+                      className="w-full rounded-xl border border-[color:var(--t10-border)] px-4 py-2.5 text-sm text-[color:var(--t10-navy)] focus:border-[color:var(--t10-navy)] focus:ring-1 focus:ring-[color:var(--t10-navy)] outline-none"
+                    />
+                  </label>
+                  <label className="block space-y-1.5">
+                    <span className="block text-xs font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Biography / Professional Bio *</span>
+                    <textarea 
+                      rows={5} 
+                      value={bio} 
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Share your expertise, past credentials (e.g. Former VP at Noon), and what clients can expect during a session."
+                      className="w-full rounded-xl border border-[color:var(--t10-border)] px-4 py-2.5 text-sm text-[color:var(--t10-navy)] focus:border-[color:var(--t10-navy)] focus:ring-1 focus:ring-[color:var(--t10-navy)] outline-none resize-none"
+                    />
+                    <div className="flex justify-between text-[10px] text-neutral-400 font-semibold">
+                      <span>Minimum 50 characters</span>
+                      <span>{bio.length} characters</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: Areas of Expertise */}
+            {onboardingStep === 2 && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 2: Advisory Domains</h3>
+                  <p className="text-xs text-neutral-500">Specify your primary category and tags so clients can find you easily.</p>
+                </div>
+                <div className="space-y-4 pt-2">
+                  <label className="block space-y-1.5">
+                    <span className="block text-xs font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Primary Advisory Area *</span>
+                    <select
+                      value={primaryArea}
+                      onChange={(e) => setPrimaryArea(e.target.value)}
+                      className="w-full rounded-xl border border-[color:var(--t10-border)] bg-white px-4 py-2.5 text-sm text-[color:var(--t10-navy)] focus:border-[color:var(--t10-navy)] outline-none"
+                    >
+                      <option value="Supply Chain & Logistics">Supply Chain & Logistics</option>
+                      <option value="E-commerce Strategy">E-commerce Strategy</option>
+                      <option value="Financial Planning">Financial Planning</option>
+                      <option value="Marketing & Growth">Marketing & Growth</option>
+                    </select>
+                  </label>
+                  
+                  <div className="space-y-1.5">
+                    <span className="block text-xs font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Consultation Tags / Topics</span>
+                    <div className="flex flex-wrap gap-2 rounded-xl border border-[color:var(--t10-border)] p-3 bg-neutral-50 min-h-[50px]">
+                      {tags.map((tag) => (
+                        <span key={tag} className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--t10-mint)] px-3 py-1 text-xs font-semibold text-[color:var(--t10-emerald)]">
+                          {tag}
+                          <button 
+                            type="button" 
+                            onClick={() => setTags(tags.filter(t => t !== tag))}
+                            className="hover:text-[color:var(--t10-navy)] font-bold"
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                      {tags.length === 0 && <span className="text-xs text-neutral-400">No tags added yet.</span>}
+                    </div>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        placeholder="e.g. Last-mile, 3PL contracts"
+                        className="flex-1 rounded-xl border border-[color:var(--t10-border)] px-4 py-2 text-xs outline-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+                              setTags([...tags, tagInput.trim()]);
+                              setTagInput("");
+                            }
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+                            setTags([...tags, tagInput.trim()]);
+                            setTagInput("");
+                          }
+                        }}
+                        className="rounded-xl bg-[color:var(--t10-navy)] px-4 text-white text-xs font-bold"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: Setup Availability */}
+            {onboardingStep === 3 && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 3: Initial Schedule</h3>
+                  <p className="text-xs text-neutral-500">Configure your standard advisory slots. Clients will be able to book sessions during these times.</p>
+                </div>
+                
+                <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-5 h-5 text-[color:var(--t10-emerald)] shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-[color:var(--t10-navy)]">Apply Standard Work Hours</h4>
+                      <p className="text-[11px] text-neutral-500 mt-0.5">We will initialize your schedule as Monday to Friday, 9:00 AM to 6:00 PM (Gulf Standard Time, UTC+4).</p>
+                    </div>
+                  </div>
+                  <div className="text-[11px] font-semibold text-neutral-400 pt-2 border-t border-neutral-200">
+                    You can fully customize these days, times, and buffer limits under the "My Availability" tab once your dashboard is unlocked.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: Review and Submit */}
+            {onboardingStep === 4 && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 4: Profile Submission</h3>
+                  <p className="text-xs text-neutral-500">Double check your details before submitting your application for approval.</p>
+                </div>
+                
+                <div className="border border-[color:var(--t10-border)] rounded-2xl p-5 space-y-4 bg-neutral-50/50">
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <span className="font-bold text-neutral-400 uppercase">Title</span>
+                    <span className="col-span-2 font-semibold text-[color:var(--t10-navy)]">{title}</span>
+                    
+                    <span className="font-bold text-neutral-400 uppercase">Domain</span>
+                    <span className="col-span-2 font-semibold text-[color:var(--t10-navy)]">{primaryArea}</span>
+                    
+                    <span className="font-bold text-neutral-400 uppercase">Tags</span>
+                    <span className="col-span-2 flex flex-wrap gap-1.5">
+                      {tags.map(t => (
+                        <span key={t} className="bg-neutral-200/80 px-2 py-0.5 rounded text-[10px] font-semibold">{t}</span>
+                      ))}
+                    </span>
+                    
+                    <span className="font-bold text-neutral-400 uppercase">Biography</span>
+                    <span className="col-span-2 text-neutral-600 line-clamp-3 leading-relaxed">{bio}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions Footer */}
+            <div className="flex justify-between items-center pt-6 border-t border-[color:var(--t10-border)]">
+              {onboardingStep > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => setOnboardingStep(prev => prev - 1)}
+                  className="px-5 py-2.5 border border-neutral-200 rounded-xl text-xs font-bold text-neutral-600 hover:bg-neutral-50 cursor-pointer"
+                >
+                  Back
+                </button>
+              ) : (
+                <div />
+              )}
+              
+              {onboardingStep < 4 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg("");
+                    if (onboardingStep === 1) {
+                      if (!title.trim() || !bio.trim()) {
+                        setErrorMsg("Please fill in both the title and biography.");
+                        return;
+                      }
+                      if (bio.length < 50) {
+                        setErrorMsg("Biography must be at least 50 characters long.");
+                        return;
+                      }
+                    }
+                    setOnboardingStep(prev => prev + 1);
+                  }}
+                  className="px-6 py-2.5 bg-[color:var(--t10-navy)] text-white rounded-xl text-xs font-bold hover:bg-neutral-800 cursor-pointer"
+                >
+                  Continue
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setSubmitting(true);
+                    setErrorMsg("");
+                    try {
+                      const { updateConsultantProfileFn, setConsultantAvailabilityFn, updateUserOnboardingFn } = await import("@/lib/server-actions");
+                      
+                      // 1. Save Profile
+                      await updateConsultantProfileFn({
+                        uid: currentUser!.uid,
+                        profile: { title, bio, primaryArea, topics: tags }
+                      });
+                      
+                      // 2. Set Availability
+                      await setConsultantAvailabilityFn({
+                        data: {
+                          consultantId: currentUser!.uid,
+                          consultantName: userDoc?.displayName || currentUser?.displayName || "",
+                          consultantEmail: userDoc?.email || currentUser?.email || "",
+                          weeklySchedule: {
+                            monday: [{ start: "09:00", end: "18:00" }],
+                            tuesday: [{ start: "09:00", end: "18:00" }],
+                            wednesday: [{ start: "09:00", end: "18:00" }],
+                            thursday: [{ start: "09:00", end: "18:00" }],
+                            friday: [{ start: "09:00", end: "18:00" }],
+                            saturday: [],
+                            sunday: [],
+                          },
+                          timezone: "Asia/Dubai",
+                          sessionDurationMinutes: 60,
+                          bufferMinutes: 15,
+                          blockedDates: [],
+                        }
+                      });
+
+                      // 3. Mark Onboarding as Completed
+                      await updateUserOnboardingFn({
+                        data: {
+                          uid: currentUser!.uid,
+                          completed: true,
+                          step: 4
+                        }
+                      });
+
+                      // 4. Reload page or redirect
+                      window.location.reload();
+                    } catch (err: any) {
+                      setErrorMsg(err.message || "Failed to complete onboarding. Please try again.");
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}
+                  disabled={submitting}
+                  className="px-6 py-2.5 bg-[color:var(--t10-emerald)] hover:bg-[color:var(--t10-emerald)]/90 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow disabled:opacity-50"
+                >
+                  {submitting ? "Submitting..." : "Submit Application"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Pending reports (completed bookings without a report)
   const pendingReports = bookings.filter(
