@@ -443,11 +443,6 @@ function ConsultantDashboardHome() {
     );
   }
 
-  // Pending reports (completed bookings without a report)
-  const pendingReports = bookings.filter(
-    (b: any) => b.status === "COMPLETED" && !b.report
-  ).length;
-
   return (
     <div className="max-w-6xl mx-auto space-y-6">
 
