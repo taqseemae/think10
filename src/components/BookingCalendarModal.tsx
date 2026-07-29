@@ -447,8 +447,9 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                   onClick={async () => {
                     setPayingMock(true);
                     setTimeout(() => {
-                      dashboardState.setCredits((c) => c + 1);
-                      dashboardState.addLedgerEntry("Purchased 1 Strategy Session Credit", 1, 1);
+                      if (dashboardState?.buyCredits) {
+                        dashboardState.buyCredits(1);
+                      }
                       setPayingMock(false);
                       handleConfirmBooking();
                     }, 800);
