@@ -70,6 +70,7 @@ function parseFirebaseError(code: string): string {
 }
 
 function ConsultantLayout() {
+  const { authLoading, docLoading, userDoc, currentUser, logout } = useAuth() as any;
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -77,7 +78,7 @@ function ConsultantLayout() {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
+      if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && userDoc?.email !== "admin@think10.ae" && currentUser?.email !== "admin@think10.ae") {
          navigate({ to: "/" });
          return;
       }
@@ -95,12 +96,11 @@ function ConsultantLayout() {
     return <ConsultantAuthView />;
   }
 
-  if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
+  if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && userDoc?.email !== "admin@think10.ae" && currentUser?.email !== "admin@think10.ae") {
     return null;
   }
 
-  const { logout } = useAuth() as any;
-  const isOnboarded = userDoc?.onboarding?.completed !== false || userDoc?.adminRole || userDoc?.email === "admin@think10.ae";
+  const isOnboarded = userDoc?.onboarding?.completed !== false || userDoc?.adminRole || userDoc?.email === "admin@think10.ae" || currentUser?.email === "admin@think10.ae";
 
   const NAV_ITEMS = [
     { to: "/consultant", icon: LayoutDashboard, label: "Home" },
@@ -145,7 +145,7 @@ function ConsultantLayout() {
               await logout();
               navigate({ to: "/" });
             }}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors cursor-pointer"
           >
             <LogOut className="h-5 w-5" />
             Logout

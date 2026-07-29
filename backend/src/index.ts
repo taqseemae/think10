@@ -19,7 +19,110 @@ app.use(cors({
   ],
   credentials: true,
 }));
+
+// ── Stripe Webhook (must use raw body) ────────────────────────────────────────
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', { apiVersion: '2025-02-24.acacia' as any });
+
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'] as string;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder';
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err: any) {
+    console.error(`[Stripe Webhook Error]`, err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    const db = await getDb();
+    
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const uid = session.metadata?.uid || session.client_reference_id;
+      const planRole = session.metadata?.planRole;
+      
+      if (uid && planRole) {
+        await db.collection('users').updateOne(
+          { uid },
+          { $set: { 'plan.role': planRole, 'plan.status': 'Active', stripeCustomerId: session.customer } }
+        );
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+      await db.collection('users').updateOne(
+        { stripeCustomerId: customerId },
+        { $set: { 'plan.role': 'Free', 'plan.status': 'Active' } }
+      );
+    }
+    
+    res.json({ received: true });
+  } catch (err: any) {
+    console.error(`[Stripe DB Error]`, err.message);
+    res.status(500).send('Database Error');
+  }
+});
+
 app.use(express.json());
+
+
+// ── Firebase Admin Middleware ────────────────────────────────────────────────
+import admin from 'firebase-admin';
+if (!admin.apps.length) {
+  try {
+    const serviceAccountKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+
+    if (serviceAccountKey && clientEmail && projectId) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey: serviceAccountKey.replace(/\\n/g, '\n'),
+        }),
+      });
+      console.log('[Think10 Backend] Firebase Admin initialized.');
+    } else {
+      console.warn('[Think10 Backend] Firebase Admin env vars missing. Auth will fail.');
+    }
+  } catch (error) {
+    console.error('[Think10 Backend] Error initializing Firebase Admin:', error);
+  }
+}
+
+const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    (req as any).user = decodedToken;
+    next();
+  } catch (err: any) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+  }
+};
+
+const requireAdmin = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  try {
+    const db = await getDb();
+    const userDoc = await db.collection('users').findOne({ uid: (req as any).user.uid });
+    if (!userDoc || !userDoc.adminRole) {
+      return res.status(403).json({ error: 'Forbidden: Admin access required' });
+    }
+    next();
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
+};
+
 
 // ── MongoDB Connection ────────────────────────────────────────────────────────
 let _clientPromise: Promise<MongoClient> | null = null;
@@ -49,7 +152,7 @@ app.get('/api/health', (_req, res) => {
 
 // ── Admin Metrics ─────────────────────────────────────────────────────────────
 // GET /api/admin/metrics — aggregated KPIs for Admin Command Centre
-app.get('/api/admin/metrics', async (_req, res) => {
+app.get('/api/admin/metrics', requireAuth, requireAdmin, async (_req, res) => {
   try {
     const db = await getDb();
 
@@ -103,7 +206,7 @@ app.get('/api/admin/metrics', async (_req, res) => {
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
 // GET /api/bookings — all bookings (admin) or filtered by userId/consultantId
-app.get('/api/bookings', async (req, res) => {
+app.get('/api/bookings', requireAuth, async (req, res) => {
   try {
     const db = await getDb();
     const { userId, consultantId, status, limit = '50' } = req.query;
@@ -126,7 +229,7 @@ app.get('/api/bookings', async (req, res) => {
 });
 
 // POST /api/bookings/create — create new booking
-app.post('/api/bookings/create', async (req, res) => {
+app.post('/api/bookings/create', requireAuth, async (req, res) => {
   try {
     const db = await getDb();
     const bookingData = req.body;
@@ -151,7 +254,7 @@ app.post('/api/bookings/create', async (req, res) => {
 });
 
 // POST /api/bookings/:id/status — update booking status
-app.post('/api/bookings/:id/status', async (req, res) => {
+app.post('/api/bookings/:id/status', requireAuth, async (req, res) => {
   try {
     const { ObjectId } = await import('mongodb');
     const db = await getDb();
@@ -170,7 +273,7 @@ app.post('/api/bookings/:id/status', async (req, res) => {
 
 // ── Earnings ──────────────────────────────────────────────────────────────────
 // GET /api/earnings/:consultantId — consultant earnings breakdown
-app.get('/api/earnings/:consultantId', async (req, res) => {
+app.get('/api/earnings/:consultantId', requireAuth, async (req, res) => {
   try {
     const db = await getDb();
     const { consultantId } = req.params;
@@ -221,7 +324,7 @@ app.get('/api/earnings/:consultantId', async (req, res) => {
 
 // ── Quality Cases ──────────────────────────────────────────────────────────────
 // POST /api/quality/cases — create a quality/compliance case
-app.post('/api/quality/cases', async (req, res) => {
+app.post('/api/quality/cases', requireAuth, async (req, res) => {
   try {
     const db = await getDb();
     const caseData = {
@@ -238,7 +341,7 @@ app.post('/api/quality/cases', async (req, res) => {
 });
 
 // GET /api/quality/cases — list quality cases
-app.get('/api/quality/cases', async (req, res) => {
+app.get('/api/quality/cases', requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const { status, consultantId } = req.query;
@@ -255,7 +358,7 @@ app.get('/api/quality/cases', async (req, res) => {
 
 // ── Users (Admin) ─────────────────────────────────────────────────────────────
 // GET /api/users — paginated user list for admin
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const { role, status, limit = '100', skip = '0' } = req.query;
@@ -278,7 +381,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // POST /api/users/suspend — suspend or unsuspend a user
-app.post('/api/users/suspend', async (req, res) => {
+app.post('/api/users/suspend', requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const { uid, isSuspended } = req.body;
@@ -295,7 +398,7 @@ app.post('/api/users/suspend', async (req, res) => {
 });
 
 // POST /api/users/approve-consultant — approve consultant application
-app.post('/api/users/approve-consultant', async (req, res) => {
+app.post('/api/users/approve-consultant', requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const { uid } = req.body;
@@ -313,7 +416,7 @@ app.post('/api/users/approve-consultant', async (req, res) => {
 
 // ── Tickets (Admin) ───────────────────────────────────────────────────────────
 // GET /api/tickets — all support tickets
-app.get('/api/tickets', async (req, res) => {
+app.get('/api/tickets', requireAuth, requireAdmin, async (req, res) => {
   try {
     const db = await getDb();
     const { status } = req.query;

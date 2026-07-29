@@ -11,6 +11,7 @@ export const Route = createFileRoute("/consultant/bookings")({
 function ConsultantBookings() {
   const { bookings, updateBookingStatus, cancelBooking } = useConsultantState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       
@@ -23,26 +24,14 @@ function ConsultantBookings() {
           <button className="flex-1 sm:flex-none px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-medium text-neutral-600 hover:bg-neutral-50 transition-colors flex items-center justify-center gap-2">
             <Filter className="w-4 h-4" /> Filter
           </button>
-          <button className="flex-1 sm:flex-none px-4 py-2 bg-[color:var(--t10-emerald)] text-white rounded-lg text-sm font-medium hover:bg-[color:var(--t10-emerald)]/90 transition-colors">
-            Set Availability
-          </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-neutral-200">
+      <div className="flex items-center justify-between border-b border-neutral-200">
         <nav className="-mb-px flex space-x-8">
           <a href="#" className="border-[color:var(--t10-emerald)] text-[color:var(--t10-emerald)] whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
-            Upcoming (12)
-          </a>
-          <a href="#" className="border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
-            Requests (2)
-          </a>
-          <a href="#" className="border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
-            Past & Completed
-          </a>
-          <a href="#" className="border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
-            Cancellations
+            All Sessions ({bookings.length})
           </a>
         </nav>
       </div>
@@ -58,19 +47,22 @@ function ConsultantBookings() {
           ) : bookings.map((booking: any) => {
             const dateStr = booking.when ? new Date(booking.when).toDateString() : "TBD";
             const timeStr = booking.when ? new Date(booking.when).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD";
+
             return (
-              <li key={booking.id} className="p-6 hover:bg-neutral-50 transition-colors">
+              <li key={booking.id} className="p-6 transition-colors hover:bg-neutral-50">
                 <div className="flex flex-col sm:flex-row gap-6">
                   
                   {/* Date/Time Column */}
-                  <div className="flex sm:flex-col items-center sm:items-start gap-4 sm:gap-1 sm:w-48 shrink-0">
-                    <div className="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg p-2 text-center min-w-[72px]">
-                      <span className="text-xs font-bold text-neutral-500 uppercase">{dateStr.substring(4, 7)}</span>
-                      <span className="text-xl font-bold text-neutral-900 leading-none my-0.5">{dateStr.substring(8, 10)}</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-neutral-900 mt-1">{timeStr}</p>
-                      <p className="text-xs text-neutral-500">60 mins</p>
+                  <div className="flex items-center sm:items-start gap-4 sm:w-48 shrink-0">
+                    <div className="flex sm:flex-col items-center sm:items-start gap-4 sm:gap-1">
+                      <div className="flex flex-col bg-neutral-50 border border-neutral-200 rounded-lg p-2 text-center min-w-[72px]">
+                        <span className="text-xs font-bold text-neutral-500 uppercase">{dateStr.substring(4, 7)}</span>
+                        <span className="text-xl font-bold text-neutral-900 leading-none my-0.5">{dateStr.substring(8, 10)}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-neutral-900 mt-1">{timeStr}</p>
+                        <p className="text-xs text-neutral-500">60 mins</p>
+                      </div>
                     </div>
                   </div>
 
@@ -80,7 +72,7 @@ function ConsultantBookings() {
                       <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${booking.status === 'CONFIRMED' ? 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-700/10' : 'bg-neutral-100 text-neutral-600'}`}>
                         {booking.status}
                       </span>
-                      <span className="text-xs text-neutral-500 font-medium">#{booking.id.substring(booking.id.length - 6).toUpperCase()}</span>
+                      <span className="text-xs text-neutral-500 font-medium">#{(booking.id || "").toString().slice(-6).toUpperCase()}</span>
                     </div>
                     <h4 className="text-lg font-bold text-neutral-900 truncate">{booking.topic || "Strategy Session"}</h4>
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
@@ -114,7 +106,7 @@ function ConsultantBookings() {
                             cancelBooking(booking.id);
                           }
                         }}
-                        className="w-full sm:w-auto px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-medium text-red-600 hover:bg-neutral-50 transition-colors">
+                        className="w-full sm:w-auto px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-medium text-amber-600 hover:bg-neutral-50 transition-colors">
                         Cancel Session
                       </button>
                     )}

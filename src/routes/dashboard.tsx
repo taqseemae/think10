@@ -37,7 +37,7 @@ function DashboardLayout() {
     logout,
     isLoggedIn,
   } = useDashboardState();
-  const { authLoading, docLoading, userDoc } = useAuth();
+  const { authLoading, docLoading, userDoc, currentUser } = useAuth();
 
   const navigate = useNavigate();
 
@@ -50,7 +50,7 @@ function DashboardLayout() {
     }
 
     // Role-based redirection out of the user dashboard
-    if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae") {
+    if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae" || currentUser?.email === "admin@think10.ae") {
       navigate({ to: "/admin" });
       return;
     }

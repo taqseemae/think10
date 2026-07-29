@@ -15,6 +15,8 @@ interface ConsultantContextType {
   refreshData: () => void;
   updateBookingStatus: (id: string, status: string) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
+  deleteBooking: (id: string) => Promise<void>;
+  deleteMultipleBookings: (ids: string[]) => Promise<void>;
   rescheduleBooking: (id: string, newStartTime: string, newEndTime: string) => Promise<void>;
   loading: boolean;
 }
@@ -27,7 +29,19 @@ const DEFAULT_METRICS: ConsultantMetrics = {
   totalEarnings: 0,
 };
 
-const ConsultantStateContext = createContext<ConsultantContextType | undefined>(undefined);
+const DEFAULT_CONSULTANT_CTX: ConsultantContextType = {
+  metrics: DEFAULT_METRICS,
+  bookings: [],
+  refreshData: () => {},
+  updateBookingStatus: async () => {},
+  cancelBooking: async () => {},
+  deleteBooking: async () => {},
+  deleteMultipleBookings: async () => {},
+  rescheduleBooking: async () => {},
+  loading: false,
+};
+
+const ConsultantStateContext = createContext<ConsultantContextType>(DEFAULT_CONSULTANT_CTX);
 
 export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser, userDoc } = useAuth();
@@ -88,29 +102,31 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
   const updateBookingStatus = async (id: string, status: string) => {
     const { updateBookingStatusFn } = await import("@/lib/server-actions");
     await updateBookingStatusFn({ data: { id, status } });
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
-    setTimeout(() => refreshData(), 300);
+    refreshData();
   };
 
   const cancelBooking = async (id: string) => {
     const { cancelBookingFn } = await import("@/lib/server-actions");
     await cancelBookingFn({ data: { bookingId: id, cancelledBy: "consultant" } });
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "CANCELLED" } : b));
-    setTimeout(() => refreshData(), 300);
+    refreshData();
+  };
+
+  const deleteBooking = async (id: string) => {
+    const { deleteBookingFn } = await import("@/lib/server-actions");
+    await deleteBookingFn({ data: { bookingId: id } });
+    refreshData();
+  };
+
+  const deleteMultipleBookings = async (ids: string[]) => {
+    const { deleteMultipleBookingsFn } = await import("@/lib/server-actions");
+    await deleteMultipleBookingsFn({ data: { bookingIds: ids } });
+    refreshData();
   };
 
   const rescheduleBooking = async (id: string, newStartTime: string, newEndTime: string) => {
     const { rescheduleBookingFn } = await import("@/lib/server-actions");
-    await rescheduleBookingFn({ 
-      data: { 
-        bookingId: id, 
-        newStartTime, 
-        newEndTime, 
-        timezone: "Asia/Dubai" 
-      } 
-    });
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, startTime: newStartTime, endTime: newEndTime, when: newStartTime, status: "CONFIRMED" } : b));
-    setTimeout(() => refreshData(), 300);
+    await rescheduleBookingFn({ data: { bookingId: id, newStartTime, newEndTime, timezone: "Asia/Dubai" } });
+    refreshData();
   };
 
   return (
@@ -121,6 +137,8 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
         refreshData,
         updateBookingStatus,
         cancelBooking,
+        deleteBooking,
+        deleteMultipleBookings,
         rescheduleBooking,
         loading,
       }}
@@ -131,9 +149,5 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
 };
 
 export const useConsultantState = () => {
-  const context = useContext(ConsultantStateContext);
-  if (!context) {
-    throw new Error("useConsultantState must be used within a ConsultantStateProvider");
-  }
-  return context;
+  return useContext(ConsultantStateContext);
 };

@@ -6,11 +6,18 @@ import { CTA } from "@/components/site/CTA";
 import { EXPERTS, ADVISORY_AREAS, type Expert } from "@/data/think10";
 import { ShieldCheck, MapPin, Languages, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
+import { getPublicConsultantsFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/experts/$slug")({
   component: Page,
-  loader: ({ params }) => {
-    const expert = EXPERTS.find((e) => e.slug === params.slug);
+  loader: async ({ params }) => {
+    let expert = EXPERTS.find((e) => e.slug === params.slug);
+    if (!expert) {
+      try {
+        const publicList = await getPublicConsultantsFn();
+        expert = publicList.find((e: any) => e.slug === params.slug);
+      } catch (e) {}
+    }
     if (!expert) throw notFound();
     return { expert };
   },

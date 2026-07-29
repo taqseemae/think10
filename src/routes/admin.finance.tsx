@@ -81,12 +81,7 @@ function FinanceAdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-200">
-              {[
-                { id: "TXN-001", desc: "Premium Plan - Annual", customer: "TechCorp Inc.", date: "Today, 10:45 AM", amount: "AED 12,000", status: "Succeeded" },
-                { id: "TXN-002", desc: "ZynePaid Plan - Monthly", customer: "Global Trade LLC", date: "Today, 09:12 AM", amount: "AED 500", status: "Succeeded" },
-                { id: "TXN-003", desc: "Advisory Session (1 hr)", customer: "StartUp Node", date: "Yesterday, 14:30 PM", amount: "AED 1,200", status: "Pending" },
-                { id: "TXN-004", desc: "Premium Plan - Annual", customer: "Alpha Holdings", date: "Yesterday, 11:00 AM", amount: "AED 12,000", status: "Failed" },
-              ].map((txn) => (
+              {metrics.transactions && metrics.transactions.length > 0 ? metrics.transactions.map((txn: any) => (
                 <tr key={txn.id} className="hover:bg-neutral-50 transition-colors">
                   <td className="px-6 py-4 font-mono text-xs text-neutral-500">{txn.id}</td>
                   <td className="px-6 py-4 font-medium text-neutral-900">{txn.desc}</td>
@@ -103,7 +98,13 @@ function FinanceAdminPage() {
                     </span>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-neutral-500">
+                    No recent transactions found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

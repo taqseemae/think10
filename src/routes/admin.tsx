@@ -35,7 +35,7 @@ function AdminLayoutWrapper() {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (!userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
+      if (!userDoc?.adminRole && userDoc?.email !== "admin@think10.ae" && currentUser.email !== "admin@think10.ae") {
          navigate({ to: "/" });
       }
     }
@@ -49,7 +49,7 @@ function AdminLayoutWrapper() {
     return <AdminLoginView />;
   }
 
-  if (!userDoc?.adminRole && userDoc?.email !== "admin@think10.ae") {
+  if (!userDoc?.adminRole && userDoc?.email !== "admin@think10.ae" && currentUser.email !== "admin@think10.ae") {
     return null;
   }
 
@@ -70,13 +70,11 @@ function AdminLayout() {
     { to: "/admin/customers", icon: Users, label: "Customers" },
     { to: "/admin/consultants", icon: Briefcase, label: "Consultants" },
     { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings & Delivery" },
-    { to: "/admin/ai", icon: BrainCircuit, label: "Zyne & AI" },
     { to: "/admin/finance", icon: CircleDollarSign, label: "Revenue & Finance" },
     { to: "/admin/quality", icon: ShieldAlert, label: "Quality, Risk & Support" },
     { to: "/admin/crm", icon: Building2, label: "Enterprise CRM" },
     { to: "/admin/growth", icon: TrendingUp, label: "Growth & Content" },
     { to: "/admin/users", icon: UserCog, label: "System Users" },
-    { to: "/admin/google-connect", icon: Settings, label: "Google Calendar" },
     { to: "/admin/settings", icon: Settings, label: "Reports & Settings" },
   ];
 
@@ -110,7 +108,7 @@ function AdminLayout() {
               await logout();
               navigate({ to: "/" });
             }}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-500 hover:bg-neutral-50 transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4" />
             Logout

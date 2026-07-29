@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CircleDollarSign, Download, ArrowUpRight, ArrowDownRight, Landmark, FileText, Clock } from "lucide-react";
+import { useConsultantState } from "@/context/ConsultantStateContext";
 
 export const Route = createFileRoute("/consultant/earnings")({
   component: ConsultantEarnings,
 });
 
 function ConsultantEarnings() {
+  const { metrics, bookings } = useConsultantState();
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       
@@ -27,7 +29,7 @@ function ConsultantEarnings() {
         <div className="bg-[color:var(--t10-navy)] text-white p-6 rounded-xl shadow-sm flex flex-col justify-between">
           <div>
             <h4 className="text-sm font-medium text-neutral-400 mb-2">Total Earned (YTD)</h4>
-            <span className="text-4xl font-bold">$24,850</span>
+            <span className="text-4xl font-bold">AED {metrics.totalEarnings.toLocaleString()}</span>
           </div>
           <div className="mt-6 flex items-center text-sm text-[color:var(--t10-mint)]">
             <ArrowUpRight className="w-4 h-4 mr-1" /> +12% vs last year
@@ -53,12 +55,12 @@ function ConsultantEarnings() {
         {/* Current Balance (Unsettled) */}
         <div className="bg-white border border-neutral-200 p-6 rounded-xl shadow-sm flex flex-col justify-between">
           <div>
-            <h4 className="text-sm font-bold text-neutral-900 mb-2">Current Period</h4>
-            <span className="text-4xl font-bold text-neutral-900">$450</span>
-            <p className="text-xs text-neutral-500 mt-1">Accumulated since last cutoff</p>
+            <h4 className="text-sm font-bold text-neutral-900 mb-2">Completed Sessions</h4>
+            <span className="text-4xl font-bold text-neutral-900">{metrics.completedSessions}</span>
+            <p className="text-xs text-neutral-500 mt-1">Sessions paid successfully</p>
           </div>
           <div className="mt-6 w-full bg-neutral-100 rounded-full h-1.5">
-            <div className="bg-[color:var(--t10-emerald)] h-1.5 rounded-full" style={{ width: '30%' }}></div>
+            <div className="bg-[color:var(--t10-emerald)] h-1.5 rounded-full" style={{ width: '100%' }}></div>
           </div>
         </div>
 
@@ -85,54 +87,31 @@ function ConsultantEarnings() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
-              <tr className="hover:bg-neutral-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">Jul 22, 2026</td>
-                <td className="px-6 py-4">
-                  <p className="font-medium text-neutral-900">Consultation: Market Entry Strategy</p>
-                  <p className="text-xs text-neutral-500">Ref: BK-93821 • Gross: $250 • Comm: -$50</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600">
-                    Eligible
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-bold text-neutral-900">+$200.00</td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-neutral-400 hover:text-[color:var(--t10-emerald)]"><FileText className="w-4 h-4"/></button>
-                </td>
-              </tr>
-              <tr className="hover:bg-neutral-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">Jul 15, 2026</td>
-                <td className="px-6 py-4">
-                  <p className="font-medium text-neutral-900">Payout: July 1 - July 15</p>
-                  <p className="text-xs text-neutral-500">Transfer to Bank ending in 4092</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-[color:var(--t10-emerald)] ring-1 ring-inset ring-[color:var(--t10-emerald)]/20">
-                    Paid
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-bold text-neutral-900">-$1,850.00</td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-neutral-400 hover:text-[color:var(--t10-emerald)]"><Download className="w-4 h-4"/></button>
-                </td>
-              </tr>
-              <tr className="hover:bg-neutral-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">Jul 14, 2026</td>
-                <td className="px-6 py-4">
-                  <p className="font-medium text-neutral-900">Consultation: Supply Chain Audit</p>
-                  <p className="text-xs text-neutral-500">Ref: BK-93780 • Gross: $250 • Comm: -$50</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                    Processed
-                  </span>
-                </td>
-                <td className="px-6 py-4 font-bold text-neutral-900">+$200.00</td>
-                <td className="px-6 py-4 text-right">
-                  <button className="text-neutral-400 hover:text-[color:var(--t10-emerald)]"><FileText className="w-4 h-4"/></button>
-                </td>
-              </tr>
+              {bookings.filter(b => b.status === "COMPLETED").map((booking: any) => (
+                <tr key={booking.id} className="hover:bg-neutral-50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">{booking.updatedAt ? new Date(booking.updatedAt).toDateString() : "N/A"}</td>
+                  <td className="px-6 py-4">
+                    <p className="font-medium text-neutral-900">{booking.topic || "Consultation"}</p>
+                    <p className="text-xs text-neutral-500">Ref: {(booking.id || "").toString().slice(-6).toUpperCase()} • Gross: AED 500 • Comm: -AED 50</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-[color:var(--t10-emerald)] ring-1 ring-inset ring-[color:var(--t10-emerald)]/20">
+                      Paid
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-bold text-neutral-900">+AED 450.00</td>
+                  <td className="px-6 py-4 text-right">
+                    <button className="text-neutral-400 hover:text-[color:var(--t10-emerald)]"><FileText className="w-4 h-4"/></button>
+                  </td>
+                </tr>
+              ))}
+              {bookings.filter(b => b.status === "COMPLETED").length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-8 text-center text-neutral-500">
+                    No completed sessions to show.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

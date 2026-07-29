@@ -2,18 +2,22 @@ import { useState, useEffect } from "react";
 import { Video, Mic, MicOff, VideoOff, X, Share2, Send, CheckCircle, Star } from "lucide-react";
 
 export function GenericCallModal({
-  expertName,
-  expertRole,
-  topic,
+  expertName = "Advisor",
+  expertRole = "Strategy Consultant",
+  topic = "Advisory Session",
   onClose,
   onComplete,
 }: {
-  expertName: string;
-  expertRole: string;
-  topic: string;
+  expertName?: string;
+  expertRole?: string;
+  topic?: string;
   onClose: () => void;
   onComplete?: (rating: number, feedback: string) => void;
 }) {
+  const safeName = expertName || "Advisor";
+  const safeRole = expertRole || "Strategy Consultant";
+  const safeTopic = topic || "Advisory Session";
+
   const [callStep, setCallStep] = useState<"DEVICE_CHECK" | "CONSENT" | "ACTIVE" | "FEEDBACK">("DEVICE_CHECK");
 
   const [micActive, setMicActive] = useState(true);
@@ -35,11 +39,11 @@ export function GenericCallModal({
     setChatMessages([
       {
         sender: "expert",
-        text: `Session initialized for '${topic}'. Let's begin.`,
+        text: `Session initialized for '${safeTopic}'. Let's begin.`,
         time: "Just now",
       },
     ]);
-  }, [topic]);
+  }, [safeTopic]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -201,9 +205,9 @@ export function GenericCallModal({
           <div className="flex flex-col justify-between space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 flex-1">
               <div className="relative rounded-2xl bg-neutral-900 border border-white/10 overflow-hidden flex flex-col items-center justify-center text-center">
-                <span className="grid h-16 w-16 place-items-center rounded-full bg-blue-600 text-xl font-bold text-white">{expertName.substring(0, 2).toUpperCase()}</span>
-                <p className="mt-2 text-xs font-bold">{expertName}</p>
-                <p className="text-[10px] text-neutral-400">{expertRole}</p>
+                <span className="grid h-16 w-16 place-items-center rounded-full bg-blue-600 text-xl font-bold text-white">{safeName.substring(0, 2).toUpperCase()}</span>
+                <p className="mt-2 text-xs font-bold">{safeName}</p>
+                <p className="text-[10px] text-neutral-400">{safeRole}</p>
                 <span className="absolute bottom-4 left-4 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-semibold text-neutral-300">Advisor Feed (Connected)</span>
               </div>
               <div className="relative rounded-2xl bg-neutral-900 border border-white/10 overflow-hidden flex flex-col items-center justify-center text-center">

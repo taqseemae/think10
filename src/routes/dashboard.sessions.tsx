@@ -19,12 +19,13 @@ import {
   Download,
   AlertCircle,
   BookOpen,
+  Trash2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/sessions")({ component: Page });
 
 function Page() {
-  const { bookings, cancelBooking, completeCall, triggerServiceRecovery, role } = useDashboardState();
+  const { bookings, cancelBooking, deleteBooking, completeCall, triggerServiceRecovery, role } = useDashboardState();
 
   const [activeCallSession, setActiveCallSession] = useState<BookingSession | null>(null);
   const [callStep, setCallStep] = useState<"DEVICE_CHECK" | "CONSENT" | "ACTIVE" | "FEEDBACK">("DEVICE_CHECK");
@@ -267,9 +268,11 @@ function Page() {
                       </div>
                     )}
                   </div>
-                  <span className={`rounded border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${getStatusColor(b.status)}`}>
-                    {b.status.replace("_", " ")}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`rounded border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${getStatusColor(b.status)}`}>
+                      {b.status.replace("_", " ")}
+                    </span>
+                  </div>
                 </div>
               ))}
 
@@ -437,10 +440,10 @@ function Page() {
                   {/* Expert Video Window */}
                   <div className="relative rounded-2xl bg-neutral-900 border border-white/10 overflow-hidden flex flex-col items-center justify-center text-center">
                     <span className="grid h-16 w-16 place-items-center rounded-full bg-blue-600 text-xl font-bold text-white">
-                      {activeCallSession.expertName.split(" ").map((s) => s[0]).join("")}
+                      {(activeCallSession.expertName || "Advisor").split(" ").map((s) => s[0] || "").join("")}
                     </span>
-                    <p className="mt-2 text-xs font-bold">{activeCallSession.expertName}</p>
-                    <p className="text-[10px] text-neutral-400">{activeCallSession.expertRole}</p>
+                    <p className="mt-2 text-xs font-bold">{activeCallSession.expertName || "Advisor"}</p>
+                    <p className="text-[10px] text-neutral-400">{activeCallSession.expertRole || "Consultant"}</p>
                     <span className="absolute bottom-4 left-4 rounded-full bg-black/60 px-2 py-0.5 text-[9px] font-semibold text-neutral-300">
                       Advisor Feed (Connected)
                     </span>

@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { SiteShell, Section } from "@/components/site/SiteShell";
 import { PageHeader } from "@/components/site/PageHeader";
 import { FinalCTA } from "@/components/site/FinalCTA";
-import { EXPERTS, ADVISORY_AREAS } from "@/data/think10";
-import { ShieldCheck, Search } from "lucide-react";
+import { ADVISORY_AREAS, type Expert } from "@/data/think10";
+import { ShieldCheck, Search, Loader2 } from "lucide-react";
+import { getPublicConsultantsFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/experts")({
   component: Page,
@@ -27,10 +28,19 @@ function Page() {
   const [q, setQ] = useState("");
   const [area, setArea] = useState<string>("");
   const [lang, setLang] = useState<string>("");
+  const [expertsList, setExpertsList] = useState<Expert[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const languages = Array.from(new Set(EXPERTS.flatMap((e) => e.languages)));
+  useEffect(() => {
+    getPublicConsultantsFn()
+      .then((data: any) => setExpertsList(data || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const languages = Array.from(new Set(expertsList.flatMap((e) => e.languages || [])));
   const results = useMemo(() => {
-    return EXPERTS.filter((e) => {
+    return expertsList.filter((e) => {
       if (area && !e.areas.includes(area)) return false;
       if (lang && !e.languages.includes(lang)) return false;
       if (q) {
@@ -39,7 +49,7 @@ function Page() {
       }
       return true;
     });
-  }, [q, area, lang]);
+  }, [expertsList, q, area, lang]);
 
   return (
     <SiteShell>

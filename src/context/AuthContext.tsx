@@ -96,10 +96,24 @@ async function initAndFetchDoc(
   return null;
 }
 
-
 // ── Provider ──────────────────────────────────────────────────────────────────
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Safe default — returned during SSR before AuthProvider mounts
+const SAFE_DEFAULT_CTX: AuthContextType = {
+  currentUser: null,
+  userDoc: null,
+  authLoading: true,
+  docLoading: false,
+  signInWithEmail: async () => {},
+  signUpWithEmail: async () => {},
+  signInWithGoogle: async () => {},
+  sendPhoneOtp: async () => { throw new Error('AuthProvider not mounted'); },
+  confirmPhoneOtp: async () => {},
+  logout: async () => {},
+  refreshUserDoc: async () => {},
+};
+
+const AuthContext = createContext<AuthContextType>(SAFE_DEFAULT_CTX);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -127,9 +141,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthLoading(false);
 
       if (user) {
+        // Fetch ID token and set as cookie for server functions
+        try {
+          // Use Secure flag only on HTTPS (not on localhost)
+          const idToken = await user.getIdToken();
+          const isSecure = window.location.protocol === 'https:';
+          const secureFlag = isSecure ? '; Secure' : '';
+          document.cookie = `auth_token=${idToken}; path=/; max-age=3600${secureFlag}; SameSite=Strict`;
+        } catch (e) {
+          console.error("Failed to get ID token", e);
+        }
+        
         // Load the document in the background
         loadUserDoc(user);
       } else {
+        // Clear auth token cookie
+        document.cookie = `auth_token=; path=/; max-age=0`;
         setUserDoc(null);
         setDocLoading(false);
       }
@@ -241,7 +268,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useAuth(): AuthContextType {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
-  return ctx;
+  return useContext(AuthContext);
 }

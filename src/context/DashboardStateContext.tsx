@@ -216,6 +216,8 @@ interface DashboardContextType {
     files: string[]
   ) => boolean;
   cancelBooking: (bookingId: string) => void;
+  deleteBooking: (bookingId: string) => Promise<void>;
+  deleteMultipleBookings: (bookingIds: string[]) => Promise<void>;
   rescheduleBooking: (bookingId: string, newSlot: string) => void;
   triggerServiceRecovery: (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => void;
   completeCall: (bookingId: string, rating: number, feedback: string) => void;
@@ -277,7 +279,67 @@ const DEFAULT_SCORES: HealthScores = {
   systems: 0,
 };
 
-const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+const DashboardContext = createContext<DashboardContextType | null>(null);
+
+// Empty no-op default — used during SSR before provider mounts
+const EMPTY_DASHBOARD_CTX: DashboardContextType = {
+  role: "Free",
+  setRole: () => {},
+  floatingAlert: null,
+  setFloatingAlert: () => {},
+  resetAllData: () => {},
+  isLoggedIn: false,
+  setIsLoggedIn: () => {},
+  logout: () => {},
+  onboardingStep: 1,
+  setOnboardingStep: () => {},
+  onboardingCompleted: false,
+  setOnboardingCompleted: () => {},
+  profile: { businessName: "", stage: "", industry: "", channels: [], teamSize: "", revenue: "", goals: [], challenges: [] },
+  updateProfileField: () => {},
+  profileAuditLogs: [],
+  healthScores: { valueProp: 0, marketFit: 0, unitEconomics: 0, channelEfficiency: 0, operations: 0, teamOrg: 0, marketingRoi: 0, cashFlow: 0, supplyChain: 0, systems: 0 },
+  updateHealthScores: () => {},
+  healthAssessmentHistory: [],
+  calculateOverallHealthScore: () => 0,
+  conversations: [],
+  activeConversationId: null,
+  setActiveConversationId: () => {},
+  startNewChat: async () => "",
+  sendChatMessage: async () => {},
+  deleteConversation: () => {},
+  messageAllowanceUsed: 0,
+  bookings: [],
+  createBooking: () => false,
+  cancelBooking: () => {},
+  deleteBooking: async () => {},
+  deleteMultipleBookings: async () => {},
+  rescheduleBooking: () => {},
+  triggerServiceRecovery: () => {},
+  completeCall: () => {},
+  fetchBookings: () => {},
+  actionItems: [],
+  addActionItem: () => {},
+  toggleActionItem: () => {},
+  updateActionItem: () => {},
+  deleteActionItem: () => {},
+  credits: 0,
+  buyCredits: () => {},
+  creditsLedger: [],
+  invoices: [],
+  documents: [],
+  uploadDocument: () => {},
+  deleteDocument: () => {},
+  toggleDocumentShare: () => {},
+  posts: [],
+  addPost: () => {},
+  likePost: () => {},
+  addComment: () => {},
+  connections: {},
+  toggleConnection: () => {},
+  tickets: [],
+  createSupportTicket: () => {},
+};
 
 export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth State — delegated to Firebase AuthContext
@@ -885,6 +947,18 @@ Do not use markdown blocks. Output raw JSON only.`;
     });
   };
 
+  const deleteBooking = async (bookingId: string) => {
+    const { deleteBookingFn } = await import("@/lib/server-actions");
+    await deleteBookingFn({ data: { bookingId } });
+    setBookings(prev => prev.filter(b => b.id !== bookingId));
+  };
+
+  const deleteMultipleBookings = async (bookingIds: string[]) => {
+    const { deleteMultipleBookingsFn } = await import("@/lib/server-actions");
+    await deleteMultipleBookingsFn({ data: { bookingIds } });
+    setBookings(prev => prev.filter(b => !bookingIds.includes(b.id)));
+  };
+
   const rescheduleBooking = (bookingId: string, newSlot: string) => {
     // Basic reschedule assuming 1 hr duration in GST
     const newStart = new Date(newSlot);
@@ -1143,6 +1217,8 @@ Do not use markdown blocks. Output raw JSON only.`;
         bookings,
         createBooking,
         cancelBooking,
+        deleteBooking,
+        deleteMultipleBookings,
         rescheduleBooking,
         triggerServiceRecovery,
         completeCall,
@@ -1176,9 +1252,5 @@ Do not use markdown blocks. Output raw JSON only.`;
 };
 
 export const useDashboardState = () => {
-  const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error("useDashboardState must be used within a DashboardStateProvider");
-  }
-  return context;
+  return useContext(DashboardContext) ?? EMPTY_DASHBOARD_CTX;
 };

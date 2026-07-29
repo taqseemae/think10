@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useDashboardState, type UserRole } from "@/context/DashboardStateContext";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { createStripeCheckoutSessionFn, createStripeCustomerPortalFn } from "@/lib/server-actions";
 import {
   CreditCard,
   Plus,
@@ -19,6 +21,7 @@ export const Route = createFileRoute("/dashboard/billing")({
 });
 
 function BillingPage() {
+  const { userDoc } = useAuth();
   const {
     role,
     setRole,
@@ -28,6 +31,7 @@ function BillingPage() {
     invoices,
     resetAllData,
   } = useDashboardState();
+  const [loadingStripe, setLoadingStripe] = useState(false);
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -68,16 +72,65 @@ function BillingPage() {
 
   const plan = getPlanDetails(role);
 
-  const handleTopUp = () => {
-    buyCredits(1);
-    setSuccessMsg("Successfully purchased 1 Strategy Session Credit! Deduction logged to ledger.");
-    setTimeout(() => setSuccessMsg(""), 4000);
+  const handleTopUp = async () => {
+    try {
+      setLoadingStripe(true);
+      const res = await createStripeCheckoutSessionFn({
+        data: {
+          priceId: "price_credit_placeholder",
+          planRole: role,
+          successUrl: window.location.origin + "/dashboard/billing?success=true",
+          cancelUrl: window.location.origin + "/dashboard/billing?canceled=true",
+        }
+      });
+      if (res?.url) window.location.href = res.url;
+    } catch (err: any) {
+      alert(err.message || 'Failed to initialize checkout');
+      setLoadingStripe(false);
+    }
   };
 
-  const handleUpgrade = (target: UserRole) => {
-    setRole(target);
-    setSuccessMsg(`Successfully changed subscription plan to: ${getPlanName(target)}`);
-    setTimeout(() => setSuccessMsg(""), 4000);
+  const handleUpgrade = async (target: UserRole) => {
+    try {
+      setLoadingStripe(true);
+      let priceId = "";
+      if (target === "ZynePaid") priceId = "price_zyne_paid_placeholder";
+      if (target === "Hybrid") priceId = "price_hybrid_placeholder";
+      if (target === "Premium") priceId = "price_premium_placeholder";
+      
+      const res = await createStripeCheckoutSessionFn({
+        data: {
+          priceId,
+          planRole: target,
+          successUrl: window.location.origin + "/dashboard/billing?success=true",
+          cancelUrl: window.location.origin + "/dashboard/billing?canceled=true",
+        }
+      });
+      if (res?.url) window.location.href = res.url;
+    } catch (err: any) {
+      alert(err.message || 'Failed to initialize checkout');
+      setLoadingStripe(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    if (!userDoc?.stripeCustomerId) {
+      alert("No active billing profile found.");
+      return;
+    }
+    try {
+      setLoadingStripe(true);
+      const res = await createStripeCustomerPortalFn({
+        data: {
+          customerId: userDoc.stripeCustomerId,
+          returnUrl: window.location.href
+        }
+      });
+      if (res?.url) window.location.href = res.url;
+    } catch (err: any) {
+      alert(err.message || 'Failed to open customer portal');
+      setLoadingStripe(false);
+    }
   };
 
   const handleSaveOfferDowngrade = () => {
@@ -151,6 +204,19 @@ function BillingPage() {
             {/* Cancel controls */}
             {role !== "Cancelled" && role !== "Free" && (
               <div className="pt-4 border-t border-[color:var(--t10-border)] flex items-center justify-between">
+                <span className="text-[10px] text-[color:var(--t10-grey)]">Need to update payment method?</span>
+                <button
+                  onClick={handleManageBilling}
+                  disabled={loadingStripe}
+                  className="font-bold text-[color:var(--t10-navy)] hover:underline disabled:opacity-50"
+                >
+                  Manage Billing
+                </button>
+              </div>
+            )}
+            
+            {role !== "Cancelled" && role !== "Free" && (
+              <div className="pt-2 flex items-center justify-between">
                 <span className="text-[10px] text-[color:var(--t10-grey)]">Want to suspend membership?</span>
                 <button
                   onClick={() => setShowCancelModal(true)}
@@ -293,10 +359,10 @@ function BillingPage() {
             </div>
             <button
               onClick={() => handleUpgrade("ZynePaid")}
-              disabled={role === "ZynePaid"}
-              className="w-full rounded bg-[color:var(--t10-navy)] py-1.5 font-bold text-white text-[11px] disabled:opacity-50 hover:bg-neutral-800"
+              disabled={role === "ZynePaid" || loadingStripe}
+              className="w-full rounded bg-[color:var(--t10-navy)] py-1.5 font-bold text-white text-[11px] disabled:opacity-50 hover:bg-neutral-800 flex justify-center items-center gap-1"
             >
-              {role === "ZynePaid" ? "Active" : "Downgrade to AI"}
+              {loadingStripe ? "Processing..." : (role === "ZynePaid" ? "Active" : "Downgrade to AI")}
             </button>
           </div>
 
@@ -311,10 +377,10 @@ function BillingPage() {
             </div>
             <button
               onClick={() => handleUpgrade("Hybrid")}
-              disabled={role === "Hybrid"}
-              className="w-full rounded bg-[color:var(--t10-navy)] py-1.5 font-bold text-white text-[11px] disabled:opacity-50 hover:bg-neutral-800"
+              disabled={role === "Hybrid" || loadingStripe}
+              className="w-full rounded bg-[color:var(--t10-navy)] py-1.5 font-bold text-white text-[11px] disabled:opacity-50 hover:bg-neutral-800 flex justify-center items-center gap-1"
             >
-              {role === "Hybrid" ? "Active" : "Switch to Hybrid"}
+              {loadingStripe ? "Processing..." : (role === "Hybrid" ? "Active" : "Switch to Hybrid")}
             </button>
           </div>
 
@@ -329,10 +395,10 @@ function BillingPage() {
             </div>
             <button
               onClick={() => handleUpgrade("Premium")}
-              disabled={role === "Premium"}
-              className="w-full rounded bg-[color:var(--t10-navy)] py-1.5 font-bold text-white text-[11px] disabled:opacity-50 hover:bg-neutral-800"
+              disabled={role === "Premium" || loadingStripe}
+              className="w-full rounded bg-[color:var(--t10-navy)] py-1.5 font-bold text-white text-[11px] disabled:opacity-50 hover:bg-neutral-800 flex justify-center items-center gap-1"
             >
-              {role === "Premium" ? "Active" : "Upgrade to Premium"}
+              {loadingStripe ? "Processing..." : (role === "Premium" ? "Active" : "Upgrade to Premium")}
             </button>
           </div>
         </div>

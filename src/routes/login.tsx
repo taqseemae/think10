@@ -92,7 +92,7 @@ function Page() {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae") {
+      if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae" || currentUser?.email === "admin@think10.ae") {
         navigate({ to: "/admin" });
       } else if (userDoc?.plan?.role === "Consultant") {
         navigate({ to: "/consultant" });

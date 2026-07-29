@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useDashboardState } from "@/context/DashboardStateContext";
-import { EXPERTS, ADVISORY_AREAS, type Expert } from "@/data/think10";
-import { useState, useMemo } from "react";
+import { ADVISORY_AREAS, type Expert } from "@/data/think10";
+import { useState, useMemo, useEffect } from "react";
 import { BookingCalendarModal } from "@/components/BookingCalendarModal";
+import { getPublicConsultantsFn } from "@/lib/server-actions";
 import {
   Search,
   ShieldCheck,
@@ -15,6 +16,7 @@ import {
   ChevronRight,
   Info,
   Clock,
+  Loader2,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/advisors")({
@@ -24,6 +26,18 @@ export const Route = createFileRoute("/dashboard/advisors")({
 function AdvisorsPage() {
   const { credits, createBooking, role, fetchBookings } = useDashboardState();
   const navigate = useNavigate();
+
+  const [expertsList, setExpertsList] = useState<Expert[]>([]);
+  const [loadingExperts, setLoadingExperts] = useState(true);
+
+  useEffect(() => {
+    getPublicConsultantsFn()
+      .then((data: any) => {
+        setExpertsList(data || []);
+      })
+      .catch(console.error)
+      .finally(() => setLoadingExperts(false));
+  }, []);
 
   // Search & Filter state
   const [q, setQ] = useState("");
@@ -37,11 +51,11 @@ function AdvisorsPage() {
   // Booking Modal State
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
 
-  const languages = Array.from(new Set(EXPERTS.flatMap((e) => e.languages)));
+  const languages = Array.from(new Set(expertsList.flatMap((e) => e.languages || [])));
 
   // Filter experts list
   const filteredExperts = useMemo(() => {
-    return EXPERTS.filter((e) => {
+    return expertsList.filter((e) => {
       if (area && !e.areas.includes(area)) return false;
       if (lang && !e.languages.includes(lang)) return false;
       if (q) {
@@ -50,7 +64,7 @@ function AdvisorsPage() {
       }
       return true;
     });
-  }, [q, area, lang]);
+  }, [expertsList, q, area, lang]);
 
   // Handle comparison selection
   const handleToggleCompare = (slug: string) => {
@@ -60,8 +74,8 @@ function AdvisorsPage() {
   };
 
   const comparedExperts = useMemo(() => {
-    return EXPERTS.filter((e) => compareSlugs.includes(e.slug));
-  }, [compareSlugs]);
+    return expertsList.filter((e) => compareSlugs.includes(e.slug));
+  }, [expertsList, compareSlugs]);
 
   // Handle booking success from the new modal
   const handleBookingSuccess = (bookingId: string, meetLink: string) => {
@@ -123,73 +137,86 @@ function AdvisorsPage() {
       </div>
 
       {/* Experts Grid */}
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredExperts.map((e) => {
-          const isComparing = compareSlugs.includes(e.slug);
-          return (
-            <div
-              key={e.slug}
-              className="flex flex-col justify-between rounded-2xl border border-[color:var(--t10-border)] bg-white p-5 shadow-sm hover:shadow-md transition-all"
-            >
-              <div>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-full bg-[color:var(--t10-navy)] text-xs font-bold text-white uppercase">
-                      {e.initials}
-                    </span>
-                    <div>
-                      <h4 className="text-sm font-bold text-[color:var(--t10-navy)]">{e.name}</h4>
-                      <p className="text-[11px] text-[color:var(--t10-grey)]">{e.role}</p>
-                    </div>
-                  </div>
-                  <label className="flex items-center gap-1 cursor-pointer select-none rounded bg-[color:var(--t10-offwhite)] border border-[color:var(--t10-border)] px-2 py-1 text-[10px] font-semibold text-[color:var(--t10-navy)]">
-                    <input
-                      type="checkbox"
-                      checked={isComparing}
-                      onChange={() => handleToggleCompare(e.slug)}
-                      className="h-3 w-3 accent-[color:var(--t10-emerald)]"
-                    />
-                    <span>Compare</span>
-                  </label>
-                </div>
-
-                <p className="mt-3 text-xs leading-relaxed text-[color:var(--t10-grey)]">
-                  {e.bio}
-                </p>
-
-                <div className="mt-4 flex flex-wrap gap-1">
-                  {e.areas.map((a) => {
-                    const found = ADVISORY_AREAS.find((x) => x.slug === a);
-                    return found ? (
-                      <span
-                        key={a}
-                        className="rounded-full bg-[color:var(--t10-mint)] px-2 py-0.5 text-[9px] font-semibold text-[color:var(--t10-navy)]"
-                      >
-                        {found.title.split(" ")[0]}
+      {loadingExperts ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-[color:var(--t10-emerald)]" />
+        </div>
+      ) : filteredExperts.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-[color:var(--t10-border)] bg-white p-12 text-center">
+          <p className="text-sm font-bold text-[color:var(--t10-navy)]">No registered consultants found.</p>
+          <p className="text-xs text-[color:var(--t10-grey)] mt-1">
+            As consultants complete their onboardings, they will automatically be listed here for clients to book.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredExperts.map((e) => {
+            const isComparing = compareSlugs.includes(e.slug);
+            return (
+              <div
+                key={e.slug}
+                className="flex flex-col justify-between rounded-2xl border border-[color:var(--t10-border)] bg-white p-5 shadow-sm hover:shadow-md transition-all"
+              >
+                <div>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-10 w-10 place-items-center rounded-full bg-[color:var(--t10-navy)] text-xs font-bold text-white uppercase">
+                        {e.initials}
                       </span>
-                    ) : null;
-                  })}
-                </div>
-              </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-[color:var(--t10-navy)]">{e.name}</h4>
+                        <p className="text-[11px] text-[color:var(--t10-grey)]">{e.role}</p>
+                      </div>
+                    </div>
+                    <label className="flex items-center gap-1 cursor-pointer select-none rounded bg-[color:var(--t10-offwhite)] border border-[color:var(--t10-border)] px-2 py-1 text-[10px] font-semibold text-[color:var(--t10-navy)]">
+                      <input
+                        type="checkbox"
+                        checked={isComparing}
+                        onChange={() => handleToggleCompare(e.slug)}
+                        className="h-3 w-3 accent-[color:var(--t10-emerald)]"
+                      />
+                      <span>Compare</span>
+                    </label>
+                  </div>
 
-              <div className="mt-5 border-t border-[color:var(--t10-border)] pt-3">
-                <div className="flex items-center justify-between text-[11px] text-[color:var(--t10-grey)] mb-3">
-                  <span className="flex items-center gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--t10-emerald)]" /> Verified
-                  </span>
-                  <span>{e.experienceYears} Years Exp</span>
+                  <p className="mt-3 text-xs leading-relaxed text-[color:var(--t10-grey)]">
+                    {e.bio}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap gap-1">
+                    {e.areas.map((a) => {
+                      const found = ADVISORY_AREAS.find((x) => x.slug === a);
+                      return found ? (
+                        <span
+                          key={a}
+                          className="rounded-full bg-[color:var(--t10-mint)] px-2 py-0.5 text-[9px] font-semibold text-[color:var(--t10-navy)]"
+                        >
+                          {found.title.split(" ")[0]}
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
                 </div>
-                <button
-                  onClick={() => setSelectedExpert(e)}
-                  className="w-full rounded-lg bg-[color:var(--t10-navy)] py-2 text-center text-xs font-bold text-white hover:bg-neutral-800 transition-colors shadow-sm"
-                >
-                  Schedule Session (1 Credit)
-                </button>
+
+                <div className="mt-5 border-t border-[color:var(--t10-border)] pt-3">
+                  <div className="flex items-center justify-between text-[11px] text-[color:var(--t10-grey)] mb-3">
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="h-3.5 w-3.5 text-[color:var(--t10-emerald)]" /> Verified
+                    </span>
+                    <span>{e.experienceYears} Years Exp</span>
+                  </div>
+                  <button
+                    onClick={() => setSelectedExpert(e)}
+                    className="w-full rounded-lg bg-[color:var(--t10-navy)] py-2 text-center text-xs font-bold text-white hover:bg-neutral-800 transition-colors shadow-sm"
+                  >
+                    Schedule Session (1 Credit)
+                  </button>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Comparison Bottom Sticky Bar */}
       {compareSlugs.length > 0 && (

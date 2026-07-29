@@ -42,14 +42,18 @@ interface AdminContextType {
   users: any[];
   tickets: any[];
   bookings: any[];
+  transactions: any[];
   refreshData: () => void;
   suspendUser: (uid: string, isSuspended: boolean) => Promise<void>;
   approveConsultant: (uid: string) => Promise<void>;
   updateUserRole: (uid: string, role: string) => Promise<void>;
   updateUserAdminRole: (uid: string, role: string | null) => Promise<void>;
   updateUserProfile: (uid: string, displayName: string, email: string) => Promise<void>;
+  deleteUser: (uid: string) => Promise<void>;
   updateBookingStatus: (id: string, status: string) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
+  deleteBooking: (id: string) => Promise<void>;
+  deleteMultipleBookings: (ids: string[]) => Promise<void>;
 }
 
 const DEFAULT_METRICS: AdminMetrics = {
@@ -71,7 +75,30 @@ const STATIC_TASKS: Task[] = [
   { id: "t6", title: "System health check and backup audit", category: "Operations", priority: "High", status: "Pending", ownerRole: "Super Admin" },
 ];
 
-const AdminStateContext = createContext<AdminContextType | undefined>(undefined);
+const DEFAULT_ADMIN_CTX: AdminContextType = {
+  adminRole: "Super Admin",
+  setAdminRole: () => {},
+  metrics: DEFAULT_METRICS,
+  tasks: STATIC_TASKS,
+  resolveTask: () => {},
+  users: [],
+  tickets: [],
+  bookings: [],
+  transactions: [],
+  refreshData: () => {},
+  suspendUser: async () => {},
+  approveConsultant: async () => {},
+  updateUserRole: async () => {},
+  updateUserAdminRole: async () => {},
+  updateUserProfile: async () => {},
+  deleteUser: async () => {},
+  updateBookingStatus: async () => {},
+  cancelBooking: async () => {},
+  deleteBooking: async () => {},
+  deleteMultipleBookings: async () => {},
+};
+
+const AdminStateContext = createContext<AdminContextType>(DEFAULT_ADMIN_CTX);
 
 export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { userDoc } = useAuth();
@@ -90,6 +117,7 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [users, setUsers] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
 
   const refreshData = () => {
     import("@/lib/server-actions").then(({ getAllAdminDataFn }) => {
@@ -162,16 +190,21 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const updateUserAdminRole = async (uid: string, role: string | null) => {
-    const { setAdminRoleFn } = await import("@/lib/server-actions");
-    await setAdminRoleFn({ data: { uid, adminRole: role } });
+    const { updateUserAdminRoleFn } = await import("@/lib/server-actions");
+    await updateUserAdminRoleFn({ data: { uid, adminRole: role } });
     refreshData();
   };
 
   const updateUserProfile = async (uid: string, displayName: string, email: string) => {
-    // In a real app we would update the profile via server-action or Firebase directly.
-    // For now we'll just refresh, but ideally we add an update user function.
-    // Assuming we have a way to update basic details or we just ignore for this mock.
+    const { updateUserProfileByAdminFn } = await import("@/lib/server-actions");
+    await updateUserProfileByAdminFn({ data: { uid, displayName, email } });
     refreshData();
+  };
+
+  const deleteUser = async (uid: string) => {
+    const { deleteUserFn } = await import("@/lib/server-actions");
+    await deleteUserFn({ data: { uid } });
+    setUsers(prev => prev.filter(u => u.uid !== uid));
   };
 
   const updateBookingStatus = async (id: string, status: string) => {
@@ -184,6 +217,20 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const { cancelBookingFn } = await import("@/lib/server-actions");
     await cancelBookingFn({ data: { bookingId: id, cancelledBy: "admin" } });
     setBookings(prev => prev.map(b => b.id === id ? { ...b, status: "CANCELLED" } : b));
+  };
+
+  const deleteBooking = async (id: string) => {
+    const { deleteBookingFn } = await import("@/lib/server-actions");
+    await deleteBookingFn({ data: { bookingId: id } });
+    setBookings(prev => prev.filter(b => b.id !== id && (b as any)._id !== id));
+    refreshData();
+  };
+
+  const deleteMultipleBookings = async (ids: string[]) => {
+    const { deleteMultipleBookingsFn } = await import("@/lib/server-actions");
+    await deleteMultipleBookingsFn({ data: { bookingIds: ids } });
+    setBookings(prev => prev.filter(b => !ids.includes(b.id) && !ids.includes((b as any)._id)));
+    refreshData();
   };
 
   const resolveTask = (id: string) => {
@@ -213,14 +260,18 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         users,
         tickets,
         bookings,
+        transactions,
         refreshData,
         suspendUser,
         approveConsultant,
         updateUserRole,
         updateUserAdminRole,
         updateUserProfile,
+        deleteUser,
         updateBookingStatus,
         cancelBooking,
+        deleteBooking,
+        deleteMultipleBookings,
       }}
     >
       {children}
@@ -229,9 +280,5 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 };
 
 export const useAdminState = () => {
-  const context = useContext(AdminStateContext);
-  if (!context) {
-    throw new Error("useAdminState must be used within an AdminStateProvider");
-  }
-  return context;
+  return useContext(AdminStateContext);
 };

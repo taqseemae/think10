@@ -30,19 +30,22 @@ function ConsultantProfile() {
   }, [userDoc]);
 
   const handleSave = async () => {
-    if (!currentUser?.uid) return;
+    const uid = currentUser?.uid || userDoc?.uid;
+    if (!uid) return;
     setSaving(true);
     setSuccess(false);
     setErrorMsg("");
     try {
       const { updateConsultantProfileFn } = await import("@/lib/server-actions");
       await updateConsultantProfileFn({
-        uid: currentUser.uid,
-        profile: {
-          title,
-          bio,
-          primaryArea,
-          topics: tags
+        data: {
+          uid,
+          profile: {
+            title,
+            bio,
+            primaryArea,
+            topics: tags
+          }
         }
       });
       await refreshUserDoc();

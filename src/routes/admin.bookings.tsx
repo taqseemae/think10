@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState } from "@/context/AdminStateContext";
-import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban } from "lucide-react";
+import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { GenericCallModal } from "@/components/GenericCallModal";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -10,8 +10,31 @@ export const Route = createFileRoute("/admin/bookings")({
 });
 
 function BookingsAdminPage() {
-  const { bookings, updateBookingStatus, cancelBooking } = useAdminState();
+  const { bookings, updateBookingStatus, cancelBooking, deleteBooking, deleteMultipleBookings } = useAdminState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === bookings.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(bookings.map((b: any) => b.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Permanently delete ${selectedIds.length} selected booking record(s)?`)) {
+      await deleteMultipleBookings(selectedIds);
+      setSelectedIds([]);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -25,6 +48,14 @@ function BookingsAdminPage() {
         </div>
         
         <div className="flex gap-3">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-colors flex items-center gap-1.5 shadow"
+            >
+              <Trash2 className="w-4 h-4" /> Delete Selected ({selectedIds.length})
+            </button>
+          )}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <input 
@@ -44,6 +75,14 @@ function BookingsAdminPage() {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">
               <tr>
+                <th className="px-4 py-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === bookings.length && bookings.length > 0}
+                    onChange={handleSelectAll}
+                    className="rounded border-neutral-300 text-[color:var(--t10-emerald)] focus:ring-[color:var(--t10-emerald)] h-4 w-4"
+                  />
+                </th>
                 <th className="px-6 py-4">Session Details</th>
                 <th className="px-6 py-4">Expert / Advisor</th>
                 <th className="px-6 py-4">Schedule</th>
@@ -54,13 +93,23 @@ function BookingsAdminPage() {
             <tbody className="divide-y divide-neutral-200">
               {bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-neutral-500">
+                  <td colSpan={6} className="px-6 py-8 text-center text-neutral-500">
                     No bookings found in the system.
                   </td>
                 </tr>
               ) : (
-                bookings.map((booking) => (
-                  <tr key={booking.id} className="hover:bg-neutral-50 transition-colors">
+                bookings.map((booking) => {
+                  const isSelected = selectedIds.includes(booking.id);
+                  return (
+                    <tr key={booking.id} className={`transition-colors ${isSelected ? "bg-red-50/40" : "hover:bg-neutral-50"}`}>
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(booking.id)}
+                          className="rounded border-neutral-300 text-[color:var(--t10-emerald)] focus:ring-[color:var(--t10-emerald)] h-4 w-4"
+                        />
+                      </td>
                     <td className="px-6 py-4">
                       <div className="font-semibold text-neutral-900">{booking.topic || "General Advisory"}</div>
                       <div className="text-xs text-neutral-500 flex items-center gap-1 mt-1">
@@ -97,6 +146,18 @@ function BookingsAdminPage() {
                             <Video className="w-3 h-3" /> Audit Call
                           </button>
                         )}
+
+                        <button
+                          onClick={() => {
+                            if (window.confirm("Permanently delete this booking record from database?")) {
+                              deleteBooking(booking.id || (booking as any)._id);
+                            }
+                          }}
+                          className="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded hover:bg-red-100 transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" /> Delete
+                        </button>
+
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <button className="text-neutral-400 hover:text-neutral-900 transition-colors p-1">
@@ -120,7 +181,7 @@ function BookingsAdminPage() {
                                     cancelBooking(booking.id);
                                   }
                                 }}
-                                className="cursor-pointer text-red-600 font-medium flex items-center"
+                                className="cursor-pointer text-amber-600 font-medium flex items-center"
                               >
                                 <Ban className="mr-2 h-4 w-4" />
                                 Cancel Session
@@ -131,7 +192,8 @@ function BookingsAdminPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                );
+              })
               )}
             </tbody>
           </table>

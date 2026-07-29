@@ -23,7 +23,7 @@ import {
 import {
   getAvailableSlotsForDateFn,
   getAvailableDatesForMonthFn,
-  createGoogleMeetBookingFn,
+  createBookingFn,
 } from "@/lib/server-actions";
 import { useAuth } from "@/context/AuthContext";
 import type { Expert } from "@/data/think10";
@@ -173,7 +173,7 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
     setBooking(true);
     setBookingError(null);
     try {
-      const result = await createGoogleMeetBookingFn({
+      const result = await createBookingFn({
         data: {
           userId: currentUser.uid,
           userEmail: currentUser.email || userDoc?.email || "",
@@ -193,7 +193,7 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
       });
       setBookingResult(result);
       setStep(3);
-      onSuccess?.(result.bookingId, result.googleMeetLink);
+      onSuccess?.(result.bookingId, result.meetLink);
     } catch (err: any) {
       setBookingError(err?.message || "Booking failed. Please try again.");
     } finally {

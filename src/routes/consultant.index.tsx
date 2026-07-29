@@ -13,6 +13,7 @@ import {
   FileText,
   CircleDollarSign,
   RefreshCcw,
+  Trash2,
 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/consultant/")({
 
 function ConsultantDashboardHome() {
   const { currentUser, userDoc } = useAuth();
-  const { metrics, bookings, refreshData } = useConsultantState();
+  const { metrics, bookings, refreshData, deleteBooking } = useConsultantState();
 
   const [onboardingStep, setOnboardingStep] = useState(1);
   const [title, setTitle] = useState(userDoc?.consultantProfile?.title || "");
@@ -383,18 +384,36 @@ function ConsultantDashboardHome() {
                     setSubmitting(true);
                     setErrorMsg("");
                     try {
+                      const uid = currentUser?.uid;
+                      if (!uid) {
+                        throw new Error("User session not found. Please refresh the page and try again.");
+                      }
+
+                      // Refresh the Firebase ID token and set the cookie before any server call
+                      try {
+                        const freshToken = await currentUser.getIdToken(true); // force refresh
+                        const isSecure = window.location.protocol === 'https:';
+                        const secureFlag = isSecure ? '; Secure' : '';
+                        document.cookie = `auth_token=${freshToken}; path=/; max-age=3600${secureFlag}; SameSite=Strict`;
+                      } catch (tokenErr) {
+                        console.error("Failed to refresh token:", tokenErr);
+                        throw new Error("Authentication expired. Please log out and log in again.");
+                      }
+
                       const { updateConsultantProfileFn, setConsultantAvailabilityFn, updateUserOnboardingFn } = await import("@/lib/server-actions");
                       
                       // 1. Save Profile
                       await updateConsultantProfileFn({
-                        uid: currentUser!.uid,
-                        profile: { title, bio, primaryArea, topics: tags }
+                        data: {
+                          uid,
+                          profile: { title, bio, primaryArea, topics: tags }
+                        }
                       });
                       
                       // 2. Set Availability
                       await setConsultantAvailabilityFn({
                         data: {
-                          consultantId: currentUser!.uid,
+                          consultantId: uid,
                           consultantName: userDoc?.displayName || currentUser?.displayName || "",
                           consultantEmail: userDoc?.email || currentUser?.email || "",
                           weeklySchedule: {
@@ -416,7 +435,7 @@ function ConsultantDashboardHome() {
                       // 3. Mark Onboarding as Completed
                       await updateUserOnboardingFn({
                         data: {
-                          uid: currentUser!.uid,
+                          uid,
                           completed: true,
                           step: 4
                         }
@@ -544,6 +563,16 @@ function ConsultantDashboardHome() {
                   >
                     <FileText className="w-4 h-4" /> View Details
                   </Link>
+                  <button
+                    onClick={() => {
+                      if (window.confirm("Permanently delete this test session?")) {
+                        deleteBooking(nextBooking.id);
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors flex justify-center items-center gap-1 cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete
+                  </button>
                 </div>
               </>
             ) : (

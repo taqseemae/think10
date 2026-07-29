@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState, type AdminRole } from "@/context/AdminStateContext";
-import { Users, Search, MoreVertical, ShieldCheck, Mail, Building2, CheckCircle2, Edit, X, Save } from "lucide-react";
+import { Users, Search, MoreVertical, ShieldCheck, Mail, Building2, CheckCircle2, Edit, X, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/admin/users")({
@@ -22,9 +22,9 @@ const ADMIN_ROLES: AdminRole[] = [
 ];
 
 function UsersAdminPage() {
-  const { users, suspendUser, updateUserRole, updateUserAdminRole, updateUserProfile } = useAdminState();
+  const { users, suspendUser, updateUserRole, updateUserAdminRole, updateUserProfile, deleteUser } = useAdminState();
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  
+
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("");
@@ -98,7 +98,7 @@ function UsersAdminPage() {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className="hover:bg-neutral-50 transition-colors">
+                  <tr key={user.id || user.uid} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-[color:var(--t10-mint)] flex items-center justify-center text-[color:var(--t10-emerald)] font-bold">
@@ -140,10 +140,10 @@ function UsersAdminPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end items-center gap-2">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors cursor-pointer"
                         >
                           <Edit className="h-3 w-3" /> Edit
                         </button>
@@ -151,18 +151,29 @@ function UsersAdminPage() {
                         {user.plan?.status === "Suspended" ? (
                           <button
                             onClick={() => suspendUser(user.uid, false)}
-                            className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors"
+                            className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-1 rounded hover:bg-emerald-100 transition-colors cursor-pointer"
                           >
                             Unsuspend
                           </button>
                         ) : (
                           <button
                             onClick={() => suspendUser(user.uid, true)}
-                            className="text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 px-2 py-1 rounded hover:bg-red-100 transition-colors"
+                            className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-1 rounded hover:bg-amber-100 transition-colors cursor-pointer"
                           >
                             Suspend
                           </button>
                         )}
+
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Permanently delete user account '${user.displayName || user.email}' from system?`)) {
+                              deleteUser(user.uid);
+                            }
+                          }}
+                          className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded hover:bg-red-100 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="h-3 w-3" /> Delete
+                        </button>
                       </div>
                     </td>
                   </tr>

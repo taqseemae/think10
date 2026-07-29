@@ -147,7 +147,7 @@ function GoogleConnectPage() {
           <p className="text-sm font-bold text-amber-800">Important Setup Note</p>
         </div>
         <p className="text-xs text-amber-700 leading-relaxed">
-          The Google account you connect here will be the "host" of all booking events. It will appear as the organizer in Google Calendar invites. We recommend using a dedicated <strong>bookings@think10.ae</strong> Google Workspace account rather than a personal account.
+          The Google account you connect here will be the "host" of all booking events. It will appear as the organizer in Google Calendar invites. Use your Google Workspace account <strong>info@taqseem.ae</strong> to authorize meeting creation.
         </p>
         <p className="text-xs text-amber-700 leading-relaxed">
           For production, make sure <code className="bg-amber-100 px-1 rounded">https://think10.ae/auth/google/callback</code> is added as an authorized redirect URI in your Google Cloud Console.
