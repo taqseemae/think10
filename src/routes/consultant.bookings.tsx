@@ -3,14 +3,16 @@ import { Calendar, Filter, Clock, Users, ArrowUpRight, CheckCircle2, XCircle, Vi
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
 import { GenericCallModal } from "@/components/GenericCallModal";
+import { RescheduleModal } from "@/components/RescheduleModal";
 
 export const Route = createFileRoute("/consultant/bookings")({
   component: ConsultantBookings,
 });
 
 function ConsultantBookings() {
-  const { bookings, updateBookingStatus, cancelBooking } = useConsultantState();
+  const { bookings, updateBookingStatus, cancelBooking, rescheduleBooking } = useConsultantState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState<any | null>(null);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -99,16 +101,19 @@ function ConsultantBookings() {
 
                   {/* Actions Column */}
                   <div className="flex flex-row sm:flex-col items-center sm:items-end justify-center sm:justify-start gap-2 shrink-0 border-t sm:border-t-0 border-neutral-100 pt-4 sm:pt-0">
-                    {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
-                      <button 
-                        onClick={() => {
-                          if (window.confirm("Are you sure you want to cancel this booking?")) {
-                            cancelBooking(booking.id);
-                          }
-                        }}
-                        className="w-full sm:w-auto px-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm font-medium text-amber-600 hover:bg-neutral-50 transition-colors">
-                        Cancel Session
-                      </button>
+                    {booking.status === "CONFIRMED" && (
+                      <>
+                        <button 
+                          onClick={() => setRescheduleTarget(booking)}
+                          className="w-full sm:w-auto px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-medium text-[color:var(--t10-emerald)] hover:bg-emerald-100 transition-colors">
+                          Reschedule
+                        </button>
+                        <button 
+                          onClick={() => cancelBooking(booking.id)}
+                          className="w-full sm:w-auto px-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-200 transition-colors">
+                          Cancel Session
+                        </button>
+                      </>
                     )}
                     {booking.status !== "COMPLETED" && (
                       <button 
@@ -132,6 +137,19 @@ function ConsultantBookings() {
           </button>
         </div>
       </div>
+
+      {rescheduleTarget && (
+        <RescheduleModal
+          bookingId={rescheduleTarget.id}
+          expertSlug={rescheduleTarget.expertSlug || rescheduleTarget.consultantId || "consultant"}
+          expertName={rescheduleTarget.expertName || "Advisor"}
+          onClose={() => setRescheduleTarget(null)}
+          onRescheduleConfirm={(id, newSlot) => {
+            const newEnd = new Date(new Date(newSlot).getTime() + 60 * 60 * 1000).toISOString();
+            rescheduleBooking(id, newSlot, newEnd);
+          }}
+        />
+      )}
 
       {activeCallSession && (
         <GenericCallModal

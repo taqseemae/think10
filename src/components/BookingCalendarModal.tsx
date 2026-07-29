@@ -26,7 +26,9 @@ import {
   createBookingFn,
 } from "@/lib/server-actions";
 import { useAuth } from "@/context/AuthContext";
+import { useDashboardState } from "@/context/DashboardStateContext";
 import type { Expert } from "@/data/think10";
+import { CreditCard } from "lucide-react";
 
 interface TimeSlot {
   startTime: string;
@@ -58,7 +60,11 @@ function formatISO(date: Date): string {
 
 export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCalendarModalProps) {
   const { currentUser, userDoc } = useAuth();
+  const dashboardState = (() => {
+    try { return useDashboardState(); } catch { return null; }
+  })();
 
+  const [payingMock, setPayingMock] = useState(false);
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1); // 1-indexed
@@ -423,24 +429,64 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
               </div>
             )}
 
-            {/* Confirm Button */}
-            <button
-              onClick={handleConfirmBooking}
-              disabled={!selectedSlot || !preCall.challenge.trim() || booking}
-              className="w-full rounded-lg bg-[color:var(--t10-emerald)] py-3 text-sm font-bold text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
-            >
-              {booking ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Creating your Google Meet session...
-                </>
-              ) : (
-                <>
-                  <Video className="h-4 w-4" />
-                  Confirm Booking & Generate Meet Link
-                </>
-              )}
-            </button>
+            {/* Mock Payment banner if user has 0 credits */}
+            {dashboardState && dashboardState.credits <= 0 ? (
+              <div className="space-y-2 rounded-xl bg-amber-50 border border-amber-200 p-4">
+                <div className="flex items-center justify-between text-xs text-amber-900 font-medium">
+                  <span className="flex items-center gap-1.5 font-bold">
+                    <CreditCard className="h-4 w-4 text-amber-600" /> Pay Now (Test Mode)
+                  </span>
+                  <span className="font-bold">AED 450</span>
+                </div>
+                <p className="text-[11px] text-amber-700">
+                  You have 0 credits. Click Pay Now to simulate credit purchase and complete booking.
+                </p>
+                <button
+                  type="button"
+                  disabled={!selectedSlot || !preCall.challenge.trim() || booking || payingMock}
+                  onClick={async () => {
+                    setPayingMock(true);
+                    setTimeout(() => {
+                      dashboardState.setCredits((c) => c + 1);
+                      dashboardState.addLedgerEntry("Purchased 1 Strategy Session Credit", 1, 1);
+                      setPayingMock(false);
+                      handleConfirmBooking();
+                    }, 800);
+                  }}
+                  className="w-full rounded-lg bg-[color:var(--t10-navy)] py-3 text-xs font-bold text-white hover:bg-neutral-800 disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
+                >
+                  {payingMock ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing Payment...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-4 w-4" />
+                      Pay Now & Confirm Booking
+                    </>
+                  )}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleConfirmBooking}
+                disabled={!selectedSlot || !preCall.challenge.trim() || booking}
+                className="w-full rounded-lg bg-[color:var(--t10-emerald)] py-3 text-sm font-bold text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
+              >
+                {booking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating your Google Meet session...
+                  </>
+                ) : (
+                  <>
+                    <Video className="h-4 w-4" />
+                    Confirm Booking & Generate Meet Link
+                  </>
+                )}
+              </button>
+            )}
             <p className="text-center text-[10px] text-[color:var(--t10-grey)]">
               A Google Calendar invite will be sent to your email after confirmation.
             </p>

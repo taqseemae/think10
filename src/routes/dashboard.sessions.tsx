@@ -22,11 +22,14 @@ import {
   Trash2,
 } from "lucide-react";
 
+import { RescheduleModal } from "@/components/RescheduleModal";
+
 export const Route = createFileRoute("/dashboard/sessions")({ component: Page });
 
 function Page() {
-  const { bookings, cancelBooking, deleteBooking, completeCall, triggerServiceRecovery, role } = useDashboardState();
+  const { bookings, cancelBooking, deleteBooking, completeCall, triggerServiceRecovery, rescheduleBooking, role } = useDashboardState();
 
+  const [rescheduleTarget, setRescheduleTarget] = useState<BookingSession | null>(null);
   const [activeCallSession, setActiveCallSession] = useState<BookingSession | null>(null);
   const [callStep, setCallStep] = useState<"DEVICE_CHECK" | "CONSENT" | "ACTIVE" | "FEEDBACK">("DEVICE_CHECK");
 
@@ -218,6 +221,12 @@ function Page() {
                       </button>
                     )}
                     <button
+                      onClick={() => setRescheduleTarget(b)}
+                      className="rounded border border-[color:var(--t10-emerald)] px-3 py-1.5 font-semibold text-[color:var(--t10-emerald)] hover:bg-emerald-50 transition-colors"
+                    >
+                      Reschedule
+                    </button>
+                    <button
                       onClick={() => cancelBooking(b.id)}
                       className="rounded border border-[color:var(--t10-border)] px-3 py-1.5 font-semibold text-[color:var(--t10-grey)] hover:bg-neutral-50 transition-colors"
                     >
@@ -234,6 +243,19 @@ function Page() {
             )}
           </div>
         </div>
+
+        {/* Reschedule Modal */}
+        {rescheduleTarget && (
+          <RescheduleModal
+            bookingId={rescheduleTarget.id}
+            expertSlug={rescheduleTarget.expertSlug}
+            expertName={rescheduleTarget.expertName}
+            onClose={() => setRescheduleTarget(null)}
+            onRescheduleConfirm={(id, newSlot) => {
+              rescheduleBooking(id, newSlot);
+            }}
+          />
+        )}
 
         {/* Historical Logs */}
         <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-5 shadow-sm space-y-4">
@@ -268,10 +290,28 @@ function Page() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-end gap-2">
                     <span className={`rounded border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${getStatusColor(b.status)}`}>
                       {b.status.replace("_", " ")}
                     </span>
+                    {b.status !== "TECH_FAILURE" && b.status !== "NO_SHOW" && b.status !== "DISPUTED" && (
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => triggerServiceRecovery(b.id, "TECH_FAILURE")}
+                          className="rounded border border-neutral-200 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-red-600 transition-colors"
+                          title="Report technical issues during call"
+                        >
+                          Tech Failure
+                        </button>
+                        <button
+                          onClick={() => triggerServiceRecovery(b.id, "NO_SHOW")}
+                          className="rounded border border-neutral-200 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-red-600 transition-colors"
+                          title="Report advisor did not join call"
+                        >
+                          Advisor No-Show
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
