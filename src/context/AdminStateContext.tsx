@@ -46,6 +46,7 @@ interface AdminContextType {
   refreshData: () => void;
   suspendUser: (uid: string, isSuspended: boolean) => Promise<void>;
   approveConsultant: (uid: string) => Promise<void>;
+  rejectConsultant: (uid: string, reason?: string) => Promise<void>;
   updateUserRole: (uid: string, role: string) => Promise<void>;
   updateUserAdminRole: (uid: string, role: string | null) => Promise<void>;
   updateUserProfile: (uid: string, displayName: string, email: string) => Promise<void>;
@@ -88,6 +89,7 @@ const DEFAULT_ADMIN_CTX: AdminContextType = {
   refreshData: () => {},
   suspendUser: async () => {},
   approveConsultant: async () => {},
+  rejectConsultant: async () => {},
   updateUserRole: async () => {},
   updateUserAdminRole: async () => {},
   updateUserProfile: async () => {},
@@ -183,6 +185,12 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     refreshData();
   };
 
+  const rejectConsultant = async (uid: string, reason?: string) => {
+    const { rejectConsultantFn } = await import("@/lib/server-actions");
+    await rejectConsultantFn({ data: { uid, reason } });
+    refreshData();
+  };
+
   const updateUserRole = async (uid: string, role: string) => {
     const { updateUserPlanFn } = await import("@/lib/server-actions");
     await updateUserPlanFn({ data: { uid, role } });
@@ -264,6 +272,7 @@ export const AdminStateProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         refreshData,
         suspendUser,
         approveConsultant,
+        rejectConsultant,
         updateUserRole,
         updateUserAdminRole,
         updateUserProfile,

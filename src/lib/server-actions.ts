@@ -324,7 +324,22 @@ export const approveConsultantFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     await requireAdmin();
     const db = await getDb();
-    await db.collection('users').updateOne({ uid: data.uid }, { $set: { "plan.role": "Consultant" } });
+    await db.collection('users').updateOne(
+      { uid: data.uid },
+      { $set: { "plan.role": "Consultant", approved: true, approvalStatus: "APPROVED", updatedAt: new Date().toISOString() } }
+    );
+    return true;
+  });
+
+export const rejectConsultantFn = createServerFn({ method: 'POST' })
+  .validator((d: { uid: string; reason?: string }) => d)
+  .handler(async ({ data }) => {
+    await requireAdmin();
+    const db = await getDb();
+    await db.collection('users').updateOne(
+      { uid: data.uid },
+      { $set: { approved: false, approvalStatus: "REJECTED", rejectionReason: data.reason || "Documents require resubmission", updatedAt: new Date().toISOString() } }
+    );
     return true;
   });
 
@@ -510,6 +525,29 @@ export const updateConsultantProfileFn = createServerFn({ method: 'POST' })
     return true;
   });
 
+export const submitConsultantVerificationFn = createServerFn({ method: 'POST' })
+  .validator((d: { uid: string; verificationDocs: any; setupFeePaid: boolean }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    if (!data?.uid || token.uid !== data.uid) throw new Error('Unauthorized');
+    const db = await getDb();
+    await db.collection('users').updateOne(
+      { uid: data.uid },
+      {
+        $set: {
+          approved: false,
+          approvalStatus: "PENDING",
+          verificationDocs: data.verificationDocs,
+          setupFeePaid: data.setupFeePaid,
+          "onboarding.completed": true,
+          "onboarding.step": 5,
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    );
+    return true;
+  });
+
 // --- Quality Cases ---
 export const createQualityCaseFn = createServerFn({ method: 'POST' })
   .validator((d: { type: string; severity: string; relatedBookingId?: string; consultantId?: string; customerId?: string; description: string }) => d)
@@ -656,7 +694,9 @@ export const getPublicConsultantsFn = createServerFn({ method: 'GET' })
       $or: [
         { 'plan.role': 'Consultant' },
         { consultantProfile: { $exists: true } }
-      ]
+      ],
+      approved: { $ne: false },
+      approvalStatus: { $nin: ['PENDING', 'REJECTED'] }
     }).toArray();
 
     return docs.map((d) => {

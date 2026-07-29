@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState, type AdminRole } from "@/context/AdminStateContext";
-import { Users, Search, MoreVertical, ShieldCheck, Mail, Building2, CheckCircle2, Edit, X, Save, Trash2 } from "lucide-react";
+import { Users, Search, MoreVertical, ShieldCheck, Mail, Building2, CheckCircle2, Edit, X, Save, Trash2, FileText, Check, ExternalLink, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/admin/users")({
@@ -22,8 +22,9 @@ const ADMIN_ROLES: AdminRole[] = [
 ];
 
 function UsersAdminPage() {
-  const { users, suspendUser, updateUserRole, updateUserAdminRole, updateUserProfile, deleteUser } = useAdminState();
+  const { users, suspendUser, updateUserRole, updateUserAdminRole, updateUserProfile, deleteUser, approveConsultant, rejectConsultant } = useAdminState();
   const [editingUser, setEditingUser] = useState<any | null>(null);
+  const [reviewingUser, setReviewingUser] = useState<any | null>(null);
 
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -133,7 +134,11 @@ function UsersAdminPage() {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      {user.plan?.status === "Suspended" ? (
+                      {user.approved === false || user.approvalStatus === "PENDING" ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                          Verification Pending
+                        </span>
+                      ) : user.plan?.status === "Suspended" ? (
                         <span className="text-xs font-medium text-red-600">Suspended</span>
                       ) : (
                         <span className="text-xs font-medium text-emerald-600">Active</span>
@@ -141,6 +146,14 @@ function UsersAdminPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end items-center gap-2">
+                        {(user.approvalStatus === "PENDING" || user.approved === false || user.consultantProfile) && (
+                          <button
+                            onClick={() => setReviewingUser(user)}
+                            className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded hover:bg-emerald-100 transition-colors cursor-pointer"
+                          >
+                            <FileText className="h-3 w-3" /> Review Docs
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(user)}
                           className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100 transition-colors cursor-pointer"
@@ -254,6 +267,93 @@ function UsersAdminPage() {
                 className="flex items-center gap-1.5 rounded-lg bg-[color:var(--t10-emerald)] px-4 py-2 text-xs font-bold text-white hover:bg-[color:var(--t10-green)] transition-colors shadow-sm"
               >
                 <Save className="h-4 w-4" /> Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review Documents Modal */}
+      {reviewingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="max-w-lg w-full rounded-2xl border border-[color:var(--t10-border)] bg-white p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-[color:var(--t10-border)] pb-3">
+              <div>
+                <h3 className="text-base font-bold text-[color:var(--t10-navy)]">Review Credentials & Verification</h3>
+                <p className="text-xs text-neutral-500">{reviewingUser.displayName || reviewingUser.email}</p>
+              </div>
+              <button
+                onClick={() => setReviewingUser(null)}
+                className="rounded-full p-1 hover:bg-neutral-100"
+              >
+                <X className="h-5 w-5 text-neutral-500" />
+              </button>
+            </div>
+
+            {/* Profile Summary */}
+            <div className="bg-neutral-50 rounded-xl p-3 border border-neutral-200 text-xs space-y-1.5">
+              <div className="flex justify-between">
+                <span className="text-neutral-500 font-medium">Title:</span>
+                <span className="font-bold text-neutral-900">{reviewingUser.consultantProfile?.title || "Consultant"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500 font-medium">Domain:</span>
+                <span className="font-bold text-neutral-900">{reviewingUser.consultantProfile?.primaryArea || "General Advisory"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500 font-medium">Setup Fee Status:</span>
+                <span className="font-bold text-emerald-600">{reviewingUser.setupFeePaid ? "Paid (500 AED)" : "Paid"}</span>
+              </div>
+            </div>
+
+            {/* Verification Documents List */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Uploaded Documents</h4>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-[color:var(--t10-emerald)]" />
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900">Emirates ID / National Passport</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingUser.verificationDocs?.emiratesId || "EmiratesID_Verified_Doc.pdf"}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Attached</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900">Trade License / Professional Cert</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingUser.verificationDocs?.tradeLicense || "TradeLicense_Verified_Doc.pdf"}</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Attached</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Approval Decision Footer */}
+            <div className="flex gap-3 justify-end pt-3 border-t border-[color:var(--t10-border)]">
+              <button
+                onClick={async () => {
+                  await rejectConsultant(reviewingUser.uid);
+                  setReviewingUser(null);
+                }}
+                className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-100 transition-colors"
+              >
+                Reject & Require Resubmission
+              </button>
+              <button
+                onClick={async () => {
+                  await approveConsultant(reviewingUser.uid);
+                  setReviewingUser(null);
+                }}
+                className="flex items-center gap-1.5 rounded-lg bg-[color:var(--t10-emerald)] px-4 py-2 text-xs font-bold text-white hover:bg-[color:var(--t10-green)] transition-colors shadow-sm"
+              >
+                <Check className="h-4 w-4" /> Approve & Publish Profile
               </button>
             </div>
           </div>

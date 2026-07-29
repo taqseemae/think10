@@ -153,11 +153,11 @@ function ConsultantDashboardHome() {
             </div>
             {/* Step indicator */}
             <div className="mt-6 flex items-center justify-between gap-3 text-xs font-semibold text-white/60">
-              <span>Step {onboardingStep} of 4</span>
+              <span>Step {onboardingStep} of 5</span>
               <div className="flex-1 max-w-[200px] h-1 bg-white/20 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-[color:var(--t10-emerald)] transition-all duration-300"
-                  style={{ width: `${(onboardingStep / 4) * 100}%` }}
+                  style={{ width: `${(onboardingStep / 5) * 100}%` }}
                 />
               </div>
             </div>
@@ -312,31 +312,68 @@ function ConsultantDashboardHome() {
               </div>
             )}
 
-            {/* STEP 4: Review and Submit */}
+            {/* STEP 4: Document Verification Upload */}
             {onboardingStep === 4 && (
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 4: Profile Submission</h3>
-                  <p className="text-xs text-neutral-500">Double check your details before submitting your application for approval.</p>
+                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 4: Verification Documents</h3>
+                  <p className="text-xs text-neutral-500">Upload your official credentials for Think10 quality review & admin approval.</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div className="border border-dashed border-neutral-300 rounded-2xl p-4 bg-neutral-50 flex flex-col items-center justify-center text-center space-y-2">
+                    <FileText className="w-8 h-8 text-[color:var(--t10-emerald)]" />
+                    <div>
+                      <h4 className="text-xs font-bold text-[color:var(--t10-navy)]">Emirates ID / National Passport *</h4>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">PDF or JPEG, max 5MB</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[color:var(--t10-emerald)] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      ✓ Document Attached
+                    </span>
+                  </div>
+
+                  <div className="border border-dashed border-neutral-300 rounded-2xl p-4 bg-neutral-50 flex flex-col items-center justify-center text-center space-y-2">
+                    <FileText className="w-8 h-8 text-[color:var(--t10-navy)]" />
+                    <div>
+                      <h4 className="text-xs font-bold text-[color:var(--t10-navy)]">Trade License / Professional Cert *</h4>
+                      <p className="text-[10px] text-neutral-400 mt-0.5">PDF or JPEG, max 5MB</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[color:var(--t10-emerald)] bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                      ✓ Document Attached
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>Your credentials will be securely reviewed by Think10 quality administrators before your consultant profile is published.</span>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: Verification Fee & Submission */}
+            {onboardingStep === 5 && (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">Step 5: Setup & Verification Fee</h3>
+                  <p className="text-xs text-neutral-500">Pay your one-time onboarding & credential verification fee to submit your application.</p>
                 </div>
                 
                 <div className="border border-[color:var(--t10-border)] rounded-2xl p-5 space-y-4 bg-neutral-50/50">
-                  <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="flex items-center justify-between border-b border-neutral-200 pb-3">
+                    <div>
+                      <h4 className="text-sm font-bold text-[color:var(--t10-navy)]">Consultant Setup & Verification Package</h4>
+                      <p className="text-xs text-neutral-500">Includes ID background check, calendar setup & marketplace listing</p>
+                    </div>
+                    <span className="text-base font-bold text-[color:var(--t10-navy)]">AED 500</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-xs pt-1">
                     <span className="font-bold text-neutral-400 uppercase">Title</span>
                     <span className="col-span-2 font-semibold text-[color:var(--t10-navy)]">{title}</span>
                     
                     <span className="font-bold text-neutral-400 uppercase">Domain</span>
                     <span className="col-span-2 font-semibold text-[color:var(--t10-navy)]">{primaryArea}</span>
-                    
-                    <span className="font-bold text-neutral-400 uppercase">Tags</span>
-                    <span className="col-span-2 flex flex-wrap gap-1.5">
-                      {tags.map(t => (
-                        <span key={t} className="bg-neutral-200/80 px-2 py-0.5 rounded text-[10px] font-semibold">{t}</span>
-                      ))}
-                    </span>
-                    
-                    <span className="font-bold text-neutral-400 uppercase">Biography</span>
-                    <span className="col-span-2 text-neutral-600 line-clamp-3 leading-relaxed">{bio}</span>
                   </div>
                 </div>
               </div>
@@ -356,7 +393,7 @@ function ConsultantDashboardHome() {
                 <div />
               )}
               
-              {onboardingStep < 4 ? (
+              {onboardingStep < 5 ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -389,9 +426,9 @@ function ConsultantDashboardHome() {
                         throw new Error("User session not found. Please refresh the page and try again.");
                       }
 
-                      // Refresh the Firebase ID token and set the cookie before any server call
+                      // Refresh the Firebase ID token and set cookie
                       try {
-                        const freshToken = await currentUser.getIdToken(true); // force refresh
+                        const freshToken = await currentUser.getIdToken(true);
                         const isSecure = window.location.protocol === 'https:';
                         const secureFlag = isSecure ? '; Secure' : '';
                         document.cookie = `auth_token=${freshToken}; path=/; max-age=3600${secureFlag}; SameSite=Strict`;
@@ -400,7 +437,11 @@ function ConsultantDashboardHome() {
                         throw new Error("Authentication expired. Please log out and log in again.");
                       }
 
-                      const { updateConsultantProfileFn, setConsultantAvailabilityFn, updateUserOnboardingFn } = await import("@/lib/server-actions");
+                      const {
+                        updateConsultantProfileFn,
+                        setConsultantAvailabilityFn,
+                        submitConsultantVerificationFn
+                      } = await import("@/lib/server-actions");
                       
                       // 1. Save Profile
                       await updateConsultantProfileFn({
@@ -432,16 +473,20 @@ function ConsultantDashboardHome() {
                         }
                       });
 
-                      // 3. Mark Onboarding as Completed
-                      await updateUserOnboardingFn({
+                      // 3. Submit Verification Docs & Setup Fee Payment (Mock 500 AED)
+                      await submitConsultantVerificationFn({
                         data: {
                           uid,
-                          completed: true,
-                          step: 4
+                          verificationDocs: {
+                            emiratesId: "EmiratesID_Verified_Doc.pdf",
+                            tradeLicense: "TradeLicense_Verified_Doc.pdf",
+                            passport: "Passport_Copy.pdf",
+                          },
+                          setupFeePaid: true,
                         }
                       });
 
-                      // 4. Reload page or redirect
+                      // 4. Reload page
                       window.location.reload();
                     } catch (err: any) {
                       setErrorMsg(err.message || "Failed to complete onboarding. Please try again.");
@@ -452,7 +497,7 @@ function ConsultantDashboardHome() {
                   disabled={submitting}
                   className="px-6 py-2.5 bg-[color:var(--t10-emerald)] hover:bg-[color:var(--t10-emerald)]/90 text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer shadow disabled:opacity-50"
                 >
-                  {submitting ? "Submitting..." : "Submit Application"}
+                  {submitting ? "Submitting Application..." : "Pay Setup Fee (500 AED) & Submit"}
                 </button>
               )}
             </div>
@@ -493,6 +538,20 @@ function ConsultantDashboardHome() {
           </Link>
         </div>
       </div>
+
+      {/* Verification Status Banner */}
+      {userDoc?.approved !== true && userDoc?.email !== "admin@think10.ae" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
+          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">Verification Pending Admin Approval</h4>
+            <p className="text-xs text-amber-700 mt-0.5">
+              Your credentials and uploaded verification documents are under review by the Think10 Admin team.
+              Once approved, your profile will automatically be published on the public Advisors page for clients to book.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

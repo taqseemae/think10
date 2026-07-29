@@ -134,6 +134,7 @@ function Overview() {
         updateProfileField("teamSize", enterpriseForm.teamSize);
       }
       setOnboardingCompleted(true);
+      navigate({ to: "/dashboard/billing" });
     }, 1200);
   };
 
