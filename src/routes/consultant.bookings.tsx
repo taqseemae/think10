@@ -78,9 +78,9 @@ function ConsultantBookings() {
                     </div>
                     <h4 className="text-lg font-bold text-neutral-900 truncate">{booking.topic || "Strategy Session"}</h4>
                     <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                      <p className="flex items-center text-neutral-500">
+                      <p className="flex items-center text-neutral-500 font-medium">
                         <Users className="w-4 h-4 mr-2 text-neutral-400" />
-                        Client User
+                        {booking.userName || booking.userEmail || "Client User"}
                       </p>
                       <p className="flex items-center text-neutral-500">
                         <Clock className="w-4 h-4 mr-2 text-neutral-400" />

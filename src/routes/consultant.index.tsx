@@ -589,8 +589,8 @@ function ConsultantDashboardHome() {
                     <h3 className="text-xl font-bold text-neutral-900">
                       {nextBooking.topic || "Advisory Session"}
                     </h3>
-                    <p className="text-neutral-500 flex items-center gap-2 mt-2">
-                      <Video className="w-4 h-4" /> Client ID: {nextBooking.userId?.substring(0, 8) || "Unknown"}
+                    <p className="text-neutral-500 flex items-center gap-2 mt-2 font-medium">
+                      <User className="w-4 h-4 text-[color:var(--t10-emerald)]" /> Client: {nextBooking.userName || nextBooking.userEmail || "Client User"}
                     </p>
                     {safeDate(nextBooking.when || nextBooking.date) && (
                       <p className="text-neutral-500 flex items-center gap-2 mt-1">
