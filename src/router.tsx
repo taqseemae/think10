@@ -10,6 +10,8 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    defaultPendingMs: 0,         // show content immediately, no loading delay
+    defaultPendingMinMs: 0,      // don't keep loading screen visible artificially
   });
 
   return router;

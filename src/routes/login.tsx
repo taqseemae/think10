@@ -127,18 +127,7 @@ function Page() {
   const [agree, setAgree] = useState(true);
 
   // ── Spinner while Firebase resolves ──────────────────────────────────────
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[color:var(--t10-offwhite)]">
-        <div className="flex flex-col items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color:var(--t10-navy)] text-white shadow animate-pulse">
-            <span className="h-3 w-3 rounded-full border-2 border-white" />
-          </span>
-          <p className="text-xs font-semibold text-[color:var(--t10-grey)] tracking-wider uppercase">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  if (authLoading) return null;
 
   // ── Login handlers ────────────────────────────────────────────────────────
   const handleEmailLogin = async (e: React.FormEvent) => {

@@ -725,135 +725,93 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     if (type === "VA") {
-      // Virtual Assistant Response (simpler platform help)
-      let answer = "I am the Zyne Virtual Assistant. I help you navigate the Think10 platform. For deeper business diagnostics, recommendations, and custom reports, please upgrade to a paid Plan to unlock Zyne VC.";
-      
-      if (text.includes("onboarding") || text.includes("start")) {
-        answer = "To complete your onboarding, go to your Business profile tab, fill in the business information, and take the 10-dimension Business Health Assessment. After that, choose an advisory plan.";
-      } else if (text.includes("expert") || text.includes("book") || text.includes("call")) {
-        answer = "You can book vetted experts in the Advisors tab. Hybrid members get 2 credits included monthly, Premium members get 5. As a Free user, you can book on a pay-per-call basis.";
-      } else if (text.includes("report") || text.includes("pdf")) {
-        answer = "Reports are generated after completing a consultation with a human advisor. You can view them in the Bookings or Documents tab.";
-      }
-
-      return {
-        role: "zyne",
-        content: answer,
-        timestamp: nowStr,
-      };
-    } else {
-      // Virtual Consultant Response via Gemini
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      
-      if (!apiKey || apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey === "") {
-        return {
-          role: "zyne",
-          content: "System Alert: Gemini API Key is not configured. Please add VITE_GEMINI_API_KEY in the .env file.",
-          timestamp: nowStr,
-          sections: {
-            understanding: "API configuration missing.",
-            recommendation: "Please set up the environment variables to activate Zyne's intelligence engine.",
-            assumptions: "None",
-            risks: "Zyne VC cannot function without an API key.",
-            nextActions: ["Configure VITE_GEMINI_API_KEY"],
-            sources: ["System Setup Guide"]
-          }
-        };
-      }
-
+      // Virtual Assistant Response via Server Function
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       try {
-        const systemPrompt = `You are Zyne VC, Think10's expert AI business consultant specializing exclusively in Dubai and GCC retail and e-commerce.
+        const { generateZyneResponseFn } = await import('@/lib/server-ai');
+        
+        const formattedMessages = [
+          ...history.map(msg => ({
+            role: (msg.role === "zyne" ? "model" : "user") as "user" | "model",
+            text: msg.content
+          })),
+          { role: "user" as const, text: input }
+        ];
 
-Your expertise covers:
-- Amazon UAE and noon.com marketplace strategy (listings, PPC, ACOS optimization)
-- UAE retail and Shopify DTC (conversion, AOV, LTV, subscription)
-- GCC market entry strategy (Dubai, Abu Dhabi, KSA, Qatar, Kuwait)
-- UAE import regulations, customs, VAT (5%), and logistics
-- UAE-specific consumer behavior and seasonal campaigns (Ramadan, White Friday, DSF, Eid)
-- B2B wholesale and distributor channels in GCC
-- Cash flow, unit economics, and margin optimization for GCC brands
-- Supply chain and 3PL in UAE (Aramex, Fetchr, Shipa Freight)
-- Digital marketing in UAE (Meta, TikTok, Google Ads, influencer marketing)
-
-Client Business Profile:
-- Business: ${profile.businessName || 'Not specified'}
-- Industry: ${profile.industry || 'Not specified'}
-- Stage: ${profile.stage || 'Not specified'}
-- Active Channels: ${profile.channels.length > 0 ? profile.channels.join(', ') : 'Not specified'}
-- Goals: ${profile.goals.length > 0 ? profile.goals.join(', ') : 'Not specified'}
-- Annual Revenue: ${profile.revenue || 'Not specified'}
-
-Rules:
-- ONLY discuss Dubai/GCC retail and e-commerce topics relevant to this client.
-- If asked about unrelated topics, politely redirect to GCC business matters.
-- Be direct, data-driven, and immediately actionable.
-- Reference UAE-specific platforms, regulations, and market conditions.
-- Suggest escalating to a human Think10 expert when deep judgment or relationship-building is needed.
-
-Respond in valid JSON only with this exact structure:
-{
-  "understanding": "1 sentence showing you understand their specific GCC context",
-  "recommendation": "A detailed multi-paragraph diagnosis and recommendation",
-  "assumptions": "1 sentence outlining key assumptions",
-  "risks": "1 sentence highlighting main risks",
-  "nextActions": ["Action 1", "Action 2", "Action 3"],
-  "sources": ["Source or benchmark 1", "Source 2"]
-}
-Do not use markdown blocks. Output raw JSON only.`;
-
-        const requestBody = {
-          system_instruction: {
-            parts: [{ text: systemPrompt }]
-          },
-          contents: [
-            ...history.map(msg => ({
-              role: msg.role === "zyne" ? "model" : "user",
-              parts: [{ text: msg.sections ? JSON.stringify(msg.sections) : msg.content }]
-            })),
-            {
-              role: "user",
-              parts: [{ text: input }]
-            }
-          ],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
-        };
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody)
+        const response = await generateZyneResponseFn({ 
+          data: { 
+            messages: formattedMessages, 
+            isGuest: true 
+          } 
         });
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.error?.message || "Gemini API error");
-        }
-
-        const rawText = data.candidates[0]?.content?.parts[0]?.text;
-        if (!rawText) throw new Error("Empty response from AI");
-
-        // Clean the response just in case it has markdown ticks
-        const cleanedText = rawText.replace(/^```json/g, '').replace(/```$/g, '').trim();
-        const parsed = JSON.parse(cleanedText);
-
         return {
           role: "zyne",
-          content: "Here is my structured diagnosis.", // fallback plain text
+          content: response.success ? response.text : "I am having trouble connecting right now.",
           timestamp: nowStr,
-          sections: {
-            understanding: parsed.understanding || "Context processed.",
-            recommendation: parsed.recommendation || "No recommendation provided.",
-            assumptions: parsed.assumptions || "None.",
-            risks: parsed.risks || "None.",
-            nextActions: parsed.nextActions || [],
-            sources: parsed.sources || []
-          },
         };
       } catch (err: any) {
-        console.error("Gemini API Error:", err);
+        console.error("Zyne VA API Error:", err);
+        return {
+          role: "zyne",
+          content: "I'm sorry, I'm currently unavailable.",
+          timestamp: nowStr,
+        };
+      }
+    } else {
+      // Virtual Consultant Response via Server Function
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      try {
+        const { generateZyneResponseFn } = await import('@/lib/server-ai');
+        
+        const formattedMessages = [
+          ...history.map(msg => ({
+            role: (msg.role === "zyne" ? "model" : "user") as "user" | "model",
+            text: msg.sections ? JSON.stringify(msg.sections) : msg.content
+          })),
+          { role: "user" as const, text: input }
+        ];
+
+        const response = await generateZyneResponseFn({ 
+          data: { 
+            messages: formattedMessages, 
+            isGuest: false, 
+            businessProfile: profile 
+          } 
+        });
+
+        if (!response.success) {
+           return {
+             role: "zyne",
+             content: response.text,
+             timestamp: nowStr,
+           };
+        }
+
+        try {
+          const parsed = JSON.parse(response.text);
+          return {
+            role: "zyne",
+            content: "Consultant Diagnosis Completed", 
+            timestamp: nowStr,
+            sections: {
+              understanding: parsed.understanding || "Context processed.",
+              recommendation: parsed.recommendation || "No recommendation provided.",
+              assumptions: parsed.assumptions || "None.",
+              risks: parsed.risks || "None.",
+              nextActions: parsed.nextActions || [],
+              sources: parsed.sources || []
+            },
+          };
+        } catch(e) {
+          return {
+             role: "zyne",
+             content: response.text, // raw fallback
+             timestamp: nowStr,
+          };
+        }
+      } catch (err: any) {
+        console.error("Zyne API Error:", err);
         return {
           role: "zyne",
           content: `Sorry, I encountered an error while processing your request: ${err.message}`,

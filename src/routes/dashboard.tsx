@@ -69,19 +69,8 @@ function DashboardLayout() {
     navigate({ to: "/" });
   };
 
-  // Show nothing while auth is still loading
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[color:var(--t10-offwhite)]">
-        <div className="flex flex-col items-center gap-4">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color:var(--t10-navy)] text-white shadow-sm animate-pulse">
-            <span className="h-3 w-3 rounded-full border-2 border-white" />
-          </span>
-          <p className="text-xs font-semibold text-[color:var(--t10-grey)] tracking-wider uppercase">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Don't block render — auth resolves quickly in the background
+  if (authLoading) return null;
 
   // Dynamic navigation based on role permissions
   const NAV_ITEMS = [
@@ -159,16 +148,7 @@ function DashboardLayout() {
 
       <main className="flex-grow py-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          {docLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-sm">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[color:var(--t10-navy)] text-white shadow animate-pulse">
-                <span className="h-3 w-3 rounded-full border-2 border-white" />
-              </span>
-              <p className="mt-4 text-xs font-bold text-[color:var(--t10-navy)] tracking-wider uppercase">Loading Command Centre...</p>
-            </div>
-          ) : (
-            <>
-              {onboardingCompleted ? (
+          {onboardingCompleted ? (
                 <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-3 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2">
                     <p className="text-xs font-semibold uppercase tracking-wider text-[color:var(--t10-emerald)] flex items-center gap-1.5">
@@ -205,8 +185,6 @@ function DashboardLayout() {
               <div className="mt-6">
                 <Outlet />
               </div>
-            </>
-          )}
         </div>
       </main>
     </div>

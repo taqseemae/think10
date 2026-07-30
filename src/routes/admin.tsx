@@ -65,8 +65,10 @@ function AdminLayout() {
   const { logout } = useAuth() as any;
   const navigate = useNavigate();
 
+  // Sidebar groups: main navigation order
   const NAV_ITEMS = [
-    { to: "/admin", icon: LayoutDashboard, label: "Command Centre" },
+    { to: "/admin", icon: LayoutDashboard, label: "Command Centre", exact: true },
+    { to: "/admin/users", icon: UserCog, label: "Users" },
     { to: "/admin/customers", icon: Users, label: "Customers" },
     { to: "/admin/consultants", icon: Briefcase, label: "Consultants" },
     { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings & Delivery" },
@@ -74,7 +76,6 @@ function AdminLayout() {
     { to: "/admin/quality", icon: ShieldAlert, label: "Quality, Risk & Support" },
     { to: "/admin/crm", icon: Building2, label: "Enterprise CRM" },
     { to: "/admin/growth", icon: TrendingUp, label: "Growth & Content" },
-    { to: "/admin/users", icon: UserCog, label: "System Users" },
     { to: "/admin/settings", icon: Settings, label: "Reports & Settings" },
   ];
 
@@ -89,12 +90,14 @@ function AdminLayout() {
           </Link>
         </div>
 
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-0.5 p-3">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 [&.active]:bg-[color:var(--t10-mint)] [&.active]:text-[color:var(--t10-emerald)] transition-colors"
+              activeOptions={item.exact ? { exact: true } : undefined}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 transition-colors"
+              activeProps={{ className: "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-[color:var(--t10-mint)] text-[color:var(--t10-emerald)] transition-colors" }}
             >
               <item.icon className="h-4 w-4" />
               {item.label}
@@ -102,7 +105,7 @@ function AdminLayout() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-neutral-200">
+        <div className="p-3 border-t border-neutral-200">
           <button 
             onClick={async () => {
               await logout();

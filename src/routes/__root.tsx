@@ -1,5 +1,5 @@
 import { DashboardStateProvider } from "@/context/DashboardStateContext";
-import { AuthProvider } from "@/context/AuthContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -130,6 +130,20 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function GlobalZyneWidget() {
+  const { currentUser } = useAuth();
+  const router = useRouter();
+  
+  // Don't show on dashboard/admin routes where they have full Zyne, 
+  // or if they are logged in (they should go to dashboard for Zyne)
+  if (currentUser) return null;
+  if (router.state.location.pathname.startsWith("/admin") || router.state.location.pathname.startsWith("/dashboard")) return null;
+
+  return <ZyneFloatingWidget />;
+}
+
+import { ZyneFloatingWidget } from "@/components/ZyneFloatingWidget";
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -139,6 +153,7 @@ function RootComponent() {
         <DashboardStateProvider>
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
+          <GlobalZyneWidget />
         </DashboardStateProvider>
       </AuthProvider>
     </QueryClientProvider>
