@@ -9,11 +9,11 @@ export const generateZyneResponseFn = createServerFn({ method: 'POST' })
     businessProfile?: BusinessProfile | null 
   }) => d)
   .handler(async ({ data }) => {
-    // Note: VITE_GEMINI_API_KEY must be in .env
-    const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    // Note: GEMINI_API_KEY or VITE_GEMINI_API_KEY in process.env
+    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
     
     if (!apiKey) {
-      return { success: false, text: "System Error: Zyne API key is missing. Please add VITE_GEMINI_API_KEY to your .env file." };
+      return { success: false, text: "System Error: Zyne API key is missing. Please add GEMINI_API_KEY or VITE_GEMINI_API_KEY to your environment variables." };
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -30,10 +30,10 @@ Keep your answers brief, professional, and persuasive. Do NOT give detailed busi
         : `You are Zyne VC (Virtual Consultant), an expert business advisor for Think10 Advisory.
 You are talking to an authenticated user who has access to you.
 ${businessProfile ? `Here is the user's business context:
-- Model: ${businessProfile.businessModel}
-- Stage: ${businessProfile.stage}
-- Monthly Rev: ${businessProfile.monthlyRevenue}
-- Main Challenge: ${businessProfile.mainChallenge}` : 'The user has not completed their business profile yet.'}
+- Industry: ${businessProfile.industry || 'Not specified'}
+- Stage: ${businessProfile.stage || 'Not specified'}
+- Revenue: ${businessProfile.revenue || 'Not specified'}
+- Challenges: ${businessProfile.challenges ? businessProfile.challenges.join(', ') : 'None listed'}` : 'The user has not completed their business profile yet.'}
 Your goal is to provide highly actionable, data-driven, and specific business advice for the UAE market. 
 If the user's problem is very complex, requires human intuition, or if they ask to speak to a human, strongly suggest that they book a 1-on-1 session with a Think10 Human Expert through the platform.
 
@@ -60,7 +60,7 @@ Do not use markdown blocks like \`\`\`json. Output raw JSON string only.`;
       const latestMessage = messages[messages.length - 1].text;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         contents: [
           ...history,
           { role: 'user', parts: [{ text: latestMessage }] }
@@ -75,6 +75,6 @@ Do not use markdown blocks like \`\`\`json. Output raw JSON string only.`;
       return { success: true, text: response.text || "I couldn't process that right now. Please rephrase." };
     } catch (error: any) {
       console.error("Zyne AI Error:", error);
-      return { success: false, text: "Zyne API is currently unreachable. Please check your API key or network connection." };
+      return { success: false, text: `Zyne API Error: ${error?.message || "Unreachable"}` };
     }
   });
