@@ -762,14 +762,14 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
         return {
           role: "zyne",
-          content: response.success ? response.text : "I am having trouble connecting right now.",
+          content: response.text || "I am having trouble connecting right now.",
           timestamp: nowStr,
         };
       } catch (err: any) {
         console.error("Zyne VA API Error:", err);
         return {
           role: "zyne",
-          content: "I'm sorry, I'm currently unavailable.",
+          content: `Connection error: ${err?.message || "Service unavailable"}`,
           timestamp: nowStr,
         };
       }

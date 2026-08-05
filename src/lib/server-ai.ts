@@ -11,11 +11,15 @@ export const generateZyneResponseFn = createServerFn({ method: 'POST' })
   .handler(async ({ data }) => {
     // Check all common environment variable names for the Gemini API key
     const apiKey =
-      process.env.VITE_GEMINI_API_KEY ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.API_KEY ||
-      process.env.GOOGLE_GEMINI_API_KEY;
+      (typeof process !== 'undefined' && (
+        process.env.VITE_GEMINI_API_KEY ||
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        process.env.API_KEY ||
+        process.env.GOOGLE_GEMINI_API_KEY
+      )) ||
+      (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+      (import.meta as any).env?.GEMINI_API_KEY;
 
     if (!apiKey) {
       console.warn('[Zyne AI] Missing Gemini API key in process.env');
