@@ -16,6 +16,68 @@ function FormattedMessageText({ text }: { text: string }) {
     .replace(/\*{3}([^*]+)\*{3}/g, '$1');
 
   const paragraphs = sanitized.split(/\n\n+/);
+
+  const renderContentWithLinks = (input: string) => {
+    // Regex matches markdown links [text](url) OR raw URLs (https?://[^\s]+)
+    const linkRegex = /(\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s]+)/g;
+    const parts = input.split(linkRegex);
+
+    return parts.map((part, i) => {
+      let label = "";
+      let url = "";
+
+      if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
+        const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        if (match) {
+          label = match[1];
+          url = match[2];
+        }
+      } else if (/^https?:\/\/[^\s]+$/.test(part.trim())) {
+        url = part.trim();
+        label = part.trim();
+      }
+
+      if (url) {
+        const isSignUp = url.includes('/signup') || url.includes('/login') || label.toLowerCase().includes('sign up');
+        const displayLabel = (label.startsWith('http') && isSignUp) ? 'Sign Up for Think10' : label;
+
+        if (isSignUp) {
+          return (
+            <span key={i} className="block my-2.5">
+              <a
+                href={url}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[color:var(--t10-emerald)] text-white text-xs font-bold shadow-md hover:bg-emerald-600 transition-all cursor-pointer no-underline"
+              >
+                {displayLabel} →
+              </a>
+            </span>
+          );
+        }
+
+        return (
+          <a
+            key={i}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[color:var(--t10-emerald)] font-bold underline hover:text-emerald-700 transition-colors mx-1 inline-flex items-center gap-0.5"
+          >
+            {displayLabel}
+          </a>
+        );
+      }
+
+      // Handle **bold**
+      const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
+      return boldParts.map((bPart, bIdx) => {
+        if (bPart.startsWith('**') && bPart.endsWith('**')) {
+          return <strong key={bIdx} className="font-bold text-neutral-900">{bPart.slice(2, -2)}</strong>;
+        }
+        return bPart;
+      });
+    });
+  };
+
   return (
     <div className="space-y-3">
       {paragraphs.map((p, pIdx) => {
@@ -25,25 +87,17 @@ function FormattedMessageText({ text }: { text: string }) {
             {lines.map((line, lIdx) => {
               const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-') || /^\d+\./.test(line.trim());
               const cleanLine = isBullet ? line.trim().replace(/^[•\-\d+\.]\s*/, '') : line;
-              
-              const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
-              const formattedParts = parts.map((part, i) => {
-                if (part.startsWith('**') && part.endsWith('**')) {
-                  return <strong key={i} className="font-bold text-neutral-900">{part.slice(2, -2)}</strong>;
-                }
-                return part;
-              });
 
               if (isBullet) {
                 return (
                   <div key={lIdx} className="flex items-start gap-2 pl-2">
                     <span className="text-[color:var(--t10-emerald)] font-bold select-none">•</span>
-                    <span className="flex-1 font-medium">{formattedParts}</span>
+                    <span className="flex-1 font-medium">{renderContentWithLinks(cleanLine)}</span>
                   </div>
                 );
               }
 
-              return <p key={lIdx} className="leading-relaxed">{formattedParts}</p>;
+              return <p key={lIdx} className="leading-relaxed">{renderContentWithLinks(cleanLine)}</p>;
             })}
           </div>
         );
