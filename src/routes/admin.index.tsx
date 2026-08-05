@@ -21,7 +21,7 @@ function CommandCentre() {
   const totalUsers = users.length;
 
   const adminUsers = users.filter(
-    (u) => Boolean(u.adminRole) || u.email === "admin@think10.ae"
+    (u) => Boolean(u.adminRole) || u.email === "admin.think10@gmail.com"
   ).length;
 
   const consultantUsers = users.filter(
@@ -32,7 +32,7 @@ function CommandCentre() {
   ).length;
 
   const customerUsers = users.filter((u) => {
-    const isAdmin = Boolean(u.adminRole) || u.email === "admin@think10.ae";
+    const isAdmin = Boolean(u.adminRole) || u.email === "admin.think10@gmail.com";
     const isCon =
       u.plan?.role === "Consultant" ||
       u.plan?.role === "ConsultantPending" ||

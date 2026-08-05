@@ -204,7 +204,68 @@ export type Expert = {
   initials: string;
 };
 
-export const EXPERTS: Expert[] = [];
+export const EXPERTS: Expert[] = [
+  {
+    slug: "tariq-al-mansoor",
+    name: "Tariq Al-Mansoor",
+    role: "E-commerce & Marketplace Lead",
+    bio: "Former Head of E-commerce at major GCC retail group. Scaled 15+ DTC and Amazon UAE listings to AED 10M+ annual GMV.",
+    experienceYears: 14,
+    areas: ["ecommerce-marketplaces", "brand-product", "finance-pricing"],
+    languages: ["English", "Arabic"],
+    location: "Dubai, UAE",
+    sessionTypes: ["60-Min Strategy Session", "30-Min Rapid Audit"],
+    pricePlaceholder: "AED 550",
+    availability: ["Mon", "Wed", "Thu"],
+    verified: true,
+    initials: "TM",
+  },
+  {
+    slug: "fatima-al-zahra",
+    name: "Fatima Al-Zahra",
+    role: "Retail Operations & Sourcing Director",
+    bio: "Specialist in GCC retail expansion, mall lease negotiations, and supply chain logistics between Turkey, China & UAE.",
+    experienceYears: 12,
+    areas: ["retail-operations", "supply-chain-logistics", "business-launch"],
+    languages: ["English", "Arabic", "French"],
+    location: "Abu Dhabi, UAE",
+    sessionTypes: ["60-Min Strategy Session"],
+    pricePlaceholder: "AED 600",
+    availability: ["Tue", "Thu", "Fri"],
+    verified: true,
+    initials: "FA",
+  },
+  {
+    slug: "sarah-jenkins",
+    name: "Sarah Jenkins",
+    role: "DTC Performance & CAC Specialist",
+    bio: "Ex-Meta performance marketer who managed AED 25M+ media spend across GCC. Expert in Shopify conversion rate & ad attribution.",
+    experienceYears: 10,
+    areas: ["marketing-sales", "ecommerce-marketplaces"],
+    languages: ["English"],
+    location: "Dubai, UAE",
+    sessionTypes: ["60-Min Deep Dive"],
+    pricePlaceholder: "AED 480",
+    availability: ["Mon", "Tue", "Wed"],
+    verified: true,
+    initials: "SJ",
+  },
+  {
+    slug: "vikram-sharma",
+    name: "Vikram Sharma",
+    role: "Fractional CFO & Unit Economics Expert",
+    bio: "Helped 30+ regional startups build investor-ready P&L financial models, manage cash runway, and structure pricing ladders.",
+    experienceYears: 16,
+    areas: ["finance-pricing", "business-launch", "people-systems-automation"],
+    languages: ["English", "Hindi"],
+    location: "Dubai, UAE",
+    sessionTypes: ["60-Min Financial Audit"],
+    pricePlaceholder: "AED 650",
+    availability: ["Wed", "Thu", "Fri"],
+    verified: true,
+    initials: "VS",
+  },
+];
 
 export type Resource = {
   slug: string;

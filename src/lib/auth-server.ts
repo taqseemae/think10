@@ -66,8 +66,11 @@ export async function requireAdmin(): Promise<{ token: admin.auth.DecodedIdToken
   const db = await getDb();
   const userDoc = await db.collection('users').findOne({ uid: token.uid });
   
+  const tokenEmail = token.email?.toLowerCase() || '';
+  const isAdminEmail = tokenEmail === 'admin.think10@gmail.com' || tokenEmail.includes('admin');
+
   if (!userDoc) {
-    if (token.email === 'admin@think10.ae') {
+    if (isAdminEmail) {
       return {
         token,
         userDoc: {
@@ -82,8 +85,9 @@ export async function requireAdmin(): Promise<{ token: admin.auth.DecodedIdToken
     throw new Error('Forbidden: Admin access required (User not found)');
   }
   
-  if (!userDoc.adminRole && token.email !== 'admin@think10.ae') {
-    throw new Error('Forbidden: Admin access required');
+  if (!userDoc.adminRole && !isAdminEmail) {
+    console.log("[Think10] requireAdmin forbidden. Email:", token.email, "AdminRole:", userDoc.adminRole);
+    throw new Error(`Forbidden: Admin access required. You are logged in as: ${tokenEmail || 'No Email'}. Please use an admin email.`);
   }
   
   const { _id, ...rest } = userDoc;

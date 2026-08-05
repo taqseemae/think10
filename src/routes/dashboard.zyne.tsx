@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import {
   Sparkles,
-  Send,
   ArrowRight,
   Plus,
   Trash2,
@@ -13,8 +12,15 @@ import {
   Check,
   FileText,
   AlertTriangle,
-  BookOpen,
-  Info,
+  ArrowLeft,
+  Mic,
+  MicOff,
+  X,
+  FileUp,
+  Bot,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ChevronDown
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard/zyne")({
@@ -26,10 +32,16 @@ export const Route = createFileRoute("/dashboard/zyne")({
 
 const SUGGESTIONS = [
   "Which products should I prioritise for my Amazon UAE launch?",
-  "How should I price for DTC and wholesale?",
+  "How should I price for DTC and wholesale in Dubai?",
   "Plan a Ramadan launch calendar for me",
-  "How do I fix my cash flow and extend runway?",
+  "How do I audit my unit economics & extend cash runway?",
 ];
+
+interface AttachedFile {
+  name: string;
+  size: string;
+  type: string;
+}
 
 function Page() {
   const { q } = Route.useSearch();
@@ -50,8 +62,21 @@ function Page() {
   const [input, setInput] = useState("");
   const [thinking, setThinking] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [savedActionsMap, setSavedActionsMap] = useState<Record<string, boolean>>({});
   const [savedReportMap, setSavedReportMap] = useState<Record<string, boolean>>({});
+
+  // UI State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [selectedModel, setSelectedModel] = useState("Zyne Pro (GPT-4o)");
+
+  // Voice Input / Speech Recognition State
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // File Attachments State
+  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
 
   // Auto-scroll chat
   useEffect(() => {
@@ -61,7 +86,6 @@ function Page() {
   // Handle query parameter on load
   useEffect(() => {
     if (q) {
-      // Look for a chat that has this initial message
       const existing = conversations.find(
         (c) => c.messages.length > 0 && c.messages[0].content === q
       );
@@ -70,27 +94,108 @@ function Page() {
       } else {
         startNewChat(q);
       }
-      // Clear search param
       navigate({ search: { q: undefined } as any });
     }
   }, [q]);
 
+  // Init Web Speech Recognition API if supported
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+
+        recognition.onresult = (event: any) => {
+          let transcript = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (transcript) {
+            setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+          }
+        };
+
+        recognition.onerror = (event: any) => {
+          console.warn("[Voice API Error]:", event.error);
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, []);
+
+  const toggleVoiceListening = () => {
+    if (!recognitionRef.current) {
+      alert("Speech recognition is not supported in this browser. Please type your message.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        console.error("Speech start error:", err);
+      }
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+
+    const newAttachments: AttachedFile[] = files.map((f) => {
+      const sizeKB = (f.size / 1024).toFixed(1);
+      const sizeStr = f.size > 1024 * 1024 ? `${(f.size / (1024 * 1024)).toFixed(1)} MB` : `${sizeKB} KB`;
+      return {
+        name: f.name,
+        size: sizeStr,
+        type: f.type,
+      };
+    });
+
+    setAttachedFiles((prev) => [...prev, ...newAttachments]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const activeChat = conversations.find((c) => c.id === activeConversationId);
 
   const handleSend = async (text: string) => {
-    const t = text.trim();
-    if (!t) return;
-    
+    let t = text.trim();
+    if (!t && attachedFiles.length === 0) return;
+
+    if (attachedFiles.length > 0) {
+      const fileNames = attachedFiles.map((f) => f.name).join(", ");
+      t = t ? `${t}\n\n[Attached Files: ${fileNames}]` : `[Attached Files: ${fileNames}]`;
+    }
+
     let currentChatId = activeConversationId;
     if (!currentChatId) {
       setThinking(true);
       setInput("");
+      setAttachedFiles([]);
       await startNewChat(t);
       setThinking(false);
       return;
     }
 
     setInput("");
+    setAttachedFiles([]);
     setThinking(true);
     await sendChatMessage(t);
     setThinking(false);
@@ -104,7 +209,7 @@ function Page() {
       addActionItem(
         a,
         "Founder",
-        "2026-07-28", // default deadline
+        "2026-07-28",
         "Zyne",
         activeConversationId || undefined,
         "Imported from Zyne VC consultation recommendations."
@@ -125,281 +230,261 @@ function Page() {
   };
 
   return (
-    <div className="grid gap-6 md:grid-cols-[250px_1fr]">
-      {/* Sidebar - Conversations list */}
-      <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-4 shadow-sm h-[520px] flex flex-col justify-between">
-        <div className="space-y-4">
-          <button
+    <div className="absolute inset-0 z-50 bg-white flex overflow-hidden">
+      {/* ChatGPT Style Sidebar (History) */}
+      <div 
+        className={`${isSidebarOpen ? 'w-[260px] opacity-100' : 'w-0 opacity-0'} flex-shrink-0 bg-[#f9f9f9] flex flex-col border-r border-neutral-200 transition-all duration-300 overflow-hidden relative`}
+      >
+        <div className="p-3 sticky top-0 bg-[#f9f9f9] z-10 flex items-center justify-between">
+           <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-2 text-neutral-500 hover:bg-neutral-200 rounded-md transition-colors cursor-pointer"
+              title="Close sidebar"
+            >
+              <PanelLeftClose className="h-5 w-5" />
+           </button>
+           <button
             onClick={() => startNewChat()}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-[color:var(--t10-navy)] py-2 text-xs font-semibold text-white hover:bg-neutral-800 transition-colors"
+            className="flex-1 ml-2 flex items-center justify-between gap-2 rounded-md hover:bg-neutral-200 px-3 py-2 text-sm font-medium text-neutral-700 transition-colors cursor-pointer"
           >
-            <Plus className="h-3.5 w-3.5" /> New Conversation
+             New Chat
+             <Plus className="h-4 w-4" />
           </button>
-          
-          <div className="space-y-1.5 overflow-y-auto max-h-[380px] pr-1">
-            <p className="text-[10px] font-bold text-[color:var(--t10-grey)] uppercase tracking-wider px-2">
-              Recent Diagnosis
-            </p>
-            {conversations.map((c) => {
-              const active = c.id === activeConversationId;
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => setActiveConversationId(c.id)}
-                  className={`group flex items-center justify-between rounded-md px-2 py-1.5 text-xs font-medium cursor-pointer transition-all ${active ? "bg-[color:var(--t10-mint)] text-[color:var(--t10-navy)]" : "text-[color:var(--t10-grey)] hover:bg-neutral-100 hover:text-[color:var(--t10-navy)]"}`}
-                >
-                  <span className="truncate flex-1 pr-1">{c.title}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteConversation(c.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-red-500 rounded transition-all"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })}
-            {conversations.length === 0 && (
-              <p className="text-xs text-[color:var(--t10-grey)] italic px-2 py-2">
-                No chats yet.
-              </p>
-            )}
-          </div>
         </div>
 
-        {/* Message Meter for Free */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+          <p className="text-xs font-bold text-neutral-400 px-2 py-2">Today</p>
+          {conversations.map((c) => {
+            const active = c.id === activeConversationId;
+            return (
+              <div
+                key={c.id}
+                onClick={() => setActiveConversationId(c.id)}
+                className={`group flex items-center justify-between rounded-lg px-3 py-2.5 text-sm cursor-pointer transition-colors ${
+                  active
+                    ? "bg-neutral-200 text-neutral-900 font-medium"
+                    : "text-neutral-700 hover:bg-neutral-200"
+                }`}
+              >
+                <span className="truncate flex-1 pr-1">{c.title}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteConversation(c.id);
+                  }}
+                  className="opacity-0 group-hover:opacity-100 p-1 hover:text-red-500 rounded transition-all cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
         {role === "Free" && (
-          <div className="border-t border-[color:var(--t10-border)] pt-3 text-center space-y-1.5">
-            <div className="flex justify-between text-[10px] font-bold text-[color:var(--t10-grey)]">
-              <span>Free VA Queries</span>
+          <div className="p-4 border-t border-neutral-200 bg-[#f9f9f9]">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-[color:var(--t10-emerald)]" />
+              <span className="text-sm font-semibold text-[color:var(--t10-navy)]">Upgrade Plan</span>
+            </div>
+            <p className="text-xs text-neutral-500 mb-2">Get unlimited Zyne access & full context auditing.</p>
+            <div className="flex justify-between text-[10px] font-bold text-neutral-400 mb-1">
+              <span>Usage</span>
               <span>{messageAllowanceUsed} / 5</span>
             </div>
-            <div className="h-1.5 w-full rounded-full bg-neutral-100 overflow-hidden">
+            <div className="h-1.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-3">
               <div
                 className="h-full bg-[color:var(--t10-emerald)] transition-all duration-300"
                 style={{ width: `${(messageAllowanceUsed / 5) * 100}%` }}
               />
             </div>
-            <Link
-              to="/dashboard/billing"
-              className="block text-[10px] font-bold text-[color:var(--t10-emerald)] hover:underline"
-            >
-              Upgrade to Zyne VC
-            </Link>
           </div>
         )}
       </div>
 
-      {/* Main Chat Workspace */}
-      <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white shadow-sm flex flex-col justify-between h-[520px] overflow-hidden">
-        {/* Chat Header */}
-        <div className="flex items-center justify-between border-b border-[color:var(--t10-border)] bg-[color:var(--t10-navy)] px-5 py-3 text-white">
-          <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--t10-emerald)]">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold leading-tight flex items-center gap-1.5">
-                Zyne{" "}
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold tracking-wider uppercase text-white/80">
-                  {role === "Free" ? "Virtual Assistant" : "Virtual Consultant"}
-                </span>
-              </p>
-              <p className="text-[10px] text-white/70">
-                {role === "Free"
-                  ? "Standard platform navigation guide"
-                  : "Context-aware business intelligence engine"}
-              </p>
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col h-full relative bg-white">
+        {/* Top Header - Model Selector */}
+        <div className="h-14 flex items-center px-4 shrink-0 bg-white sticky top-0 z-10 border-b border-neutral-100/50">
+          <Link
+            to="/dashboard"
+            className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer mr-2"
+            title="Back to Dashboard"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          {!isSidebarOpen && (
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-md transition-colors cursor-pointer mr-2"
+              title="Open sidebar"
+            >
+              <PanelLeftOpen className="h-5 w-5" />
+            </button>
+          )}
+          
+          <div className="group relative cursor-pointer z-50">
+            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-neutral-100 transition-colors text-lg font-bold text-neutral-700">
+              {selectedModel} <ChevronDown className="h-4 w-4 text-neutral-400" />
+            </button>
+            <div className="absolute top-full left-0 mt-1 w-64 rounded-xl border border-neutral-200 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+              <div className="p-2 space-y-1">
+                <button onClick={() => setSelectedModel("Zyne Pro (GPT-4o)")} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-neutral-100 cursor-pointer">
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-neutral-800">Zyne Pro (GPT-4o)</p>
+                    <p className="text-xs text-neutral-500">Most capable, best for complex audits</p>
+                  </div>
+                  {selectedModel === "Zyne Pro (GPT-4o)" && <Check className="h-4 w-4 text-neutral-800" />}
+                </button>
+                <button onClick={() => setSelectedModel("Zyne Core (GPT-4o mini)")} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-neutral-100 cursor-pointer">
+                  <div className="text-left">
+                    <p className="text-sm font-semibold text-neutral-800">Zyne Core (GPT-4o mini)</p>
+                    <p className="text-xs text-neutral-500">Faster responses for simple queries</p>
+                  </div>
+                  {selectedModel === "Zyne Core (GPT-4o mini)" && <Check className="h-4 w-4 text-neutral-800" />}
+                </button>
+              </div>
             </div>
           </div>
-          {role !== "Free" && (
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[color:var(--t10-emerald)]">
-              Context loaded
-            </span>
-          )}
         </div>
 
-        {/* Message body */}
-        <div className="flex-1 overflow-y-auto bg-[color:var(--t10-offwhite)] p-5 space-y-4">
+        {/* Chat Feed */}
+        <div className="flex-1 overflow-y-auto scroll-smooth">
           {!activeChat ? (
-            <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto space-y-4 animate-fade-in">
-              <span className="grid h-12 w-12 place-items-center rounded-full bg-[color:var(--t10-mint)] text-[color:var(--t10-emerald)] animate-bounce">
-                <Sparkles className="h-6 w-6" />
-              </span>
-              <div>
-                <h3 className="text-base font-bold text-[color:var(--t10-navy)]">
-                  Consult with Zyne
-                </h3>
-                <p className="text-xs text-[color:var(--t10-grey)] leading-relaxed mt-1">
-                  Ask Zyne VC structured questions about your UAE logistics channels, pricing tiers,
-                  or Ramadan revenue planning.
-                </p>
-              </div>
-              <div className="grid gap-2 w-full pt-2">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => handleSend(s)}
-                    className="w-full text-left rounded-lg border border-[color:var(--t10-border)] bg-white px-3 py-2 text-xs text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)] hover:border-[color:var(--t10-emerald)] transition-all font-medium"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
+             <div className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto px-4 pb-32">
+                <div className="h-16 w-16 rounded-full bg-[color:var(--t10-navy)] text-white flex items-center justify-center shadow-md mb-6">
+                  <Sparkles className="h-8 w-8 text-[color:var(--t10-emerald)]" />
+                </div>
+                <h2 className="text-2xl font-bold text-neutral-800 mb-8 text-center">How can I help you today?</h2>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                  {SUGGESTIONS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => handleSend(s)}
+                      className="text-left p-4 rounded-xl border border-neutral-200 hover:bg-neutral-50 transition-colors group cursor-pointer"
+                    >
+                      <p className="text-sm text-neutral-600 font-medium group-hover:text-neutral-900">{s}</p>
+                    </button>
+                  ))}
+                </div>
+             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="max-w-3xl mx-auto w-full px-4 py-6 space-y-8 pb-32">
               {activeChat.messages.map((m, idx) => {
                 const isUser = m.role === "user";
                 const isSavedActions = savedActionsMap[`${activeChat.id}_${idx}`];
                 const isSavedReport = savedReportMap[`${activeChat.id}_${idx}`];
 
                 return (
-                  <div key={idx} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={`max-w-[90%] rounded-2xl p-4 text-xs shadow-sm space-y-3 ${isUser ? "bg-[color:var(--t10-navy)] text-white" : "border border-[color:var(--t10-border)] bg-white text-[color:var(--t10-navy)]"}`}
-                    >
-                      {!isUser && m.sections ? (
-                        /* Structured VC Answer UI */
-                        <div className="space-y-4">
-                          {/* 1. Understanding context */}
-                          <div className="rounded-lg bg-neutral-50 border border-neutral-100 p-2.5 flex items-start gap-2">
-                            <Info className="h-4 w-4 text-[color:var(--t10-grey)] shrink-0 mt-0.5" />
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--t10-grey)]">
-                                Zyne Context Loaded
-                              </span>
-                              <p className="text-[11px] text-[color:var(--t10-grey)] leading-normal">
-                                {m.sections.understanding}
-                              </p>
-                            </div>
-                          </div>
+                  <div key={idx} className={`flex gap-4 w-full ${isUser ? "justify-end" : "justify-start"}`}>
+                    {!isUser && (
+                       <div className="h-8 w-8 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center shrink-0 border border-neutral-200">
+                          <Bot className="h-4 w-4 text-[color:var(--t10-emerald)]" />
+                       </div>
+                    )}
+                    
+                    <div className={`max-w-[80%] ${isUser ? "" : "pt-1"}`}>
+                       {isUser ? (
+                         <div className="bg-[#f4f4f4] text-neutral-900 px-5 py-3 rounded-3xl text-[15px] leading-relaxed">
+                            {m.content}
+                         </div>
+                       ) : (
+                         <div className="text-neutral-800 text-[15px] leading-relaxed space-y-6">
+                            {m.sections ? (
+                               <div className="space-y-6">
+                                  {m.sections.understanding && (
+                                     <p>{m.sections.understanding}</p>
+                                  )}
+                                  
+                                  {m.sections.recommendation && (
+                                     <div className="whitespace-pre-wrap">{m.sections.recommendation}</div>
+                                  )}
 
-                          {/* 2. Structured Recommendation */}
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--t10-emerald)]">
-                              Recommendation & Diagnosis
-                            </span>
-                            <p className="text-xs leading-relaxed text-[color:var(--t10-navy)] font-medium whitespace-pre-line">
-                              {m.sections.recommendation}
-                            </p>
-                          </div>
+                                  {(m.sections.assumptions || m.sections.risks) && (
+                                    <div className="grid sm:grid-cols-2 gap-4 my-6 p-5 bg-neutral-50 rounded-2xl border border-neutral-100">
+                                      {m.sections.assumptions && (
+                                        <div>
+                                          <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Key Constraints</h4>
+                                          <p className="text-sm text-neutral-600">{m.sections.assumptions}</p>
+                                        </div>
+                                      )}
+                                      {m.sections.risks && (
+                                        <div>
+                                          <h4 className="text-xs font-bold uppercase tracking-wider text-red-500 flex items-center gap-1 mb-2">
+                                            <AlertTriangle className="h-3 w-3" /> System Gaps
+                                          </h4>
+                                          <p className="text-sm text-neutral-600">{m.sections.risks}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
 
-                          {/* 3. Assumptions & Risks Grid */}
-                          <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-neutral-100 text-[11px]">
-                            <div className="space-y-1">
-                              <span className="font-bold text-[color:var(--t10-grey)] uppercase tracking-wide">
-                                Key Constraints
-                              </span>
-                              <p className="text-[color:var(--t10-grey)] leading-normal">
-                                {m.sections.assumptions}
-                              </p>
-                            </div>
-                            <div className="space-y-1">
-                              <span className="font-bold text-red-700 uppercase tracking-wide flex items-center gap-1">
-                                <AlertTriangle className="h-3.5 w-3.5 text-red-500" /> System Gaps
-                              </span>
-                              <p className="text-[color:var(--t10-grey)] leading-normal">
-                                {m.sections.risks}
-                              </p>
-                            </div>
-                          </div>
+                                  {m.sections.nextActions && m.sections.nextActions.length > 0 && (
+                                    <div className="space-y-3">
+                                      <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-500">Suggested Actions</h4>
+                                      <ul className="space-y-2">
+                                        {m.sections.nextActions.map((act, aIdx) => (
+                                          <li key={aIdx} className="flex items-start gap-3 text-sm">
+                                            <span className="text-neutral-400 mt-1">•</span>
+                                            <span>{act}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
 
-                          {/* 4. Action checklist */}
-                          {m.sections.nextActions && m.sections.nextActions.length > 0 && (
-                            <div className="rounded-lg border border-emerald-100 bg-[color:var(--t10-mint)]/40 p-3 space-y-2">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--t10-navy)]">
-                                Automated Next Action Tasks
-                              </span>
-                              <ul className="space-y-1.5">
-                                {m.sections.nextActions.map((act, aIdx) => (
-                                  <li key={aIdx} className="flex items-start gap-1.5 text-[11px] text-[color:var(--t10-navy)]">
-                                    <span className="text-[color:var(--t10-emerald)] font-bold mt-0.5">•</span>
-                                    <span>{act}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {/* 5. Sources references */}
-                          {m.sections.sources && m.sections.sources.length > 0 && (
-                            <div className="text-[10px] text-[color:var(--t10-grey)] flex items-center gap-1.5 pt-1.5 border-t border-neutral-100">
-                              <BookOpen className="h-3.5 w-3.5" />
-                              <span>
-                                Referenced Sources:{" "}
-                                <strong className="text-[color:var(--t10-navy)]">
-                                  {m.sections.sources.join(", ")}
-                                </strong>
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Action Sub-Buttons */}
-                          <div className="flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
-                            <button
-                              onClick={() =>
-                                handleSaveToActionPlan(idx, m.sections?.nextActions || [])
-                              }
-                              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[10px] font-bold border transition-all ${isSavedActions ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-[color:var(--t10-navy)] hover:bg-[color:var(--t10-navy)] hover:text-white"}`}
-                            >
-                              {isSavedActions ? (
-                                <>
-                                  <Check className="h-3.5 w-3.5" /> Saved to Actions
-                                </>
-                              ) : (
-                                <>
-                                  <Bookmark className="h-3.5 w-3.5" /> Save Actions to Plan
-                                </>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleSaveAsReport(idx, m.sections?.recommendation || "")}
-                              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-[10px] font-bold border transition-all ${isSavedReport ? "bg-emerald-50 border-emerald-200 text-emerald-700" : "border-[color:var(--t10-navy)] hover:bg-[color:var(--t10-navy)] hover:text-white"}`}
-                            >
-                              {isSavedReport ? (
-                                <>
-                                  <Check className="h-3.5 w-3.5" /> Report Saved
-                                </>
-                              ) : (
-                                <>
-                                  <FileText className="h-3.5 w-3.5" /> Save as Diagnostic Report
-                                </>
-                              )}
-                            </button>
-                            {import.meta.env.VITE_CALENDLY_URL && import.meta.env.VITE_CALENDLY_URL !== "YOUR_CALENDLY_LINK_HERE" ? (
-                              <a
-                                href={import.meta.env.VITE_CALENDLY_URL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 rounded-md border border-[color:var(--t10-navy)] px-2.5 py-1.5 text-[10px] font-bold hover:bg-[color:var(--t10-navy)] hover:text-white transition-all"
-                              >
-                                <Calendar className="h-3.5 w-3.5" /> Book Marketplace Expert
-                              </a>
+                                  {/* AI Action Buttons */}
+                                  <div className="flex flex-wrap gap-2 pt-4">
+                                    <button
+                                      onClick={() => handleSaveToActionPlan(idx, m.sections?.nextActions || [])}
+                                      className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
+                                        isSavedActions
+                                          ? "bg-emerald-50 text-emerald-700"
+                                          : "bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600"
+                                      }`}
+                                    >
+                                      <Bookmark className="h-4 w-4" /> 
+                                      {isSavedActions ? "Saved to Action Plan" : "Save Actions to Plan"}
+                                    </button>
+                                    <button
+                                      onClick={() => handleSaveAsReport(idx, m.sections?.recommendation || "")}
+                                      className={`inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
+                                        isSavedReport
+                                          ? "bg-emerald-50 text-emerald-700"
+                                          : "bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600"
+                                      }`}
+                                    >
+                                      <FileText className="h-4 w-4" /> 
+                                      {isSavedReport ? "Saved as Report" : "Save Diagnostic Report"}
+                                    </button>
+                                    <Link
+                                      to="/dashboard/advisors"
+                                      className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 transition-colors"
+                                    >
+                                      <Calendar className="h-4 w-4" /> Book Expert Call
+                                    </Link>
+                                  </div>
+                               </div>
                             ) : (
-                              <Link
-                                to="/dashboard/advisors"
-                                className="inline-flex items-center gap-1 rounded-md border border-[color:var(--t10-navy)] px-2.5 py-1.5 text-[10px] font-bold hover:bg-[color:var(--t10-navy)] hover:text-white transition-all"
-                              >
-                                <Calendar className="h-3.5 w-3.5" /> Book Marketplace Expert
-                              </Link>
+                               <p className="whitespace-pre-wrap">{m.content}</p>
                             )}
-                          </div>
-                        </div>
-                      ) : (
-                        /* Standard message */
-                        <p className="whitespace-pre-line leading-relaxed">{m.content}</p>
-                      )}
+                         </div>
+                       )}
                     </div>
                   </div>
                 );
               })}
+
               {thinking && (
-                <div className="flex justify-start">
-                  <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white px-4 py-3 text-xs text-[color:var(--t10-grey)]">
-                    Zyne is diagnostic auditing context...
+                <div className="flex gap-4 justify-start w-full">
+                  <div className="h-8 w-8 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center shrink-0 border border-neutral-200">
+                    <Bot className="h-4 w-4 text-[color:var(--t10-emerald)] animate-pulse" />
+                  </div>
+                  <div className="pt-2 flex items-center gap-1.5 h-8">
+                     <span className="h-2 w-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                     <span className="h-2 w-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                     <span className="h-2 w-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               )}
@@ -408,38 +493,109 @@ function Page() {
           )}
         </div>
 
-        {/* Input box */}
-        <div className="border-t border-[color:var(--t10-border)] bg-white px-5 py-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend(input);
-            }}
-            className="flex items-center gap-2"
-          >
+        {/* ChatGPT Style Floating Input Area */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white via-white to-transparent pt-10 pb-6 px-4">
+          <div className="max-w-3xl mx-auto w-full relative">
+            
+            {/* Attachment Previews */}
+            {attachedFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 pb-3">
+                {attachedFiles.map((file, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 rounded-xl bg-neutral-100 border border-neutral-200 px-3 py-2 text-xs font-medium text-neutral-700 shadow-sm relative group"
+                  >
+                    <FileUp className="h-4 w-4 text-[color:var(--t10-emerald)]" />
+                    <span className="truncate max-w-[120px]">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(idx)}
+                      className="absolute -top-1.5 -right-1.5 bg-neutral-800 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hidden Input for Files */}
             <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={
-                role === "Free" && messageAllowanceUsed >= 5
-                  ? "Message limit reached. Upgrade plan."
-                  : "Ask Zyne VC a business or diagnostic query..."
-              }
-              disabled={role === "Free" && messageAllowanceUsed >= 5}
-              className="flex-1 rounded-lg border border-[color:var(--t10-border)] bg-white px-4 py-2 text-xs text-[color:var(--t10-navy)] outline-none focus:border-[color:var(--t10-emerald)] disabled:opacity-50"
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              multiple
+              accept=".pdf,.csv,.xlsx,.docx,.txt,.png,.jpg,.jpeg"
+              className="hidden"
             />
-            <button
-              type="submit"
-              disabled={(role === "Free" && messageAllowanceUsed >= 5) || !input.trim()}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--t10-emerald)] text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-colors shadow"
+
+            {/* Input Form */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSend(input);
+              }}
+              className="relative flex items-end rounded-[26px] border border-neutral-300 bg-white shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] focus-within:border-neutral-400 focus-within:shadow-[0_2px_20px_-3px_rgba(0,0,0,0.1)] transition-all overflow-hidden pl-3 pr-2 py-2"
             >
-              <Send className="h-4 w-4" />
-            </button>
-          </form>
-          <p className="mt-2 flex items-center gap-1 text-[10px] text-[color:var(--t10-grey)] font-medium">
-            Zyne VC can instantly suggest tasks & generate PDF briefs.{" "}
-            <ArrowRight className="h-3 w-3" />
-          </p>
+              {/* Left Action Buttons */}
+              <div className="flex items-center pb-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100 rounded-full transition-colors cursor-pointer"
+                  title="Attach File"
+                >
+                  <Plus className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Text Area */}
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={
+                  isListening
+                    ? "Listening..."
+                    : role === "Free" && messageAllowanceUsed >= 5
+                    ? "Message limit reached. Upgrade to continue."
+                    : "Message Zyne"
+                }
+                disabled={role === "Free" && messageAllowanceUsed >= 5}
+                className="flex-1 bg-transparent text-[15px] text-neutral-900 outline-none placeholder:text-neutral-500 px-2 pb-1.5 pt-1.5 min-h-[40px]"
+              />
+
+              {/* Right Action Buttons */}
+              <div className="flex items-center gap-1 pb-1">
+                <button
+                  type="button"
+                  onClick={toggleVoiceListening}
+                  className={`p-2 rounded-full transition-colors cursor-pointer ${
+                    isListening
+                      ? "bg-red-100 text-red-600 animate-pulse"
+                      : "text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100"
+                  }`}
+                  title={isListening ? "Stop Voice" : "Voice Input"}
+                >
+                  {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                </button>
+                <button
+                  type="submit"
+                  disabled={(role === "Free" && messageAllowanceUsed >= 5) || (!input.trim() && attachedFiles.length === 0)}
+                  className={`flex h-8 w-8 mb-0.5 items-center justify-center rounded-full transition-all shadow-sm ${
+                     (!input.trim() && attachedFiles.length === 0)
+                       ? "bg-[#f4f4f4] text-neutral-400 cursor-not-allowed"
+                       : "bg-black text-white hover:bg-neutral-800 cursor-pointer"
+                  }`}
+                >
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </form>
+            
+            <p className="text-center text-[11px] text-neutral-400 mt-3 font-medium">
+              Zyne can make mistakes. Consider verifying important information.
+            </p>
+          </div>
         </div>
       </div>
     </div>

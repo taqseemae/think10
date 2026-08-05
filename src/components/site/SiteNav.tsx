@@ -5,12 +5,14 @@ import { NAV } from "@/data/think10";
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useAuth } from "@/context/AuthContext";
 
+import { BrandLogo } from "@/components/ui/BrandLogo";
+
 export function SiteNav() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const iconRef = useRef<HTMLImageElement>(null);
   const { isLoggedIn, logout } = useDashboardState();
-  const { userDoc, currentUser } = useAuth();
+  const { userDoc, currentUser, authLoading } = useAuth() as any;
 
   useEffect(() => {
     let scrollTimeout: NodeJS.Timeout;
@@ -46,6 +48,7 @@ export function SiteNav() {
   }, []);
 
   const displayName = userDoc?.displayName || currentUser?.displayName || userDoc?.profile?.businessName || "My Dashboard";
+  const photoURL = userDoc?.photoURL || currentUser?.photoURL;
   
   // Determine correct dashboard route based on role
   let dashboardRoute = "/dashboard";
@@ -66,7 +69,7 @@ export function SiteNav() {
             className="h-10 w-10 shrink-0 transition-transform duration-75 ease-linear" 
           />
           <div className={`overflow-hidden transition-all duration-300 ${scrolled ? 'w-0 opacity-0' : 'w-[125px] opacity-100'}`}>
-            <img src="/logo/t10-brand-logo.svg?v=2" alt="Think10 Premium Advisory" className="h-7 w-[125px] shrink-0 object-contain object-left" />
+            <BrandLogo className="h-7 w-auto shrink-0" />
           </div>
         </a>
 
@@ -86,14 +89,23 @@ export function SiteNav() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          {isLoggedIn ? (
+          {authLoading ? (
+            <div className="flex gap-2">
+               <div className="h-10 w-20 rounded-md bg-neutral-100 animate-pulse" />
+               <div className="h-10 w-[180px] rounded-full bg-neutral-100 animate-pulse" />
+            </div>
+          ) : isLoggedIn ? (
             <>
               <Link
                 to={dashboardRoute}
                 className="flex items-center gap-2 rounded-full px-4 py-2 text-[15px] font-medium text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-mint)] transition-colors"
               >
-                <div className="bg-[color:var(--t10-emerald)]/10 p-1.5 rounded-full text-[color:var(--t10-emerald)]">
-                  <User className="h-4 w-4" />
+                <div className="bg-[color:var(--t10-emerald)]/10 p-0.5 rounded-full text-[color:var(--t10-emerald)] flex items-center justify-center overflow-hidden h-7 w-7">
+                  {photoURL ? (
+                    <img src={photoURL} alt={displayName} className="h-full w-full object-cover rounded-full" />
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
                 </div>
                 <span className="truncate max-w-[120px]">{displayName}</span>
               </Link>
@@ -148,7 +160,12 @@ export function SiteNav() {
               </a>
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-[color:var(--t10-border)] pt-3">
-              {isLoggedIn ? (
+              {authLoading ? (
+                <>
+                  <div className="h-9 w-full rounded-md bg-neutral-100 animate-pulse" />
+                  <div className="h-10 w-full rounded-full bg-neutral-100 animate-pulse" />
+                </>
+              ) : isLoggedIn ? (
                 <>
                   <Link
                     to={dashboardRoute}

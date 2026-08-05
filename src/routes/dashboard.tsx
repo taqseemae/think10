@@ -106,6 +106,18 @@ function DashboardLayout() {
             <span className="hidden md:inline-flex items-center rounded-full bg-[color:var(--t10-mint)] px-2.5 py-0.5 text-xs font-semibold text-[color:var(--t10-navy)] border border-emerald-100">
               {role} Plan
             </span>
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-full bg-[color:var(--t10-emerald)] flex items-center justify-center text-white text-xs font-bold uppercase overflow-hidden shrink-0 border border-neutral-200">
+                {userDoc?.photoURL || currentUser?.photoURL ? (
+                  <img src={userDoc?.photoURL || currentUser?.photoURL || ""} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  (userDoc?.displayName || currentUser?.displayName || "US").split(" ").map((n: string) => n[0]).join("").substring(0, 2)
+                )}
+              </div>
+              <span className="hidden md:block text-xs font-bold text-[color:var(--t10-navy)] max-w-[120px] truncate">
+                {userDoc?.displayName || currentUser?.displayName}
+              </span>
+            </div>
             <button
               type="button"
               onClick={handleLogout}

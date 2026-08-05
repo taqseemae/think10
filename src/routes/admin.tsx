@@ -42,7 +42,7 @@ function AdminLayoutWrapper() {
   }, [currentUser, userDoc, authLoading, docLoading, navigate]);
 
   if (authLoading || docLoading) {
-    return <div className="p-8 text-center">Loading Admin...</div>;
+    return null;
   }
 
   if (!currentUser) {
@@ -62,7 +62,7 @@ function AdminLayoutWrapper() {
 
 function AdminLayout() {
   const { adminRole } = useAdminState();
-  const { logout } = useAuth() as any;
+  const { logout, currentUser, userDoc } = useAuth() as any;
   const navigate = useNavigate();
 
   // Sidebar groups: main navigation order
@@ -132,6 +132,19 @@ function AdminLayout() {
               <div className="flex items-center gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-semibold text-neutral-700">
                 Role: {adminRole}
               </div>
+            </div>
+            
+            <div className="flex items-center gap-2 ml-2">
+              <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold uppercase overflow-hidden shrink-0 border border-neutral-200">
+                {userDoc?.photoURL || currentUser?.photoURL ? (
+                  <img src={userDoc?.photoURL || currentUser?.photoURL || ""} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  (userDoc?.displayName || currentUser?.displayName || "AD").split(" ").map((n: string) => n[0]).join("").substring(0, 2)
+                )}
+              </div>
+              <span className="hidden md:block text-xs font-bold text-neutral-700 max-w-[120px] truncate">
+                {userDoc?.displayName || currentUser?.displayName || "Admin"}
+              </span>
             </div>
           </div>
         </header>

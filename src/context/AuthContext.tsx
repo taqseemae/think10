@@ -53,17 +53,17 @@ interface AuthContextType {
 // ── Helper: load Firestore doc with retry on "offline" error ─────────────────
 
 async function fetchUserDocWithRetry(uid: string): Promise<UserDocument | null> {
-  const MAX_RETRIES = 4;
+  const MAX_RETRIES = 2;
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       const result = await getUserDocFn({ data: uid });
-      return result;
+      if (result) return result;
     } catch (err: any) {
       if (attempt < MAX_RETRIES - 1) {
-        await new Promise((r) => setTimeout(r, 500 * Math.pow(2, attempt)));
+        await new Promise((r) => setTimeout(r, 150));
         continue;
       }
-      console.warn("[Think10] MongoDB unavailable, skipping doc load:", err?.message ?? err);
+      console.warn("[Think10] Fast doc load fallback:", err?.message ?? err);
       return null;
     }
   }

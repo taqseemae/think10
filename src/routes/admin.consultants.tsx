@@ -121,8 +121,12 @@ function ConsultantsAdminPage() {
                     <tr key={consultant.id || consultant.uid} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center text-white font-bold border border-neutral-200 shrink-0">
-                            {consultant.displayName?.charAt(0) || consultant.email?.charAt(0) || "?"}
+                          <div className="h-10 w-10 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center text-white font-bold border border-neutral-200 shrink-0 overflow-hidden">
+                            {consultant.photoURL ? (
+                              <img src={consultant.photoURL} alt={consultant.displayName} className="h-full w-full object-cover" />
+                            ) : (
+                              consultant.displayName?.charAt(0) || consultant.email?.charAt(0) || "?"
+                            )}
                           </div>
                           <div>
                             <div className="font-semibold text-neutral-900">{consultant.displayName || consultant.email}</div>
@@ -237,40 +241,44 @@ function ConsultantsAdminPage() {
                 <span className="font-bold text-neutral-900">{reviewingConsultant.consultantProfile?.title || "Business Consultant"}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-neutral-500 font-medium">Setup Fee (500 AED):</span>
-                <span className="font-bold text-emerald-600">Paid & Cleared</span>
+                <span className="text-neutral-500 font-medium">Verification Fee:</span>
+                <span className="font-bold text-emerald-600">AED 0 (Free Preview)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-neutral-500 font-medium">Current Status:</span>
-                <span className="font-bold text-amber-700">{reviewingConsultant.approvalStatus || "PENDING_REVIEW"}</span>
+                <span className="text-neutral-500 font-medium">Experience & Rate:</span>
+                <span className="font-bold text-neutral-900">{reviewingConsultant.consultantProfile?.experienceYears || 10} Yrs Exp • {reviewingConsultant.consultantProfile?.pricePlaceholder || "AED 450"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-500 font-medium">Current Approval Status:</span>
+                <span className="font-bold text-amber-700">{reviewingConsultant.approvalStatus || "PENDING"}</span>
               </div>
             </div>
 
             {/* Verification Documents List */}
             <div className="space-y-3">
-              <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Uploaded Compliance Documents</h4>
+              <h4 className="text-xs font-bold text-neutral-700 uppercase tracking-wider">Uploaded Compliance & Resume Assets</h4>
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
                   <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-[color:var(--t10-emerald)]" />
+                    <FileText className="h-5 w-5 text-indigo-600" />
                     <div>
-                      <p className="text-xs font-bold text-neutral-900">Emirates ID / National Passport</p>
-                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.verificationDocs?.emiratesId || "EmiratesID_Verified_Doc.pdf"}</p>
+                      <p className="text-xs font-bold text-neutral-900">Uploaded Resume / CV Document</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.cvFileName || "Consultant_Executive_CV.pdf"}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Verified</span>
+                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Uploaded</span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
                   <div className="flex items-center gap-3">
-                    <FileText className="h-5 w-5 text-blue-600" />
+                    <Award className="h-5 w-5 text-emerald-600" />
                     <div>
-                      <p className="text-xs font-bold text-neutral-900">Trade License / Professional Cert</p>
-                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.verificationDocs?.tradeLicense || "TradeLicense_Verified_Doc.pdf"}</p>
+                      <p className="text-xs font-bold text-neutral-900">Trade License / Certifications</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.certFileName || "TradeLicense_Verified_Doc.pdf"}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Verified</span>
+                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Uploaded</span>
                 </div>
               </div>
             </div>
@@ -289,9 +297,14 @@ function ConsultantsAdminPage() {
               </button>
               <button
                 onClick={async () => {
-                  await approveConsultant(reviewingConsultant.uid);
-                  toast.success(`Consultant ${reviewingConsultant.email} approved & published!`);
-                  setReviewingConsultant(null);
+                  try {
+                    await approveConsultant(reviewingConsultant.uid || reviewingConsultant.id);
+                    toast.success(`Consultant ${reviewingConsultant.email} approved & published!`);
+                    setReviewingConsultant(null);
+                  } catch (err: any) {
+                    console.error("Failed to approve consultant:", err);
+                    alert("Failed to approve consultant: " + err.message);
+                  }
                 }}
                 className="flex items-center gap-1.5 rounded-lg bg-[color:var(--t10-emerald)] px-4 py-2 text-xs font-bold text-white hover:bg-[color:var(--t10-green)] transition-colors shadow-sm"
               >

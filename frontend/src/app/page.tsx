@@ -61,7 +61,7 @@ function Home() {
     if (authLoading || docLoading) return;
     if (!isLoggedIn) return;
     // Route to the correct panel based on role
-    if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae") {
+    if (userDoc?.adminRole || userDoc?.email === "admin.think10@gmail.com") {
       router.push("/admin");
     } else if (userDoc?.plan?.role === "Consultant") {
       router.push("/consultant");
@@ -1334,7 +1334,7 @@ function ContactCTA() {
               Ask Zyne Now <ArrowUpRight className="h-4 w-4" />
             </a>
             <a
-              href="mailto:hello@think10.ae"
+              href="mailto:info@think10.ae"
               className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white hover:text-[color:var(--t10-navy)]"
             >
               Book a Discovery Call <ArrowUpRight className="h-4 w-4" />

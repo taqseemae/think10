@@ -46,7 +46,7 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     }
 
     // Role-based redirection out of the user dashboard
-    if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae") {
+    if (userDoc?.adminRole || userDoc?.email === "admin.think10@gmail.com") {
       router.push("/admin");
       return;
     }

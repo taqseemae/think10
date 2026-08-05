@@ -14,6 +14,7 @@ import {
   CircleDollarSign,
   RefreshCcw,
   Trash2,
+  User,
 } from "lucide-react";
 import { useMemo, useState, useEffect } from "react";
 
@@ -507,6 +508,48 @@ function ConsultantDashboardHome() {
     );
   }
 
+  // If the user has completed onboarding but is not yet approved by admin, block full access.
+  if (userDoc?.approved !== true && userDoc?.email?.toLowerCase() !== "admin.think10@gmail.com" && currentUser?.email?.toLowerCase() !== "admin.think10@gmail.com") {
+    return (
+      <div className="max-w-3xl mx-auto py-12">
+        <div className="bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-xl overflow-hidden p-8 md:p-12 text-center flex flex-col items-center">
+          <div className="h-20 w-20 bg-amber-100 rounded-full flex items-center justify-center mb-6">
+            <AlertCircle className="w-10 h-10 text-amber-600" />
+          </div>
+          <h2 className="text-2xl font-bold font-display text-[color:var(--t10-navy)] mb-3">Verification Pending Approval</h2>
+          <p className="text-neutral-500 max-w-lg mb-8">
+            Thank you for completing the onboarding process! Your credentials and uploaded documents are currently under review by the Think10 Admin team.
+          </p>
+          
+          <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-6 text-left w-full max-w-md space-y-4">
+            <h3 className="font-bold text-[color:var(--t10-navy)] text-sm border-b border-neutral-200 pb-3">What happens next?</h3>
+            <ul className="space-y-3 text-xs text-neutral-600">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[color:var(--t10-emerald)] shrink-0 mt-0.5" />
+                <span>Our quality team verifies your submitted identity and trade documents.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 className="w-4 h-4 text-[color:var(--t10-emerald)] shrink-0 mt-0.5" />
+                <span>We ensure your professional bio and tags meet platform standards.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Clock className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <span>Once approved (usually within 24-48 hours), this dashboard will be unlocked and your public profile will go live.</span>
+              </li>
+            </ul>
+          </div>
+          
+          <button 
+            onClick={refreshData}
+            className="mt-8 px-6 py-2.5 border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 font-bold text-xs rounded-xl transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+          >
+            <RefreshCcw className="w-4 h-4" /> Check Status Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
 
@@ -538,20 +581,6 @@ function ConsultantDashboardHome() {
           </Link>
         </div>
       </div>
-
-      {/* Verification Status Banner */}
-      {userDoc?.approved !== true && userDoc?.email !== "admin@think10.ae" && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
-          <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-          <div>
-            <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wider">Verification Pending Admin Approval</h4>
-            <p className="text-xs text-amber-700 mt-0.5">
-              Your credentials and uploaded verification documents are under review by the Think10 Admin team.
-              Once approved, your profile will automatically be published on the public Advisors page for clients to book.
-            </p>
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 

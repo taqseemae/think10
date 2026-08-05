@@ -70,7 +70,7 @@ function CustomersAdminPage() {
 
   // ── ONLY customers: exclude admins and consultants ──────────────────────────
   const customers = users.filter((u) => {
-    const isAdmin = Boolean(u.adminRole) || u.email === "admin@think10.ae";
+    const isAdmin = Boolean(u.adminRole) || u.email === "admin.think10@gmail.com";
     const isConsultant =
       u.plan?.role === "Consultant" ||
       u.plan?.role === "ConsultantPending" ||

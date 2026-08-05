@@ -1157,9 +1157,13 @@ function ExpertsSection() {
               className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-6"
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[color:var(--t10-navy)] text-sm font-bold text-white">
-                  {e.initials}
-                </span>
+                {e.photoURL ? (
+                  <img src={e.photoURL} alt={e.name} className="h-12 w-12 rounded-full object-cover shadow-sm" />
+                ) : (
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[color:var(--t10-navy)] text-sm font-bold text-white uppercase">
+                    {e.initials}
+                  </span>
+                )}
                 <div>
                   <p className="text-sm font-bold text-[color:var(--t10-navy)]">{e.name}</p>
                   <p className="text-[11px] text-[color:var(--t10-grey)]">{e.location}</p>
@@ -1347,7 +1351,7 @@ function ContactCTA() {
               Ask Zyne Now <ArrowUpRight className="h-4 w-4" />
             </a>
             <a
-              href="mailto:hello@think10.ae"
+              href="mailto:info@think10.ae"
               className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white hover:text-[color:var(--t10-navy)]"
             >
               Book a Discovery Call <ArrowUpRight className="h-4 w-4" />

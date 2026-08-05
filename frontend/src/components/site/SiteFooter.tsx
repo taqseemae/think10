@@ -27,8 +27,8 @@ export function SiteFooter() {
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 text-[color:var(--t10-emerald)] shrink-0" />
-                <a href="mailto:advisory@think10.ae" className="hover:text-[color:var(--t10-emerald)] transition-colors">
-                  advisory@think10.ae
+                <a href="mailto:info@think10.ae" className="hover:text-[color:var(--t10-emerald)] transition-colors">
+                  info@think10.ae
                 </a>
               </div>
             </div>

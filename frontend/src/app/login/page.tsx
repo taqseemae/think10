@@ -87,7 +87,7 @@ function Page() {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae") {
+      if (userDoc?.adminRole || userDoc?.email === "admin.think10@gmail.com") {
         router.push("/admin");
       } else if (userDoc?.plan?.role === "Consultant") {
         router.push("/consultant");

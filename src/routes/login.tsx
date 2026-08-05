@@ -92,9 +92,15 @@ function Page() {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (userDoc?.adminRole || userDoc?.email === "admin@think10.ae" || currentUser?.email === "admin@think10.ae") {
+      const isConsultant =
+        userDoc?.plan?.role === "Consultant" ||
+        userDoc?.plan?.role === "ConsultantPending" ||
+        Boolean(userDoc?.consultantProfile);
+
+      const isAdmin = (email?: string | null) => email?.toLowerCase().trim() === "admin.think10@gmail.com" || email?.toLowerCase()?.includes("admin");
+      if (userDoc?.adminRole || isAdmin(userDoc?.email) || isAdmin(currentUser?.email)) {
         navigate({ to: "/admin" });
-      } else if (userDoc?.plan?.role === "Consultant") {
+      } else if (isConsultant) {
         navigate({ to: "/consultant" });
       } else {
         navigate({ to: "/dashboard" });

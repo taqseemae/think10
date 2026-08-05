@@ -13,6 +13,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -131,13 +132,19 @@ function RootShell({ children }: { children: ReactNode }) {
 }
 
 function GlobalZyneWidget() {
-  const { currentUser } = useAuth();
   const router = useRouter();
+  const path = router.state.location.pathname;
   
-  // Don't show on dashboard/admin routes where they have full Zyne, 
-  // or if they are logged in (they should go to dashboard for Zyne)
-  if (currentUser) return null;
-  if (router.state.location.pathname.startsWith("/admin") || router.state.location.pathname.startsWith("/dashboard")) return null;
+  // Don't show on backend/app routes
+  if (
+    path.startsWith("/admin") || 
+    path.startsWith("/dashboard") || 
+    path.startsWith("/consultant") || 
+    path === "/login" || 
+    path === "/signup"
+  ) {
+    return null;
+  }
 
   return <ZyneFloatingWidget />;
 }
@@ -154,6 +161,7 @@ function RootComponent() {
           {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
           <Outlet />
           <GlobalZyneWidget />
+          <Toaster position="top-center" />
         </DashboardStateProvider>
       </AuthProvider>
     </QueryClientProvider>

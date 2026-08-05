@@ -7,6 +7,9 @@ import {
   Globe, Zap, AlertTriangle, FileText, ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { AvatarCropperModal } from "@/components/AvatarCropperModal";
+import { updateUserProfileByAdminFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/admin/settings")({
   component: ReportsAndSettings,
@@ -38,13 +41,17 @@ const ADMIN_ROLE_DEFS = [
 
 
 
-type Tab = "reports" | "plans" | "roles" | "rules" | "audit" | "general";
+import { ColorSchemePicker } from "@/components/ui/ColorSchemePicker";
+import { User, Camera, Upload } from "lucide-react";
+
+type Tab = "profile" | "reports" | "plans" | "roles" | "rules" | "audit" | "general";
 
 function ReportsAndSettings() {
   const { users, bookings, transactions, metrics } = useAdminState();
-  const [activeTab, setActiveTab] = useState<Tab>("reports");
+  const [activeTab, setActiveTab] = useState<Tab>("profile");
 
   const TABS = [
+    { key: "profile", label: "Profile & Color Scheme", icon: User },
     { key: "reports", label: "Report Builder", icon: BarChart3 },
     { key: "plans", label: "Plans", icon: CreditCard },
     { key: "roles", label: "Roles & Permissions", icon: ShieldCheck },
@@ -57,12 +64,12 @@ function ReportsAndSettings() {
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-[color:var(--t10-navy)] flex items-center gap-2">
+        <h2 className="text-2xl font-bold text-[color:var(--t10-navy)] flex items-center gap-2 font-display">
           <Settings className="h-6 w-6 text-[color:var(--t10-emerald)]" />
           Reports & Settings
         </h2>
         <p className="text-xs text-neutral-500 mt-1">
-          Report builder, plan management, role permissions, automation rules, and audit logs.
+          Edit profile, customize admin workspace color scheme, build reports, and manage platform controls.
         </p>
       </div>
 
@@ -86,14 +93,259 @@ function ReportsAndSettings() {
 
       {/* Tab Content */}
       <div className="min-h-[400px]">
+        {activeTab === "profile" && <AdminProfileTab />}
         {activeTab === "reports" && <ReportsTab users={users} bookings={bookings} transactions={transactions} metrics={metrics} />}
         {activeTab === "plans" && <PlansTab />}
         {activeTab === "roles" && <RolesTab />}
         {activeTab === "rules" && <RulesTab />}
-        {activeTab === "rules" && <RulesTab />}
         {activeTab === "audit" && <AuditTab users={users} bookings={bookings} />}
         {activeTab === "general" && <GeneralTab />}
       </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB: Admin Profile & Color Scheme
+// ═══════════════════════════════════════════════════════════════════════════════
+function AdminProfileTab() {
+  const { currentUser, userDoc } = useAuth();
+  const [displayName, setDisplayName] = useState(userDoc?.displayName || currentUser?.displayName || "System Administrator");
+  const [email] = useState(currentUser?.email || "admin.think10@gmail.com");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(userDoc?.photoURL || currentUser?.photoURL || null);
+  const [savedSuccess, setSavedSuccess] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempImageSrc(reader.result as string);
+        setCropperOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  const { refreshUserDoc } = useAuth();
+  
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    try {
+      await updateUserProfileByAdminFn({
+        data: {
+          uid: currentUser.uid,
+          displayName,
+          photoURL: avatarUrl || undefined,
+          profilePic: avatarUrl || undefined, // For backwards compatibility
+        }
+      });
+      await refreshUserDoc();
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save profile");
+    }
+  };
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+    if (!newPassword || !confirmPassword) {
+      setPasswordError("Please fill in all password fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      return;
+    }
+    if (!currentUser) return;
+    
+    setPasswordLoading(true);
+    try {
+      const { updatePassword } = await import("firebase/auth");
+      await updatePassword(currentUser, newPassword);
+      setPasswordSuccess("Password updated successfully.");
+      setNewPassword("");
+      setConfirmPassword("");
+      setTimeout(() => setPasswordSuccess(""), 3000);
+    } catch (err: any) {
+      if (err.code === "auth/requires-recent-login") {
+        setPasswordError("Security restriction: Please log out and log back in to change your password.");
+      } else if (err.code === "auth/operation-not-allowed" || err.message?.includes("provider")) {
+        setPasswordError("You logged in using Google or Phone. You cannot set a password.");
+      } else {
+        setPasswordError(err.message || "Failed to update password.");
+      }
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 max-w-4xl">
+      {savedSuccess && (
+        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-xs font-bold text-emerald-800">
+          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          Admin profile and preferences updated successfully!
+        </div>
+      )}
+
+      {/* WordPress-Style Color Scheme Picker */}
+      <ColorSchemePicker
+        title="Admin Color Scheme"
+        subtitle="Choose your preferred workspace color theme. The theme dynamically changes colors and logo aesthetics."
+      />
+
+      {/* Admin Profile Form */}
+      <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6 space-y-6">
+        <div>
+          <h3 className="text-sm font-bold text-neutral-900 font-display">Personal Details</h3>
+          <p className="text-xs text-neutral-500 mt-0.5">Manage your display profile and avatar picture.</p>
+        </div>
+
+        <form onSubmit={handleSaveProfile} className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+            <div className="relative group cursor-pointer">
+              <div className="h-20 w-20 rounded-full bg-[color:var(--t10-navy)] text-white flex items-center justify-center text-xl font-bold uppercase overflow-hidden border-2 border-[color:var(--t10-border)] shadow">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  (displayName || "AD").slice(0, 2)
+                )}
+              </div>
+              <label className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
+                <Camera className="h-5 w-5" />
+                <span className="text-[9px] font-bold mt-1">Upload</span>
+                <input type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" />
+              </label>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-neutral-800">Profile Picture</p>
+              <p className="text-[11px] text-neutral-500">JPG, PNG or GIF. Max size 2MB.</p>
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 cursor-pointer transition-colors mt-2">
+                <Upload className="h-3.5 w-3.5" /> Upload Image
+                <input type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" />
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-neutral-600 uppercase mb-1">Display Name</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm focus:border-[color:var(--t10-emerald)] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-neutral-600 uppercase mb-1">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                disabled
+                className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-500 cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-[color:var(--t10-navy)] text-white rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow cursor-pointer"
+            >
+              Save Profile Changes
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Password Change Form */}
+      <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6 space-y-6">
+        <div>
+          <h3 className="text-sm font-bold text-neutral-900 font-display">Change Password</h3>
+          <p className="text-xs text-neutral-500 mt-0.5">Update your account password. You may be asked to log in again.</p>
+        </div>
+
+        {passwordError && (
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-xs font-bold text-red-800">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            {passwordError}
+          </div>
+        )}
+        {passwordSuccess && (
+          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-xs font-bold text-emerald-800">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            {passwordSuccess}
+          </div>
+        )}
+
+        <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+          <div>
+            <label className="block text-xs font-bold text-neutral-600 uppercase mb-1">New Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-3 text-sm focus:border-[color:var(--t10-emerald)] focus:outline-none"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-neutral-600 uppercase mb-1">Confirm Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-3 text-sm focus:border-[color:var(--t10-emerald)] focus:outline-none"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={passwordLoading}
+              className="px-5 py-2.5 bg-neutral-800 text-white rounded-lg text-xs font-bold hover:bg-black transition-all shadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {passwordLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : null}
+              {passwordLoading ? "Updating..." : "Update Password"}
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      <AvatarCropperModal 
+        isOpen={cropperOpen}
+        onClose={() => setCropperOpen(false)}
+        imageSrc={tempImageSrc}
+        onCropComplete={(croppedBase64) => setAvatarUrl(croppedBase64)}
+      />
     </div>
   );
 }
@@ -158,7 +410,7 @@ function ReportsTab({ users, bookings, transactions, metrics }: any) {
     }, 600);
   };
 
-  const totalCustomers = users.filter((u: any) => !u.adminRole && u.email !== "admin@think10.ae" && u.plan?.role !== "Consultant" && u.plan?.role !== "ConsultantPending").length;
+  const totalCustomers = users.filter((u: any) => !u.adminRole && u.email !== "admin.think10@gmail.com" && u.plan?.role !== "Consultant" && u.plan?.role !== "ConsultantPending").length;
   const paidCustomers = users.filter((u: any) => ["ZynePaid", "Hybrid", "Premium", "Enterprise"].includes(u.plan?.role)).length;
   const totalRev = transactions.reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
   const completedBookings = bookings.filter((b: any) => b.status === "COMPLETED").length;
@@ -612,10 +864,10 @@ function AuditTab({ users, bookings }: any) {
         target: b.consultantName || b.expertSlug || "Session",
         severity: b.status === "CANCELLED" ? "warn" : "info",
       })),
-      { time: new Date(now.getTime() - 300000).toISOString(), actor: "admin@think10.ae", event: "Admin login", target: "Admin Panel", severity: "info" },
-      { time: new Date(now.getTime() - 900000).toISOString(), actor: "admin@think10.ae", event: "Settings updated", target: "Platform Settings", severity: "info" },
+      { time: new Date(now.getTime() - 300000).toISOString(), actor: "admin.think10@gmail.com", event: "Admin login", target: "Admin Panel", severity: "info" },
+      { time: new Date(now.getTime() - 900000).toISOString(), actor: "admin.think10@gmail.com", event: "Settings updated", target: "Platform Settings", severity: "info" },
       { time: new Date(now.getTime() - 1800000).toISOString(), actor: "System", event: "Failed payment attempt", target: "user@example.com", severity: "error" },
-      { time: new Date(now.getTime() - 7200000).toISOString(), actor: "admin@think10.ae", event: "User suspended", target: "suspect@example.com", severity: "warn" },
+      { time: new Date(now.getTime() - 7200000).toISOString(), actor: "admin.think10@gmail.com", event: "User suspended", target: "suspect@example.com", severity: "warn" },
     ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
   });
 
@@ -693,25 +945,9 @@ function GeneralTab() {
 
       <SettingsSection title="Security" icon={Lock}>
         <SettingRow label="Admin Email" desc="Super admin account — cannot be changed here.">
-          <input type="email" defaultValue="admin@think10.ae" readOnly className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-500 cursor-not-allowed" />
+          <input type="email" defaultValue="admin.think10@gmail.com" readOnly className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm bg-neutral-50 text-neutral-500 cursor-not-allowed" />
         </SettingRow>
-        <SettingRow label="Admin Password Reset" desc="Send reset link to admin email.">
-          <button
-            onClick={async () => {
-              const { sendPasswordResetEmail } = await import("firebase/auth");
-              const { auth } = await import("@/lib/firebase");
-              try {
-                await sendPasswordResetEmail(auth, "admin@think10.ae");
-                alert("Password reset email sent to admin@think10.ae.");
-              } catch {
-                alert("Failed to send reset email.");
-              }
-            }}
-            className="px-4 py-2 bg-neutral-100 border border-neutral-200 rounded-lg text-sm font-bold text-[color:var(--t10-navy)] hover:bg-neutral-200 transition-colors cursor-pointer"
-          >
-            Send Reset Link
-          </button>
-        </SettingRow>
+
       </SettingsSection>
 
       <SettingsSection title="Notifications" icon={Bell}>

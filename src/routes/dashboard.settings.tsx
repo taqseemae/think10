@@ -12,17 +12,40 @@ import {
   reauthenticateWithCredential,
   updateEmail,
 } from "firebase/auth";
-import { Key, Phone, ShieldCheck, Mail, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Key, Phone, ShieldCheck, Mail, Loader2, CheckCircle2, AlertCircle, Camera, Upload, User } from "lucide-react";
+import { ColorSchemePicker } from "@/components/ui/ColorSchemePicker";
+import { AvatarCropperModal } from "@/components/AvatarCropperModal";
+import { updateUserBasicDetailsFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/dashboard/settings")({ component: Page });
 
 function Page() {
-  const { currentUser, refreshUserDoc } = useAuth();
+  const { currentUser, userDoc, refreshUserDoc } = useAuth();
   
   // Status/Messages
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Profile State
+  const [displayName, setDisplayName] = useState(userDoc?.displayName || currentUser?.displayName || "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentUser?.photoURL || null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [tempImageSrc, setTempImageSrc] = useState<string | null>(null);
+
+  const handleAvatarFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setTempImageSrc(reader.result as string);
+        setCropperOpen(true);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
 
   // Phone Link State
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -205,6 +228,106 @@ function Page() {
 
   return (
     <div className="max-w-3xl space-y-6">
+      {/* WordPress-Style Color Scheme Selector */}
+      <ColorSchemePicker
+        title="Dashboard Color Scheme"
+        subtitle="Choose your preferred workspace color theme. Theme updates live across all command centre pages."
+      />
+
+      {/* Edit Profile Card */}
+      <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-6 shadow-sm space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-[color:var(--t10-navy)] font-display flex items-center gap-2">
+            <User className="h-5 w-5 text-[color:var(--t10-emerald)]" /> Personal Profile
+          </h2>
+          <p className="mt-1 text-sm text-[color:var(--t10-grey)]">
+            Update your profile name and profile picture.
+          </p>
+        </div>
+
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            setProfileSaving(true);
+            try {
+              await updateUserBasicDetailsFn({
+                data: {
+                  uid: currentUser.uid,
+                  displayName,
+                  photoURL: avatarUrl || undefined,
+                }
+              });
+              await refreshUserDoc();
+              setSuccessMsg("Profile details saved successfully!");
+            } catch (err: any) {
+              setErrorMsg(err.message || "Failed to save profile");
+            } finally {
+              setProfileSaving(false);
+            }
+          }}
+          className="space-y-6"
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="relative group cursor-pointer">
+              <div className="h-20 w-20 rounded-full bg-[color:var(--t10-navy)] text-white flex items-center justify-center text-xl font-bold uppercase overflow-hidden border-2 border-[color:var(--t10-border)] shadow">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="User Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  (displayName || "US").slice(0, 2)
+                )}
+              </div>
+              <label className="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white">
+                <Camera className="h-5 w-5" />
+                <span className="text-[9px] font-bold mt-1">Upload</span>
+                <input type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" />
+              </label>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-neutral-800">Profile Photo</p>
+              <p className="text-[11px] text-neutral-500">PNG, JPG or GIF up to 2MB.</p>
+              <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[color:var(--t10-border)] bg-neutral-50 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 cursor-pointer transition-colors mt-2">
+                <Upload className="h-3.5 w-3.5" /> Upload Photo
+                <input type="file" accept="image/*" onChange={handleAvatarFile} className="hidden" />
+              </label>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-neutral-600 uppercase mb-1">Full Name</label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Your full name"
+                className="w-full rounded-xl border border-[color:var(--t10-border)] px-4 py-2.5 text-sm outline-none focus:border-[color:var(--t10-navy)]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-neutral-600 uppercase mb-1">Email Address</label>
+              <input
+                type="email"
+                value={currentUser?.email || ""}
+                disabled
+                className="w-full rounded-xl border border-[color:var(--t10-border)] bg-neutral-50 px-4 py-2.5 text-sm text-neutral-500 cursor-not-allowed"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={profileSaving}
+            className="rounded-xl bg-[color:var(--t10-navy)] px-5 py-2.5 text-sm font-bold text-white hover:bg-neutral-800 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+          >
+            {profileSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+            Save Profile
+          </button>
+        </form>
+      </div>
+
       <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-6 shadow-sm">
         <h2 className="text-xl font-bold text-[color:var(--t10-navy)]">Account Settings</h2>
         <p className="mt-1 text-sm text-[color:var(--t10-grey)]">
@@ -407,6 +530,13 @@ function Page() {
           
         </div>
       </div>
+      
+      <AvatarCropperModal 
+        isOpen={cropperOpen}
+        onClose={() => setCropperOpen(false)}
+        imageSrc={tempImageSrc}
+        onCropComplete={(croppedBase64) => setAvatarUrl(croppedBase64)}
+      />
     </div>
   );
 }

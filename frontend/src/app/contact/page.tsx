@@ -70,7 +70,7 @@ function Page() {
             <ContactRow
               icon={<Mail className="h-5 w-5" />}
               title="Email"
-              value="hello@think10.ae (placeholder)"
+              value="info@think10.ae (placeholder)"
             />
             <ContactRow
               icon={<MessageSquare className="h-5 w-5" />}

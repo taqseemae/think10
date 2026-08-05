@@ -48,7 +48,7 @@ function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (!userDoc?.adminRole && currentUser.email !== "admin@think10.ae") {
+      if (!userDoc?.adminRole && currentUser.email !== "admin.think10@gmail.com") {
          router.push("/");
       }
     }
@@ -62,7 +62,7 @@ function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
     return <AdminLoginView />;
   }
 
-  if (!userDoc?.adminRole && currentUser.email !== "admin@think10.ae") {
+  if (!userDoc?.adminRole && currentUser.email !== "admin.think10@gmail.com") {
     return null;
   }
 
@@ -237,7 +237,7 @@ function AdminLoginView() {
                 type="email"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="admin@think10.ae"
+                placeholder="admin.think10@gmail.com"
                 autoComplete="email"
                 className="w-full rounded-xl border border-[color:var(--t10-border)] bg-neutral-50 py-2.5 pl-9 pr-3 text-sm text-[color:var(--t10-navy)] placeholder:text-neutral-300 outline-none focus:border-[color:var(--t10-navy)] focus:ring-2 focus:ring-[color:var(--t10-navy)]/10 transition-all"
               />

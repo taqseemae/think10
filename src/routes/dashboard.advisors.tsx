@@ -160,9 +160,13 @@ function AdvisorsPage() {
                 <div>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-10 w-10 place-items-center rounded-full bg-[color:var(--t10-navy)] text-xs font-bold text-white uppercase">
-                        {e.initials}
-                      </span>
+                      {e.photoURL ? (
+                        <img src={e.photoURL} alt={e.name} className="h-10 w-10 rounded-full object-cover" />
+                      ) : (
+                        <span className="grid h-10 w-10 place-items-center rounded-full bg-[color:var(--t10-navy)] text-xs font-bold text-white uppercase">
+                          {e.initials}
+                        </span>
+                      )}
                       <div>
                         <h4 className="text-sm font-bold text-[color:var(--t10-navy)]">{e.name}</h4>
                         <p className="text-[11px] text-[color:var(--t10-grey)]">{e.role}</p>

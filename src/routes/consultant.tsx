@@ -89,7 +89,7 @@ function ConsultantLayout() {
   }, [currentUser, userDoc, authLoading, docLoading, pathname, navigate]);
 
   if (authLoading || docLoading) {
-    return <div className="p-8 text-center">Loading Consultant Workspace...</div>;
+    return null;
   }
 
   if (!currentUser) {
@@ -183,8 +183,12 @@ function ConsultantLayout() {
             </button>
             
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center text-white text-xs font-bold uppercase">
-                {(userDoc?.displayName || currentUser?.displayName || "CO").split(" ").map((n: string) => n[0]).join("").substring(0, 2)}
+              <div className="h-8 w-8 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center text-white text-xs font-bold uppercase overflow-hidden">
+                {userDoc?.photoURL || currentUser?.photoURL ? (
+                  <img src={userDoc?.photoURL || currentUser?.photoURL || ""} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  (userDoc?.displayName || currentUser?.displayName || "CO").split(" ").map((n: string) => n[0]).join("").substring(0, 2)
+                )}
               </div>
               <div className="hidden flex-col md:flex">
                 <span className="text-xs font-semibold leading-none text-neutral-900">

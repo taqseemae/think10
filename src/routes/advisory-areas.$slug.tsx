@@ -94,9 +94,13 @@ function AreaPage() {
                 params={{ slug: e.slug }}
                 className="flex items-start gap-3 rounded-2xl border border-[color:var(--t10-border)] bg-white p-5 hover:shadow-md"
               >
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[color:var(--t10-navy)] text-sm font-semibold text-white">
-                  {e.initials}
-                </span>
+                {e.photoURL ? (
+                  <img src={e.photoURL} alt={e.name} className="h-10 w-10 rounded-full object-cover shadow-sm" />
+                ) : (
+                  <span className="grid h-10 w-10 place-items-center rounded-full bg-[color:var(--t10-navy)] text-xs font-bold text-white uppercase">
+                    {e.initials}
+                  </span>
+                )}
                 <div>
                   <p className="text-sm font-semibold text-[color:var(--t10-navy)]">{e.name}</p>
                   <p className="text-xs text-[color:var(--t10-grey)]">{e.role}</p>

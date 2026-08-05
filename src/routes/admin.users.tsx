@@ -77,14 +77,14 @@ function UsersAdminPage() {
 
   // Role Counts for Tabs
   const allCount = users.length;
-  const adminCount = users.filter(u => Boolean(u.adminRole) || u.email === "admin@think10.ae").length;
+  const adminCount = users.filter(u => Boolean(u.adminRole) || u.email === "admin.think10@gmail.com" || u.email === "admin@think10.ae").length;
   const consultantCount = users.filter(u => u.plan?.role === "Consultant" || u.plan?.role === "ConsultantPending" || Boolean(u.consultantProfile)).length;
-  const customerCount = users.filter(u => !u.adminRole && u.email !== "admin@think10.ae" && u.plan?.role !== "Consultant" && u.plan?.role !== "ConsultantPending" && !u.consultantProfile).length;
+  const customerCount = users.filter(u => !u.adminRole && u.email !== "admin.think10@gmail.com" && u.email !== "admin@think10.ae" && u.plan?.role !== "Consultant" && u.plan?.role !== "ConsultantPending" && !u.consultantProfile).length;
 
   const filteredUsers = users.filter((u) => {
-    if (selectedRoleFilter === "Administrator" && !u.adminRole && u.email !== "admin@think10.ae") return false;
+    if (selectedRoleFilter === "Administrator" && !u.adminRole && u.email !== "admin.think10@gmail.com" && u.email !== "admin@think10.ae") return false;
     if (selectedRoleFilter === "Consultant" && u.plan?.role !== "Consultant" && u.plan?.role !== "ConsultantPending" && !u.consultantProfile) return false;
-    if (selectedRoleFilter === "Customer" && (u.adminRole || u.email === "admin@think10.ae" || u.plan?.role === "Consultant" || u.plan?.role === "ConsultantPending" || u.consultantProfile)) return false;
+    if (selectedRoleFilter === "Customer" && (u.adminRole || u.email === "admin.think10@gmail.com" || u.email === "admin@think10.ae" || u.plan?.role === "Consultant" || u.plan?.role === "ConsultantPending" || u.consultantProfile)) return false;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -123,9 +123,6 @@ function UsersAdminPage() {
     } else if (bulkAction === "unsuspend") {
       for (const uid of selectedUserIds) await suspendUser(uid, false);
       toast.success(`${selectedUserIds.length} users unsuspended.`);
-      setSelectedUserIds([]);
-    } else if (bulkAction === "reset_password") {
-      toast.success(`Password reset links sent to ${selectedUserIds.length} users.`);
       setSelectedUserIds([]);
     }
     setBulkAction("");
@@ -629,7 +626,6 @@ function UsersAdminPage() {
             <option value="">Bulk Actions</option>
             <option value="suspend">Suspend Users</option>
             <option value="unsuspend">Unsuspend Users</option>
-            <option value="reset_password">Send Password Reset</option>
             <option value="delete">Delete Permanently</option>
           </select>
           <button
@@ -677,8 +673,8 @@ function UsersAdminPage() {
                   const isChecked = selectedUserIds.includes(user.uid);
                   const displayUsername = user.email ? user.email.split("@")[0] : "user";
                   
-                  // Fix role formatting: check if admin@think10.ae or user has adminRole
-                  const isAdminUser = Boolean(user.adminRole) || user.email === "admin@think10.ae";
+                  // Fix role formatting: check if admin.think10@gmail.com or admin@think10.ae or user has adminRole
+                  const isAdminUser = Boolean(user.adminRole) || user.email === "admin.think10@gmail.com" || user.email === "admin@think10.ae";
                   const formattedRole = isAdminUser
                     ? `Administrator (${user.adminRole || "Super Admin"})`
                     : user.plan?.role === "Consultant" || user.plan?.role === "ConsultantPending"
@@ -698,8 +694,12 @@ function UsersAdminPage() {
 
                       <td className="p-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-[color:var(--t10-mint)] text-[color:var(--t10-emerald)] flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                            {user.displayName?.charAt(0) || displayUsername.charAt(0)}
+                          <div className="h-8 w-8 rounded-full bg-[color:var(--t10-mint)] text-[color:var(--t10-emerald)] flex items-center justify-center font-bold text-xs uppercase shrink-0 overflow-hidden">
+                            {user.photoURL ? (
+                              <img src={user.photoURL} alt={displayUsername} className="h-full w-full object-cover" />
+                            ) : (
+                              user.displayName?.charAt(0) || displayUsername.charAt(0)
+                            )}
                           </div>
                           <div>
                             <span className="font-semibold text-neutral-900 hover:text-[color:var(--t10-emerald)] cursor-pointer" onClick={() => handleOpenProfile(user)}>
@@ -708,15 +708,6 @@ function UsersAdminPage() {
                             {/* WordPress Style Quick Actions on Hover */}
                             <div className="opacity-0 group-hover:opacity-100 flex items-center gap-2 text-[10px] text-neutral-500 mt-0.5 transition-opacity">
                               <button onClick={() => handleOpenProfile(user)} className="text-[color:var(--t10-emerald)] font-semibold hover:underline">Edit Profile</button>
-                              <span>|</span>
-                              <button 
-                                onClick={() => {
-                                  toast.success(`Password reset link sent to ${user.email}`);
-                                }} 
-                                className="text-amber-600 font-semibold hover:underline"
-                              >
-                                Password Reset
-                              </button>
                               <span>|</span>
                               {user.plan?.status === "Suspended" ? (
                                 <button onClick={() => suspendUser(user.uid, false)} className="text-emerald-600 font-semibold hover:underline">Unsuspend</button>

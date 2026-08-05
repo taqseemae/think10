@@ -352,11 +352,19 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       if (userDoc.plan?.role) {
         setRoleState(userDoc.plan.role as UserRole);
       }
-      if (userDoc.onboarding) {
-        setOnboardingCompletedState(userDoc.onboarding.completed);
-        // Fallback to 1 if step is 0 (legacy accounts or bugged DB entries)
-        setOnboardingStepState(userDoc.onboarding.step || 1);
+
+      // Check if user has completed onboarding in DB, profile data exists, or local storage has flag
+      const localCompleted = typeof window !== "undefined" && localStorage.getItem("t10_onboarding_completed") === "true";
+      const profileHasData = !!(userDoc.profile?.businessName || userDoc.profile?.industry || userDoc.profile?.stage);
+      const isCompleted = userDoc.onboarding?.completed === true || profileHasData || localCompleted;
+
+      setOnboardingCompletedState(isCompleted);
+      if (userDoc.onboarding?.step) {
+        setOnboardingStepState(userDoc.onboarding.step);
+      } else if (isCompleted) {
+        setOnboardingStepState(5);
       }
+
       if (userDoc.profile) {
         setProfileState(userDoc.profile);
       }
@@ -385,8 +393,15 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   const [role, setRoleState] = useState<UserRole>("Free");
   const [floatingAlert, setFloatingAlert] = useState<AlertNotification | null>(null);
 
-  // Onboarding
-  const [onboardingCompleted, setOnboardingCompletedState] = useState<boolean>(false);
+  // Onboarding (defaults to true for existing users, synced when userDoc resolves)
+  const [onboardingCompleted, setOnboardingCompletedState] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("t10_onboarding_completed");
+      if (stored === "true") return true;
+      if (stored === "false") return false;
+    }
+    return true;
+  });
   const [onboardingStep, setOnboardingStepState] = useState<number>(1);
 
   // Business Profile
@@ -1124,6 +1139,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   // Custom setters for wizard
   const setOnboardingCompleted = (val: boolean) => {
     setOnboardingCompletedState(val);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("t10_onboarding_completed", val ? "true" : "false");
+    }
     addAuditLog("onboarding_status", onboardingCompleted ? "complete" : "incomplete", val ? "complete" : "incomplete");
     if (currentUser) {
       saveOnboardingState(currentUser.uid, val, onboardingStep).catch(console.error);

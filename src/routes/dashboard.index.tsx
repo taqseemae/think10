@@ -19,6 +19,11 @@ import {
   Shield,
   Clock,
   Info,
+  Bot,
+  UserCheck,
+  Compass,
+  MessageSquare,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -44,7 +49,7 @@ function Overview() {
     documents,
   } = useDashboardState();
 
-  const { currentUser, userDoc } = useAuth();
+  const { currentUser, userDoc, docLoading } = useAuth();
   const navigate = useNavigate();
 
   // Onboarding Wizard Local States
@@ -56,8 +61,6 @@ function Overview() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [enterpriseForm, setEnterpriseForm] = useState({ needs: "", teamSize: "1-5 members", phone: "" });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisStep, setAnalysisStep] = useState(0);
-
   // Health Assessment local slider scores
   const [localHealth, setLocalHealth] = useState({ ...healthScores });
 
@@ -869,17 +872,21 @@ function Overview() {
   // If Onboarding is COMPLETE: render dashboard overview
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* 1. Welcome & Business Banner */}
-      <div className="rounded-2xl border border-[color:var(--t10-border)] bg-[color:var(--t10-navy)] p-6 text-white shadow-md relative overflow-hidden">
-        <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[color:var(--t10-emerald)]/10 blur-xl" />
-        <div className="relative z-10">
-          <p className="text-xs uppercase tracking-widest text-[color:var(--t10-emerald)] font-bold">
-            {role} Membership Active
-          </p>
-          <h2 className="mt-1 text-2xl font-bold font-display">
-            Welcome back, {currentUser?.displayName || userDoc?.displayName || "Founder"}
+      {/* 1. Welcome Header Banner */}
+      <div className="rounded-2xl border border-[color:var(--t10-border)] bg-[color:var(--t10-navy)] p-6 md:p-8 text-white shadow-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-[color:var(--t10-emerald)]/10 blur-xl" />
+        <div className="relative z-10 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-widest text-[color:var(--t10-emerald)] font-bold">
+              {role} Membership Active
+            </span>
+            <span className="text-xs text-white/40">•</span>
+            <span className="text-xs text-[color:var(--t10-mint)] font-medium">Command Centre</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold font-display">
+            Welcome back, {currentUser?.displayName || userDoc?.displayName || "Founder"}!
           </h2>
-          <p className="mt-1 text-sm text-[color:var(--t10-mint)]/70">
+          <p className="text-sm text-[color:var(--t10-mint)]/80">
             {profile.businessName || "Your Business"} 
             {profile.stage ? ` · ${profile.stage}` : ""} 
             {profile.channels && profile.channels.length > 0 ? ` · Channels: ${profile.channels.join(", ")}` : ""}
@@ -887,7 +894,64 @@ function Overview() {
         </div>
       </div>
 
-      {/* 2. Main content Grid */}
+      {/* 2. Primary 2-Column Action Cards Grid */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Column 1: Zyne AI Virtual Consultant */}
+        <div className="rounded-2xl border border-[color:var(--t10-border)] bg-gradient-to-br from-white to-[color:var(--t10-mint)]/30 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--t10-mint)] border border-emerald-200 px-3 py-1 text-[10px] font-bold text-[color:var(--t10-navy)] uppercase tracking-wider">
+                <Bot className="h-3.5 w-3.5 text-[color:var(--t10-emerald)]" /> 24/7 AI Virtual Consultant
+              </span>
+              <span className="text-[10px] text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">Always Online</span>
+            </div>
+            <h3 className="text-lg font-bold text-[color:var(--t10-navy)] font-display">
+              Need Business Help or AI Advice?
+            </h3>
+            <p className="text-xs text-[color:var(--t10-grey)] leading-relaxed">
+              Chat directly with <strong>Zyne VC</strong> for instant market insights, unit economics, supply chain auditing, and pricing strategies in a clean, focused ChatGPT/Claude-style environment.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              to="/dashboard/zyne"
+              className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-[color:var(--t10-navy)] px-5 py-3 text-xs font-bold text-white hover:bg-neutral-800 transition-all shadow cursor-pointer"
+            >
+              <MessageSquare className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Launch Zyne AI Chat Panel <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Column 2: Book Human Expert Advisory */}
+        <div className="rounded-2xl border border-[color:var(--t10-border)] bg-gradient-to-br from-white to-blue-50/30 p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-[10px] font-bold text-blue-900 uppercase tracking-wider">
+                <UserCheck className="h-3.5 w-3.5 text-blue-600" /> Verified GCC Advisors
+              </span>
+              <span className="text-[10px] text-neutral-600 font-bold bg-neutral-100 px-2 py-0.5 rounded">1-on-1 Strategy Calls</span>
+            </div>
+            <h3 className="text-lg font-bold text-[color:var(--t10-navy)] font-display">
+              Speak 1-on-1 with Human Experts
+            </h3>
+            <p className="text-xs text-[color:var(--t10-grey)] leading-relaxed">
+              Want to consult directly with verified GCC business leaders? Book a private video strategy session with experts in Supply Chain, E-commerce, Marketing, and Legal.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              to="/dashboard/advisors"
+              className="inline-flex items-center justify-center gap-2 w-full rounded-xl bg-[color:var(--t10-emerald)] px-5 py-3 text-xs font-bold text-white hover:bg-[color:var(--t10-green)] transition-all shadow cursor-pointer"
+            >
+              <Users className="h-4 w-4" /> Book Meeting with Advisor <ChevronRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Main content Grid */}
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           {/* Next Best Action (NBA) */}

@@ -76,7 +76,7 @@ function ConsultantLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (authLoading || docLoading) return;
     if (currentUser) {
-      if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && currentUser.email !== "admin@think10.ae") {
+      if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && currentUser.email !== "admin.think10@gmail.com") {
          router.push("/");
       }
     }
@@ -90,7 +90,7 @@ function ConsultantLayout({ children }: { children: React.ReactNode }) {
     return <ConsultantAuthView />;
   }
 
-  if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && currentUser.email !== "admin@think10.ae") {
+  if (userDoc?.plan?.role !== "Consultant" && !userDoc?.adminRole && currentUser.email !== "admin.think10@gmail.com") {
     return null;
   }
 

@@ -104,9 +104,13 @@ function Page() {
               className="group flex flex-col rounded-2xl border border-[color:var(--t10-border)] bg-white p-5 hover:shadow-md"
             >
               <div className="flex items-center gap-3">
-                <span className="grid h-12 w-12 place-items-center rounded-full bg-[color:var(--t10-navy)] text-sm font-semibold text-white">
-                  {e.initials}
-                </span>
+                {e.photoURL ? (
+                  <img src={e.photoURL} alt={e.name} className="h-12 w-12 rounded-full object-cover shadow-sm" />
+                ) : (
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[color:var(--t10-navy)] text-sm font-bold text-[color:var(--t10-offwhite)] shadow-sm uppercase">
+                    {e.initials}
+                  </span>
+                )}
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-[color:var(--t10-navy)]">
                     {e.name}
