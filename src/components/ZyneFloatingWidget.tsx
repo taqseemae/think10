@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, MessageCircle, RefreshCcw } from 'lucide-react';
 import { generateZyneResponseFn } from '@/lib/server-ai';
+import { useAuth } from '@/context/AuthContext';
 
 type Message = {
   role: 'user' | 'model';
@@ -51,24 +52,71 @@ function FormattedMessageText({ text }: { text: string }) {
   );
 }
 
-const QUICK_QUESTIONS = [
+const GUEST_QUICK_QUESTIONS = [
   "What is Think10 Advisory?",
   "What plans & pricing are available?",
   "What vetted human experts can I book?",
   "How does Zyne AI work?",
 ];
 
+const LOGGED_IN_QUICK_QUESTIONS = [
+  "How do I get Prime badge on Amazon UAE?",
+  "Best way to split supplier deposits?",
+  "What DED license for a Dubai boutique?",
+  "How to lower my CAC on Noon?",
+];
+
 export function ZyneFloatingWidget() {
+  const { currentUser } = useAuth();
+  const isLoggedIn = !!currentUser;
+
+  const guestGreeting = "Hi! I'm Zyne, your Think10 Virtual Assistant. Ask me anything about Think10 advisory plans, vetted human experts, or how our platform works!";
+  const authGreeting = "Welcome back! I'm Zyne VC, your 24/7 GCC business advisor. Ask me anything about your e-commerce, Amazon UAE, noon, pricing, or supply chain strategy.";
+
+  const initialGreeting = isLoggedIn ? authGreeting : guestGreeting;
+  const storageKey = isLoggedIn && currentUser?.uid ? `t10_floating_chat_${currentUser.uid}` : "t10_floating_chat_guest";
+
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'model',
-      text: "Hi! I'm Zyne, your Think10 Virtual Assistant. Ask me anything about Think10 advisory plans, vetted human experts, or how our platform works!",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (e) {}
+      }
+    }
+    return [{ role: 'model', text: initialGreeting }];
+  });
+
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Sync messages when user logs in/out or storage key changes
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+            return;
+          }
+        } catch (e) {}
+      }
+      setMessages([{ role: 'model', text: initialGreeting }]);
+    }
+  }, [storageKey, isLoggedIn]);
+
+  const saveMessages = (msgs: Message[]) => {
+    setMessages(msgs);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, JSON.stringify(msgs));
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -82,7 +130,7 @@ export function ZyneFloatingWidget() {
 
     const userText = text.trim();
     const newMessages: Message[] = [...messages, { role: 'user', text: userText }];
-    setMessages(newMessages);
+    saveMessages(newMessages);
     if (!textToSend) setInput('');
     setIsTyping(true);
 
@@ -90,20 +138,20 @@ export function ZyneFloatingWidget() {
       const response = await generateZyneResponseFn({
         data: {
           messages: newMessages,
-          isGuest: true,
+          isGuest: !isLoggedIn,
         },
       });
 
       if (response.success) {
-        setMessages([...newMessages, { role: 'model', text: response.text }]);
+        saveMessages([...newMessages, { role: 'model', text: response.text }]);
       } else {
-        setMessages([
+        saveMessages([
           ...newMessages,
-          { role: 'model', text: "I'm having trouble connecting right now. Please try again later." },
+          { role: 'model', text: response.text || "I'm having trouble connecting right now. Please try again later." },
         ]);
       }
     } catch (error) {
-      setMessages([
+      saveMessages([
         ...newMessages,
         { role: 'model', text: "I'm currently unavailable." },
       ]);
@@ -113,13 +161,13 @@ export function ZyneFloatingWidget() {
   };
 
   const resetChat = () => {
-    setMessages([
-      {
-        role: 'model',
-        text: "Hi! I'm Zyne, your Think10 Virtual Assistant. Ask me anything about Think10 advisory plans, vetted human experts, or how our platform works!",
-      },
-    ]);
+    const resetMsg: Message[] = [{ role: 'model', text: initialGreeting }];
+    saveMessages(resetMsg);
   };
+
+  const quickQuestions = isLoggedIn ? LOGGED_IN_QUICK_QUESTIONS : GUEST_QUICK_QUESTIONS;
+  const headerTitle = isLoggedIn ? "Zyne VC" : "Zyne Assistant";
+  const headerSubtitle = isLoggedIn ? "GCC Business Consultant" : "Think10 Virtual Assistant";
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end font-sans">
@@ -132,13 +180,13 @@ export function ZyneFloatingWidget() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-bold text-lg leading-tight">Zyne Assistant</h3>
+                <h3 className="font-bold text-lg leading-tight">{headerTitle}</h3>
                 <p className="text-xs text-[color:var(--t10-emerald)] mt-0.5 flex items-center gap-1.5">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--t10-emerald)] opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--t10-emerald)]"></span>
                   </span>
-                  Think10 Virtual Assistant
+                  {headerSubtitle}
                 </p>
               </div>
             </div>
@@ -201,7 +249,7 @@ export function ZyneFloatingWidget() {
                   Quick Questions:
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {QUICK_QUESTIONS.map((q, i) => (
+                  {quickQuestions.map((q, i) => (
                     <button
                       key={i}
                       onClick={() => handleSend(q)}
@@ -254,7 +302,7 @@ export function ZyneFloatingWidget() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--t10-emerald)] text-white">
                   <Sparkles className="h-3.5 w-3.5" />
                 </div>
-                <span className="font-bold text-[color:var(--t10-navy)] text-sm">Zyne AI</span>
+                <span className="font-bold text-[color:var(--t10-navy)] text-sm">{headerTitle}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="h-1.5 w-1.5 rounded-full bg-[color:var(--t10-emerald)]"></div>
