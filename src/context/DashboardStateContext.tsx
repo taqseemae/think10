@@ -415,7 +415,23 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   // Zyne Chats
   const [conversations, setConversations] = useState<ZyneChatSession[]>([]);
   const [activeConversationId, setActiveConversationIdState] = useState<string | null>(null);
-  const [messageAllowanceUsed, setMessageAllowanceUsed] = useState<number>(0);
+  const [messageAllowanceUsed, setMessageAllowanceUsedState] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("t10_zyne_usage");
+      if (stored) return parseInt(stored, 10) || 0;
+    }
+    return 0;
+  });
+
+  const setMessageAllowanceUsed = (updater: number | ((prev: number) => number)) => {
+    setMessageAllowanceUsedState((prev) => {
+      const nextVal = typeof updater === "function" ? updater(prev) : updater;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("t10_zyne_usage", nextVal.toString());
+      }
+      return nextVal;
+    });
+  };
 
   // Bookings (Sessions) - fetched from MongoDB via Server Action
   const [bookings, setBookings] = useState<BookingSession[]>([]);

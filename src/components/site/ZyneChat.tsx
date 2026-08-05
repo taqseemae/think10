@@ -23,16 +23,21 @@ interface AttachedFile {
 
 function FormattedMessageText({ text }: { text: string }) {
   if (!text) return null;
-  const paragraphs = text.split(/\n\n+/);
+  // Clean markdown headers like ##, ### and raw triple asterisks
+  const sanitized = text
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\*{3}([^*]+)\*{3}/g, '$1');
+
+  const paragraphs = sanitized.split(/\n\n+/);
   return (
     <div className="space-y-3">
       {paragraphs.map((p, pIdx) => {
         const lines = p.split('\n');
         return (
-          <div key={pIdx} className="space-y-1">
+          <div key={pIdx} className="space-y-1.5">
             {lines.map((line, lIdx) => {
               const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-') || /^\d+\./.test(line.trim());
-              const cleanLine = isBullet ? line.replace(/^[•\-\d+\.]\s*/, '') : line;
+              const cleanLine = isBullet ? line.trim().replace(/^[•\-\d+\.]\s*/, '') : line;
               
               const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
               const formattedParts = parts.map((part, i) => {
@@ -46,7 +51,7 @@ function FormattedMessageText({ text }: { text: string }) {
                 return (
                   <div key={lIdx} className="flex items-start gap-2 pl-2">
                     <span className="text-[color:var(--t10-emerald)] font-bold select-none">•</span>
-                    <span className="flex-1">{formattedParts}</span>
+                    <span className="flex-1 font-medium">{formattedParts}</span>
                   </div>
                 );
               }
