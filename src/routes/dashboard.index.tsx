@@ -909,7 +909,7 @@ function Overview() {
               Need Business Help or AI Advice?
             </h3>
             <p className="text-xs text-[color:var(--t10-grey)] leading-relaxed">
-              Chat directly with <strong>Zyne VC</strong> for instant market insights, unit economics, supply chain auditing, and pricing strategies in a clean, focused ChatGPT/Claude-style environment.
+              Chat directly with <strong>Zyne VC</strong> for instant market insights, unit economics, supply chain auditing, and pricing strategies in a clean, focused AI workspace.
             </p>
           </div>
 

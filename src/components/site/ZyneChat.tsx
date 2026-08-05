@@ -277,7 +277,7 @@ export function ZyneChat({
           <div>
             <p className="text-sm font-semibold leading-tight font-display">Zyne VC</p>
             <p className="text-[11px] text-white/70">
-              {isLoggedIn ? "GCC Business Consultant · ChatGPT Mode" : "Think10 Virtual Assistant"}
+              {isLoggedIn ? "GCC Business Consultant" : "Think10 Virtual Assistant"}
             </p>
           </div>
         </div>
@@ -286,7 +286,7 @@ export function ZyneChat({
             ? "border-[color:var(--t10-emerald)]/40 text-[color:var(--t10-emerald)]" 
             : "border-white/20 text-white/70"
         }`}>
-          {isLoggedIn ? "ChatGPT Engine" : "Pre-login"}
+          {isLoggedIn ? "Zyne AI Engine" : "Pre-login"}
         </span>
       </div>
 

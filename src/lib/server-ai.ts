@@ -9,19 +9,26 @@ export const generateZyneResponseFn = createServerFn({ method: 'POST' })
     businessProfile?: BusinessProfile | null 
   }) => d)
   .handler(async ({ data }) => {
-    // Note: GEMINI_API_KEY or VITE_GEMINI_API_KEY in process.env
-    const apiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-    
-    if (!apiKey) {
-      return { success: false, text: "System Error: Zyne API key is missing. Please add GEMINI_API_KEY or VITE_GEMINI_API_KEY to your environment variables." };
-    }
+    // Check all common environment variable names for the Gemini API key
+    const apiKey =
+      process.env.VITE_GEMINI_API_KEY ||
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.API_KEY ||
+      process.env.GOOGLE_GEMINI_API_KEY;
 
-    const ai = new GoogleGenAI({ apiKey });
+    if (!apiKey) {
+      console.warn('[Zyne AI] Missing Gemini API key in process.env');
+      return {
+        success: false,
+        text: 'Zyne API key is missing. Please set VITE_GEMINI_API_KEY or GEMINI_API_KEY in your environment variables.',
+      };
+    }
 
     try {
       const { messages, isGuest, businessProfile } = data;
 
-      const systemInstruction = isGuest 
+      const systemInstruction = isGuest
         ? `You are Zyne, the AI Virtual Assistant for Think10 Advisory. 
 Think10 is an advisory platform for UAE founders in retail, e-commerce, and marketplaces.
 You combine AI (yourself) with vetted human experts.
@@ -48,33 +55,66 @@ Respond in valid JSON only with this exact structure:
 }
 Do not use markdown blocks like \`\`\`json. Output raw JSON string only.`;
 
-      // Filter out system messages and map to Gemini format
-      const history = messages
-        .slice(0, -1)
+      const formattedContents = messages
         .filter(m => m.role !== 'system')
         .map(m => ({
-          role: m.role,
-          parts: [{ text: m.text }]
+          role: m.role === 'model' ? 'model' : 'user',
+          parts: [{ text: m.text }],
         }));
-      
-      const latestMessage = messages[messages.length - 1].text;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [
-          ...history,
-          { role: 'user', parts: [{ text: latestMessage }] }
-        ],
-        config: {
-          systemInstruction,
-          temperature: 0.7,
-          responseMimeType: isGuest ? "text/plain" : "application/json"
+      if (formattedContents.length === 0) {
+        return { success: false, text: 'No message provided.' };
+      }
+
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemInstruction }] },
+            contents: formattedContents,
+            generationConfig: {
+              temperature: 0.7,
+              responseMimeType: isGuest ? 'text/plain' : 'application/json',
+            },
+          }),
         }
-      });
+      );
 
-      return { success: true, text: response.text || "I couldn't process that right now. Please rephrase." };
+      const resData = await res.json();
+
+      if (!res.ok) {
+        console.error('[Zyne AI Error Response]:', resData);
+        // Fallback without system_instruction if older format needed
+        const fallbackRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [
+                { parts: [{ text: systemInstruction }] },
+                ...formattedContents,
+              ],
+            }),
+          }
+        );
+        const fallbackData = await fallbackRes.json();
+        if (!fallbackRes.ok) {
+          return {
+            success: false,
+            text: `Gemini API Error: ${resData.error?.message || fallbackData.error?.message || 'Request failed'}`,
+          };
+        }
+        const text = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text;
+        return { success: true, text: text || 'No response generated.' };
+      }
+
+      const text = resData.candidates?.[0]?.content?.parts?.[0]?.text;
+      return { success: true, text: text || 'No response generated.' };
     } catch (error: any) {
-      console.error("Zyne AI Error:", error);
-      return { success: false, text: `Zyne API Error: ${error?.message || "Unreachable"}` };
+      console.error('[Zyne AI Exception]:', error);
+      return { success: false, text: `Zyne API Connection Error: ${error?.message || 'Unreachable'}` };
     }
   });

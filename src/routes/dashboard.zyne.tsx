@@ -69,7 +69,7 @@ function Page() {
 
   // UI State
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [selectedModel, setSelectedModel] = useState("Zyne Pro (GPT-4o)");
+  const [selectedModel, setSelectedModel] = useState("Zyne Pro");
 
   // Voice Input / Speech Recognition State
   const [isListening, setIsListening] = useState(false);
@@ -329,19 +329,19 @@ function Page() {
             </button>
             <div className="absolute top-full left-0 mt-1 w-64 rounded-xl border border-neutral-200 bg-white shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
               <div className="p-2 space-y-1">
-                <button onClick={() => setSelectedModel("Zyne Pro (GPT-4o)")} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-neutral-100 cursor-pointer">
+                <button onClick={() => setSelectedModel("Zyne Pro")} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-neutral-100 cursor-pointer">
                   <div className="text-left">
-                    <p className="text-sm font-semibold text-neutral-800">Zyne Pro (GPT-4o)</p>
+                    <p className="text-sm font-semibold text-neutral-800">Zyne Pro</p>
                     <p className="text-xs text-neutral-500">Most capable, best for complex audits</p>
                   </div>
-                  {selectedModel === "Zyne Pro (GPT-4o)" && <Check className="h-4 w-4 text-neutral-800" />}
+                  {selectedModel === "Zyne Pro" && <Check className="h-4 w-4 text-neutral-800" />}
                 </button>
-                <button onClick={() => setSelectedModel("Zyne Core (GPT-4o mini)")} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-neutral-100 cursor-pointer">
+                <button onClick={() => setSelectedModel("Zyne Core")} className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-neutral-100 cursor-pointer">
                   <div className="text-left">
-                    <p className="text-sm font-semibold text-neutral-800">Zyne Core (GPT-4o mini)</p>
+                    <p className="text-sm font-semibold text-neutral-800">Zyne Core</p>
                     <p className="text-xs text-neutral-500">Faster responses for simple queries</p>
                   </div>
-                  {selectedModel === "Zyne Core (GPT-4o mini)" && <Check className="h-4 w-4 text-neutral-800" />}
+                  {selectedModel === "Zyne Core" && <Check className="h-4 w-4 text-neutral-800" />}
                 </button>
               </div>
             </div>

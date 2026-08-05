@@ -55,7 +55,7 @@ const TOUR_STEPS = [
       "Meet Zyne, your dedicated AI consultant trained on GCC commercial laws, Amazon UAE/noon margin structures, customs clearance, and unit economics.",
     points: [
       "Ask anything about DTC pricing, logistics, or competitor strategies.",
-      "Clean, focused workspace (ChatGPT/Claude style) without clutter.",
+      "Clean, focused workspace for your business questions without clutter.",
       "Generate action plan items directly from AI diagnosis conversations.",
     ],
     ctaTo: "/dashboard/zyne",
