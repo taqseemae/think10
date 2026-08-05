@@ -412,9 +412,68 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   const [healthScores, setHealthScoresState] = useState<HealthScores>(DEFAULT_SCORES);
   const [healthAssessmentHistory, setHealthAssessmentHistory] = useState<{ timestamp: string; totalScore: number }[]>([]);
 
-  // Zyne Chats
-  const [conversations, setConversations] = useState<ZyneChatSession[]>([]);
-  const [activeConversationId, setActiveConversationIdState] = useState<string | null>(null);
+  // Zyne Chats — persisted per user in localStorage
+  const [conversations, setConversationsState] = useState<ZyneChatSession[]>(() => {
+    if (typeof window !== "undefined") {
+      const storageKey = currentUser?.uid ? `t10_zyne_chats_${currentUser.uid}` : "t10_zyne_chats_guest";
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch (e) {
+          console.error("Error parsing stored conversations:", e);
+        }
+      }
+    }
+    return [];
+  });
+
+  const [activeConversationId, setActiveConversationIdState] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const storageKey = currentUser?.uid ? `t10_zyne_chats_${currentUser.uid}` : "t10_zyne_chats_guest";
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed[0].id;
+          }
+        } catch (e) {}
+      }
+    }
+    return null;
+  });
+
+  const setConversations = (updater: ZyneChatSession[] | ((prev: ZyneChatSession[]) => ZyneChatSession[])) => {
+    setConversationsState((prev) => {
+      const nextVal = typeof updater === "function" ? updater(prev) : updater;
+      if (typeof window !== "undefined") {
+        const storageKey = currentUser?.uid ? `t10_zyne_chats_${currentUser.uid}` : "t10_zyne_chats_guest";
+        localStorage.setItem(storageKey, JSON.stringify(nextVal));
+      }
+      return nextVal;
+    });
+  };
+
+  // Sync stored chats whenever currentUser changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && currentUser?.uid) {
+      const storageKey = `t10_zyne_chats_${currentUser.uid}`;
+      const stored = localStorage.getItem(storageKey);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setConversationsState(parsed);
+            if (!activeConversationId) {
+              setActiveConversationIdState(parsed[0].id);
+            }
+          }
+        } catch (e) {}
+      }
+    }
+  }, [currentUser?.uid]);
+
   const [messageAllowanceUsed, setMessageAllowanceUsedState] = useState<number>(() => {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("t10_zyne_usage");
