@@ -70,53 +70,50 @@ Do not use markdown blocks like \`\`\`json. Output raw JSON string only.`;
         return { success: false, text: 'No message provided.' };
       }
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemInstruction }] },
-            contents: formattedContents,
-            generationConfig: {
-              temperature: 0.7,
-              responseMimeType: isGuest ? 'text/plain' : 'application/json',
-            },
-          }),
-        }
-      );
+      const modelsToTry = [
+        'gemini-flash-latest',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-latest',
+        'gemini-2.5-flash'
+      ];
 
-      const resData = await res.json();
+      let lastError = 'Request failed';
+      
+      for (const modelName of modelsToTry) {
+        try {
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                system_instruction: { parts: [{ text: systemInstruction }] },
+                contents: formattedContents,
+                generationConfig: {
+                  temperature: 0.7,
+                  responseMimeType: isGuest ? 'text/plain' : 'application/json',
+                },
+              }),
+            }
+          );
 
-      if (!res.ok) {
-        console.error('[Zyne AI Error Response]:', resData);
-        // Fallback without system_instruction if older format needed
-        const fallbackRes = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                { parts: [{ text: systemInstruction }] },
-                ...formattedContents,
-              ],
-            }),
+          const resData = await res.json();
+          if (res.ok && resData.candidates?.[0]?.content?.parts?.[0]?.text) {
+            return { success: true, text: resData.candidates[0].content.parts[0].text };
           }
-        );
-        const fallbackData = await fallbackRes.json();
-        if (!fallbackRes.ok) {
-          return {
-            success: false,
-            text: `Gemini API Error: ${resData.error?.message || fallbackData.error?.message || 'Request failed'}`,
-          };
+          
+          if (resData.error?.message) {
+            lastError = resData.error.message;
+          }
+        } catch (e: any) {
+          lastError = e?.message || lastError;
         }
-        const text = fallbackData.candidates?.[0]?.content?.parts?.[0]?.text;
-        return { success: true, text: text || 'No response generated.' };
       }
 
-      const text = resData.candidates?.[0]?.content?.parts?.[0]?.text;
-      return { success: true, text: text || 'No response generated.' };
+      return {
+        success: false,
+        text: `Gemini API Error: ${lastError}`,
+      };
     } catch (error: any) {
       console.error('[Zyne AI Exception]:', error);
       return { success: false, text: `Zyne API Connection Error: ${error?.message || 'Unreachable'}` };
