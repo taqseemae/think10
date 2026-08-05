@@ -756,7 +756,8 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
         const response = await generateZyneResponseFn({ 
           data: { 
             messages: formattedMessages, 
-            isGuest: true 
+            isGuest: false,
+            businessProfile: profile
           } 
         });
 

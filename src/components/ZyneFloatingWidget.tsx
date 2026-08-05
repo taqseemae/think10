@@ -7,6 +7,45 @@ type Message = {
   text: string;
 };
 
+function FormattedMessageText({ text }: { text: string }) {
+  if (!text) return null;
+  const paragraphs = text.split(/\n\n+/);
+  return (
+    <div className="space-y-3">
+      {paragraphs.map((p, pIdx) => {
+        const lines = p.split('\n');
+        return (
+          <div key={pIdx} className="space-y-1">
+            {lines.map((line, lIdx) => {
+              const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-') || /^\d+\./.test(line.trim());
+              const cleanLine = isBullet ? line.replace(/^[•\-\d+\.]\s*/, '') : line;
+              
+              const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
+              const formattedParts = parts.map((part, i) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return <strong key={i} className="font-bold text-neutral-900">{part.slice(2, -2)}</strong>;
+                }
+                return part;
+              });
+
+              if (isBullet) {
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-2">
+                    <span className="text-[color:var(--t10-emerald)] font-bold select-none">•</span>
+                    <span className="flex-1">{formattedParts}</span>
+                  </div>
+                );
+              }
+
+              return <p key={lIdx} className="leading-relaxed">{formattedParts}</p>;
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const QUICK_QUESTIONS = [
   "How do I get Prime badge on Amazon UAE?",
   "Best way to split supplier deposits?",
@@ -125,7 +164,11 @@ export function ZyneFloatingWidget() {
                         : 'bg-white border border-neutral-200 text-[#1a202c]'
                     }`}
                   >
-                    {m.text}
+                    {m.role === 'user' ? (
+                      m.text
+                    ) : (
+                      <FormattedMessageText text={m.text} />
+                    )}
                   </div>
                 </div>
               ))}

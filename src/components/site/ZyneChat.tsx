@@ -21,6 +21,45 @@ interface AttachedFile {
   size: string;
 }
 
+function FormattedMessageText({ text }: { text: string }) {
+  if (!text) return null;
+  const paragraphs = text.split(/\n\n+/);
+  return (
+    <div className="space-y-3">
+      {paragraphs.map((p, pIdx) => {
+        const lines = p.split('\n');
+        return (
+          <div key={pIdx} className="space-y-1">
+            {lines.map((line, lIdx) => {
+              const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-') || /^\d+\./.test(line.trim());
+              const cleanLine = isBullet ? line.replace(/^[•\-\d+\.]\s*/, '') : line;
+              
+              const parts = cleanLine.split(/(\*\*[^*]+\*\*)/g);
+              const formattedParts = parts.map((part, i) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  return <strong key={i} className="font-bold text-neutral-900">{part.slice(2, -2)}</strong>;
+                }
+                return part;
+              });
+
+              if (isBullet) {
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-2">
+                    <span className="text-[color:var(--t10-emerald)] font-bold select-none">•</span>
+                    <span className="flex-1">{formattedParts}</span>
+                  </div>
+                );
+              }
+
+              return <p key={lIdx} className="leading-relaxed">{formattedParts}</p>;
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 const THINK10_INFO: Record<string, string> = {
   pricing: "Think10 offers 4 advisory plans:\n• Free/Explorer — AED 0/mo (limited Zyne VA)\n• Zyne Advisory — AED 290/mo (unlimited AI consulting)\n• Hybrid Advisory — AED 950/mo (AI + 2 human expert credits)\n• Premium Advisory — AED 2,500/mo (AI + 5 human expert credits)\nEnterprise plans are custom-priced. Sign up to get started!",
   experts: "Think10's vetted expert network includes GCC market specialists across e-commerce, finance, operations, Amazon UAE/noon, supply chain, and digital marketing. After signing up, browse and book 60-min strategy sessions directly from your dashboard.",
@@ -317,7 +356,11 @@ export function ZyneChat({
                   : "border border-neutral-200 bg-white text-[color:var(--t10-navy)] rounded-tl-none"
               }`}
             >
-              <p className="whitespace-pre-line leading-relaxed">{m.content}</p>
+              {m.role === "user" ? (
+                <p className="whitespace-pre-line leading-relaxed">{m.content}</p>
+              ) : (
+                <FormattedMessageText text={m.content} />
+              )}
               {m.meta ? (
                 <p className="mt-2 text-[10px] text-[color:var(--t10-grey)] font-medium">{m.meta}</p>
               ) : null}
