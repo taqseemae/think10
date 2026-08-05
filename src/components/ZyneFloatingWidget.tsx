@@ -52,10 +52,10 @@ function FormattedMessageText({ text }: { text: string }) {
 }
 
 const QUICK_QUESTIONS = [
-  "How do I get Prime badge on Amazon UAE?",
-  "Best way to split supplier deposits?",
-  "What DED license for a Dubai boutique?",
-  "How to lower my CAC on Noon?",
+  "What is Think10 Advisory?",
+  "What plans & pricing are available?",
+  "What vetted human experts can I book?",
+  "How does Zyne AI work?",
 ];
 
 export function ZyneFloatingWidget() {
@@ -63,7 +63,7 @@ export function ZyneFloatingWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'model',
-      text: "Hi! I'm Zyne AI, your 24/7 GCC retail advisor. Ask me anything about e-commerce, licensing, sourcing, or marketplace strategy.",
+      text: "Hi! I'm Zyne, your Think10 Virtual Assistant. Ask me anything about Think10 advisory plans, vetted human experts, or how our platform works!",
     },
   ]);
   const [input, setInput] = useState('');
@@ -116,7 +116,7 @@ export function ZyneFloatingWidget() {
     setMessages([
       {
         role: 'model',
-        text: "Hi! I'm Zyne AI, your 24/7 GCC retail advisor. Ask me anything about e-commerce, licensing, sourcing, or marketplace strategy.",
+        text: "Hi! I'm Zyne, your Think10 Virtual Assistant. Ask me anything about Think10 advisory plans, vetted human experts, or how our platform works!",
       },
     ]);
   };
@@ -132,13 +132,13 @@ export function ZyneFloatingWidget() {
                 <Sparkles className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="font-bold text-lg leading-tight">Zyne AI</h3>
+                <h3 className="font-bold text-lg leading-tight">Zyne Assistant</h3>
                 <p className="text-xs text-[color:var(--t10-emerald)] mt-0.5 flex items-center gap-1.5">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[color:var(--t10-emerald)] opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-[color:var(--t10-emerald)]"></span>
                   </span>
-                  Online — Instant Response
+                  Think10 Virtual Assistant
                 </p>
               </div>
             </div>
