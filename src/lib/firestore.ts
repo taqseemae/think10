@@ -38,6 +38,7 @@ export type UserDocument = {
   profile: BusinessProfile;
   healthScores: HealthScores | null;
   adminRole?: AdminRole;
+  zyneTokens?: number;
 };
 
 // ── Default blank values for a new user ───────────────────────────────────────
@@ -103,6 +104,7 @@ export async function initUserDocument(
     onboarding: { completed: false, step: 1 },
     profile: { ...BLANK_PROFILE, businessName: companyName },
     healthScores: null,
+    zyneTokens: 100, // Default 100 tokens
   };
 
   await setDoc(ref, newUser);
@@ -124,6 +126,15 @@ export async function saveUserProfile(uid: string, profile: Partial<BusinessProf
 export async function saveUserPlan(uid: string, role: UserRole): Promise<void> {
   const ref = doc(db, "users", uid);
   await updateDoc(ref, { "plan.role": role });
+}
+
+/**
+ * Adjust the user's Zyne Token balance.
+ */
+export async function updateZyneTokens(uid: string, delta: number): Promise<void> {
+  const { increment } = await import("firebase/firestore");
+  const ref = doc(db, "users", uid);
+  await updateDoc(ref, { zyneTokens: increment(delta) });
 }
 
 /**

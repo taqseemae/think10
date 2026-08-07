@@ -632,7 +632,7 @@ export const exchangeGoogleCodeFn = createServerFn({ method: 'POST' })
 
 // --- Stripe Payments ---
 export const createStripeCheckoutSessionFn = createServerFn({ method: 'POST' })
-  .validator((d: { priceId: string; planRole: string; successUrl: string; cancelUrl: string }) => d)
+  .validator((d: { amount: number; productName: string; planRole: string; isSubscription: boolean; isZyneToken?: boolean; successUrl: string; cancelUrl: string }) => d)
   .handler(async ({ data }) => {
     const token = await requireAuth();
     const { stripe } = await import('@/lib/stripe');
@@ -641,10 +641,17 @@ export const createStripeCheckoutSessionFn = createServerFn({ method: 'POST' })
     // For now, we'll pass the uid in client_reference_id
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      mode: 'subscription',
+      mode: data.isSubscription ? 'subscription' : 'payment',
       line_items: [
         {
-          price: data.priceId,
+          price_data: {
+            currency: 'aed',
+            product_data: {
+              name: data.productName,
+            },
+            unit_amount: data.amount * 100,
+            recurring: data.isSubscription ? { interval: 'month' } : undefined,
+          },
           quantity: 1,
         },
       ],
@@ -653,7 +660,8 @@ export const createStripeCheckoutSessionFn = createServerFn({ method: 'POST' })
       client_reference_id: token.uid,
       metadata: {
         planRole: data.planRole,
-        uid: token.uid
+        uid: token.uid,
+        isZyneToken: data.isZyneToken ? 'true' : 'false',
       }
     });
 

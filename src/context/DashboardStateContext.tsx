@@ -6,6 +6,7 @@ import {
   saveUserPlan,
   saveOnboardingState,
   saveHealthScores,
+  updateZyneTokens,
 } from "@/lib/firestore";
 
 export type UserRole = "Free" | "ZynePaid" | "Hybrid" | "Premium" | "Cancelled" | "Enterprise";
@@ -203,7 +204,8 @@ interface DashboardContextType {
   startNewChat: (initialMessage?: string) => Promise<string>;
   sendChatMessage: (content: string) => Promise<void>;
   deleteConversation: (id: string) => void;
-  messageAllowanceUsed: number; // For Free users, out of 5
+  zyneTokens: number;
+  setZyneTokens: (tokens: number) => void;
 
   // Booking & Expert matching
   bookings: BookingSession[];
@@ -308,7 +310,8 @@ const EMPTY_DASHBOARD_CTX: DashboardContextType = {
   startNewChat: async () => "",
   sendChatMessage: async () => {},
   deleteConversation: () => {},
-  messageAllowanceUsed: 0,
+  zyneTokens: 0,
+  setZyneTokens: () => {},
   bookings: [],
   createBooking: () => false,
   cancelBooking: () => {},
@@ -371,6 +374,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       if (userDoc.healthScores) {
         setHealthScoresState(userDoc.healthScores);
       }
+      if (userDoc.zyneTokens !== undefined) {
+        setZyneTokensState(userDoc.zyneTokens);
+      }
     }
   }, [userDoc]);
 
@@ -411,6 +417,9 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   // Health Assessment
   const [healthScores, setHealthScoresState] = useState<HealthScores>(DEFAULT_SCORES);
   const [healthAssessmentHistory, setHealthAssessmentHistory] = useState<{ timestamp: string; totalScore: number }[]>([]);
+
+  // Zyne Tokens
+  const [zyneTokens, setZyneTokensState] = useState<number>(0);
 
   // Zyne Chats — persisted per user in localStorage
   const [conversations, setConversationsState] = useState<ZyneChatSession[]>(() => {
@@ -474,22 +483,8 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, [currentUser?.uid]);
 
-  const [messageAllowanceUsed, setMessageAllowanceUsedState] = useState<number>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("t10_zyne_usage");
-      if (stored) return parseInt(stored, 10) || 0;
-    }
-    return 0;
-  });
-
-  const setMessageAllowanceUsed = (updater: number | ((prev: number) => number)) => {
-    setMessageAllowanceUsedState((prev) => {
-      const nextVal = typeof updater === "function" ? updater(prev) : updater;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("t10_zyne_usage", nextVal.toString());
-      }
-      return nextVal;
-    });
+  const setZyneTokens = (tokens: number) => {
+    setZyneTokensState(tokens);
   };
 
   // Bookings (Sessions) - fetched from MongoDB via Server Action
@@ -586,7 +581,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     setProfileAuditLogs([]);
     setConversations([]);
     setActiveConversationIdState(null);
-    setMessageAllowanceUsed(0);
+    setZyneTokensState(0);
     setTickets([]);
     setFloatingAlert({
       id: "reset_" + Date.now(),
@@ -718,8 +713,10 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
         prev.map((c) => (c.id === newId ? { ...c, messages: [...c.messages, answer] } : c))
       );
 
-      if (isFree) {
-        setMessageAllowanceUsed((u) => u + 1);
+      // Deduct token
+      if (zyneTokensState > 0) {
+        setZyneTokensState((prev) => prev - 1);
+        if (currentUser) updateZyneTokens(currentUser.uid, -1).catch(console.error);
       }
     }
 
@@ -729,8 +726,8 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   const sendChatMessage = async (content: string) => {
     if (!activeConversationId) return;
 
-    // Check message limit first
-    if (role === "Free" && messageAllowanceUsed >= 5) {
+    // Check token limit first
+    if (zyneTokensState <= 0) {
       setConversations((prev) =>
         prev.map((c) => {
           if (c.id !== activeConversationId) return c;
@@ -745,7 +742,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
               },
               {
                 role: "zyne",
-                content: "You have reached your 5 free messages limit on the Zyne VA free tier. Please upgrade your plan in Plan & Payments to continue chatting with Zyne VC.",
+                content: "You have exhausted your Zyne AI Tokens. Please purchase more tokens in the Billing & Plan section to continue using Zyne.",
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               },
             ],
@@ -787,8 +784,10 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
     const responseMsg = await generateZyneResponse(content, activeSession.type, conversationHistory);
     
-    if (role === "Free") {
-      setMessageAllowanceUsed((u) => u + 1);
+    // Deduct token
+    if (zyneTokensState > 0) {
+      setZyneTokensState((prev) => prev - 1);
+      if (currentUser) updateZyneTokens(currentUser.uid, -1).catch(console.error);
     }
 
     // Append AI response
@@ -1265,7 +1264,6 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
         startNewChat,
         sendChatMessage,
         deleteConversation,
-        messageAllowanceUsed,
         bookings,
         createBooking,
         cancelBooking,

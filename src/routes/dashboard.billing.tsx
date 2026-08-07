@@ -29,6 +29,7 @@ function BillingPage() {
     buyCredits,
     creditsLedger,
     invoices,
+    zyneTokens,
     resetAllData,
   } = useDashboardState();
   const [loadingStripe, setLoadingStripe] = useState(false);
@@ -77,7 +78,30 @@ function BillingPage() {
       setLoadingStripe(true);
       const res = await createStripeCheckoutSessionFn({
         data: {
-          priceId: "price_credit_placeholder",
+          amount: 450,
+          productName: "Strategy Session Credit",
+          isSubscription: false,
+          planRole: role,
+          successUrl: window.location.origin + "/dashboard/billing?success=true",
+          cancelUrl: window.location.origin + "/dashboard/billing?canceled=true",
+        }
+      });
+      if (res?.url) window.location.href = res.url;
+    } catch (err: any) {
+      alert(err.message || 'Failed to initialize checkout');
+      setLoadingStripe(false);
+    }
+  };
+
+  const handleTopUpZyne = async () => {
+    try {
+      setLoadingStripe(true);
+      const res = await createStripeCheckoutSessionFn({
+        data: {
+          amount: 50,
+          productName: "500 Zyne AI Tokens",
+          isSubscription: false,
+          isZyneToken: true,
           planRole: role,
           successUrl: window.location.origin + "/dashboard/billing?success=true",
           cancelUrl: window.location.origin + "/dashboard/billing?canceled=true",
@@ -93,14 +117,17 @@ function BillingPage() {
   const handleUpgrade = async (target: UserRole) => {
     try {
       setLoadingStripe(true);
-      let priceId = "";
-      if (target === "ZynePaid") priceId = "price_zyne_paid_placeholder";
-      if (target === "Hybrid") priceId = "price_hybrid_placeholder";
-      if (target === "Premium") priceId = "price_premium_placeholder";
+      let amount = 0;
+      let productName = "";
+      if (target === "ZynePaid") { amount = 290; productName = "Zyne Paid AI-First"; }
+      if (target === "Hybrid") { amount = 950; productName = "Think10 Hybrid Advisory"; }
+      if (target === "Premium") { amount = 1950; productName = "Think10 Premium Advisory"; }
       
       const res = await createStripeCheckoutSessionFn({
         data: {
-          priceId,
+          amount,
+          productName,
+          isSubscription: true,
           planRole: target,
           successUrl: window.location.origin + "/dashboard/billing?success=true",
           cancelUrl: window.location.origin + "/dashboard/billing?canceled=true",
@@ -256,6 +283,38 @@ function BillingPage() {
                 </p>
                 <p className="text-[11px] text-[color:var(--t10-grey)] leading-normal">
                   Hybrid/Premium credits reset monthly. Purchase additional credits anytime for pay-per-call strategy reviews.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Zyne Tokens card */}
+          <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-5 shadow-sm space-y-4">
+            <h3 className="text-sm font-bold uppercase tracking-wider border-b border-[color:var(--t10-border)] pb-2 flex items-center justify-between">
+              <span>Zyne AI Tokens</span>
+              <button
+                onClick={handleTopUpZyne}
+                disabled={loadingStripe}
+                className="inline-flex items-center gap-1 rounded bg-black px-3 py-1.5 text-[10px] font-bold text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50"
+              >
+                <Plus className="h-3.5 w-3.5" /> Buy Tokens (AED 50)
+              </button>
+            </h3>
+
+            <div className="flex items-center gap-4">
+              <div className="text-center rounded-xl bg-indigo-50 border border-indigo-100 p-4 w-28 shrink-0">
+                <span className="text-[9px] uppercase font-bold text-indigo-400 block">
+                  Balance
+                </span>
+                <p className={`text-3xl font-bold ${zyneTokens <= 0 ? 'text-red-500' : 'text-indigo-600'}`}>{zyneTokens}</p>
+                <span className="text-[9px] text-indigo-400">Tokens</span>
+              </div>
+              <div className="space-y-1">
+                <p className="font-bold text-[color:var(--t10-navy)] leading-normal">
+                  1 token = 1 AI interaction
+                </p>
+                <p className="text-[11px] text-[color:var(--t10-grey)] leading-normal">
+                  Zyne AI Tokens allow you to consult with your AI business advisor. Purchase 500 tokens for AED 50.
                 </p>
               </div>
             </div>

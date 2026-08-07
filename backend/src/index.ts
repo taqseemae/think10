@@ -20,56 +20,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// ── Stripe Webhook (must use raw body) ────────────────────────────────────────
-import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', { apiVersion: '2025-02-24.acacia' as any });
-
-app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  const sig = req.headers['stripe-signature'] as string;
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder';
-
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-  } catch (err: any) {
-    console.error(`[Stripe Webhook Error]`, err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  try {
-    const db = await getDb();
-    
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      const uid = session.metadata?.uid || session.client_reference_id;
-      const planRole = session.metadata?.planRole;
-      
-      if (uid && planRole) {
-        await db.collection('users').updateOne(
-          { uid },
-          { $set: { 'plan.role': planRole, 'plan.status': 'Active', stripeCustomerId: session.customer } }
-        );
-      }
-    } else if (event.type === 'customer.subscription.deleted') {
-      const subscription = event.data.object as Stripe.Subscription;
-      const customerId = subscription.customer as string;
-      await db.collection('users').updateOne(
-        { stripeCustomerId: customerId },
-        { $set: { 'plan.role': 'Free', 'plan.status': 'Active' } }
-      );
-    }
-    
-    res.json({ received: true });
-  } catch (err: any) {
-    console.error(`[Stripe DB Error]`, err.message);
-    res.status(500).send('Database Error');
-  }
-});
-
-app.use(express.json());
-
-
-// ── Firebase Admin Middleware ────────────────────────────────────────────────
+// ── Firebase Admin Initialization ─────────────────────────────────────────────
 import admin from 'firebase-admin';
 if (!admin.apps.length) {
   try {
@@ -94,6 +45,70 @@ if (!admin.apps.length) {
   }
 }
 
+// ── Stripe Webhook (must use raw body) ────────────────────────────────────────
+import Stripe from 'stripe';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', { apiVersion: '2025-02-24.acacia' as any });
+
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'] as string;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder';
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err: any) {
+    console.error(`[Stripe Webhook Error]`, err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  try {
+    const db = await getDb();
+    
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const uid = session.metadata?.uid || session.client_reference_id;
+      const planRole = session.metadata?.planRole;
+      const isZyneToken = session.metadata?.isZyneToken === 'true';
+      
+      if (uid && isZyneToken) {
+        // Handle Zyne Token top-up
+        try {
+          await admin.firestore().collection('users').doc(uid).update({
+            zyneTokens: admin.firestore.FieldValue.increment(500)
+          });
+          // Also update MongoDB for consistency
+          await db.collection('users').updateOne(
+            { uid },
+            { $inc: { zyneTokens: 500 } }
+          );
+        } catch (e: any) {
+          console.error('[Stripe Webhook] Error updating Zyne Tokens:', e.message);
+        }
+      } else if (uid && planRole) {
+        await db.collection('users').updateOne(
+          { uid },
+          { $set: { 'plan.role': planRole, 'plan.status': 'Active', stripeCustomerId: session.customer } }
+        );
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription;
+      const customerId = subscription.customer as string;
+      await db.collection('users').updateOne(
+        { stripeCustomerId: customerId },
+        { $set: { 'plan.role': 'Free', 'plan.status': 'Active' } }
+      );
+    }
+    
+    res.json({ received: true });
+  } catch (err: any) {
+    console.error(`[Stripe DB Error]`, err.message);
+    res.status(500).send('Database Error');
+  }
+});
+
+app.use(express.json());
+
+// ── Firebase Admin Middleware ────────────────────────────────────────────────
 const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

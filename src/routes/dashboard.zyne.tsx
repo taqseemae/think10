@@ -151,7 +151,7 @@ function Page() {
     startNewChat,
     sendChatMessage,
     deleteConversation,
-    messageAllowanceUsed,
+    zyneTokens,
     addActionItem,
     uploadDocument,
   } = useDashboardState();
@@ -379,25 +379,22 @@ function Page() {
           })}
         </div>
 
-        {role === "Free" && (
-          <div className="p-4 border-t border-neutral-200 bg-[#f9f9f9]">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="h-4 w-4 text-[color:var(--t10-emerald)]" />
-              <span className="text-sm font-semibold text-[color:var(--t10-navy)]">Upgrade Plan</span>
-            </div>
-            <p className="text-xs text-neutral-500 mb-2">Get unlimited Zyne access & full context auditing.</p>
-            <div className="flex justify-between text-[10px] font-bold text-neutral-400 mb-1">
-              <span>Usage</span>
-              <span>{messageAllowanceUsed} / 5</span>
-            </div>
-            <div className="h-1.5 w-full rounded-full bg-neutral-200 overflow-hidden mb-3">
-              <div
-                className="h-full bg-[color:var(--t10-emerald)] transition-all duration-300"
-                style={{ width: `${(messageAllowanceUsed / 5) * 100}%` }}
-              />
-            </div>
+        <div className="p-4 border-t border-neutral-200 bg-[#f9f9f9]">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="h-4 w-4 text-[color:var(--t10-emerald)]" />
+            <span className="text-sm font-semibold text-[color:var(--t10-navy)]">Zyne Tokens</span>
           </div>
-        )}
+          <p className="text-xs text-neutral-500 mb-2">Each AI interaction consumes 1 Zyne Token.</p>
+          <div className="flex justify-between text-[11px] font-bold text-neutral-600 mb-2">
+            <span>Balance</span>
+            <span className={zyneTokens <= 0 ? "text-red-500" : ""}>{zyneTokens} Tokens</span>
+          </div>
+          {zyneTokens <= 0 && (
+            <Link to="/dashboard/billing" className="block w-full rounded-md bg-black text-white text-xs font-semibold py-2 text-center hover:bg-neutral-800 transition-colors">
+              Buy Tokens
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Main Chat Area */}
@@ -654,11 +651,11 @@ function Page() {
                 placeholder={
                   isListening
                     ? "Listening..."
-                    : role === "Free" && messageAllowanceUsed >= 5
-                    ? "Message limit reached. Upgrade to continue."
+                    : zyneTokens <= 0
+                    ? "Out of tokens. Please buy more to continue."
                     : "Message Zyne"
                 }
-                disabled={role === "Free" && messageAllowanceUsed >= 5}
+                disabled={zyneTokens <= 0}
                 className="flex-1 bg-transparent text-[15px] text-neutral-900 outline-none placeholder:text-neutral-500 px-2 pb-1.5 pt-1.5 min-h-[40px]"
               />
 
@@ -678,7 +675,7 @@ function Page() {
                 </button>
                 <button
                   type="submit"
-                  disabled={(role === "Free" && messageAllowanceUsed >= 5) || (!input.trim() && attachedFiles.length === 0)}
+                  disabled={(zyneTokens <= 0) || (!input.trim() && attachedFiles.length === 0)}
                   className={`flex h-8 w-8 mb-0.5 items-center justify-center rounded-full transition-all shadow-sm ${
                      (!input.trim() && attachedFiles.length === 0)
                        ? "bg-[#f4f4f4] text-neutral-400 cursor-not-allowed"

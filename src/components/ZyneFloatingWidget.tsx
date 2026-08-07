@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, MessageCircle, RefreshCcw } from 'lucide-react';
 import { generateZyneResponseFn } from '@/lib/server-ai';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardState } from '@/context/DashboardStateContext';
+import { updateZyneTokens } from '@/lib/firestore';
 
 type Message = {
   role: 'user' | 'model';
@@ -123,6 +125,15 @@ const LOGGED_IN_QUICK_QUESTIONS = [
 export function ZyneFloatingWidget() {
   const { currentUser } = useAuth();
   const isLoggedIn = !!currentUser;
+  
+  // Conditionally use context only if logged in to avoid breaking guest pages if provider is missing
+  let zyneTokens = 0;
+  let setZyneTokens = (t: number) => {};
+  try {
+    const ctx = useDashboardState();
+    zyneTokens = ctx.zyneTokens;
+    setZyneTokens = ctx.setZyneTokens;
+  } catch(e) {}
 
   const guestGreeting = "Hi! I'm Zyne, your Think10 Virtual Assistant. Ask me anything about Think10 advisory plans, vetted human experts, or how our platform works!";
   const authGreeting = "Welcome back! I'm Zyne VC, your 24/7 GCC business advisor. Ask me anything about your e-commerce, Amazon UAE, noon, pricing, or supply chain strategy.";
@@ -182,6 +193,17 @@ export function ZyneFloatingWidget() {
     const text = textToSend || input;
     if (!text.trim()) return;
 
+    if (isLoggedIn && zyneTokens <= 0) {
+      const newMessages: Message[] = [
+        ...messages, 
+        { role: 'user', text: text.trim() },
+        { role: 'model', text: "You have exhausted your Zyne AI Tokens. Please go to the Billing & Plan section to purchase more tokens." }
+      ];
+      saveMessages(newMessages);
+      setInput('');
+      return;
+    }
+
     const userText = text.trim();
     const newMessages: Message[] = [...messages, { role: 'user', text: userText }];
     saveMessages(newMessages);
@@ -198,6 +220,10 @@ export function ZyneFloatingWidget() {
 
       if (response.success) {
         saveMessages([...newMessages, { role: 'model', text: response.text }]);
+        if (isLoggedIn && currentUser) {
+          setZyneTokens(zyneTokens - 1);
+          updateZyneTokens(currentUser.uid, -1).catch(console.error);
+        }
       } else {
         saveMessages([
           ...newMessages,
@@ -330,13 +356,13 @@ export function ZyneFloatingWidget() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask Zyne AI anything..."
+                placeholder={isLoggedIn && zyneTokens <= 0 ? "Out of tokens..." : "Ask Zyne AI anything..."}
+                disabled={isTyping || (isLoggedIn && zyneTokens <= 0)}
                 className="flex-1 bg-transparent px-3 py-2 text-[15px] outline-none placeholder:text-neutral-400"
-                disabled={isTyping}
               />
               <button
                 type="submit"
-                disabled={!input.trim() || isTyping}
+                disabled={!input.trim() || isTyping || (isLoggedIn && zyneTokens <= 0)}
                 className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl bg-neutral-200 text-white transition-colors hover:bg-[color:var(--t10-emerald)] disabled:bg-neutral-200 disabled:opacity-50"
               >
                 <Send className="h-4 w-4 ml-0.5" />

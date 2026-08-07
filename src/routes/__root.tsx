@@ -1,5 +1,6 @@
 import { DashboardStateProvider } from "@/context/DashboardStateContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,
@@ -155,15 +156,17 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <DashboardStateProvider>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
-          <GlobalZyneWidget />
-          <Toaster position="top-center" />
-        </DashboardStateProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <ThemeProvider panel="global">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <DashboardStateProvider>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+            <GlobalZyneWidget />
+            <Toaster position="top-center" />
+          </DashboardStateProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }
