@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2 } from "lucide-react";
 import { useDashboardState } from "@/context/DashboardStateContext";
+import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
 
 export const Route = createFileRoute("/consultant/consultations")({
@@ -8,7 +9,8 @@ export const Route = createFileRoute("/consultant/consultations")({
 });
 
 function ConsultantConsultations() {
-  const { bookings, completeCall } = useDashboardState();
+  const { bookings, refreshData } = useConsultantState();
+  const { completeCall } = useDashboardState();
   const [activeTab, setActiveTab] = useState<"Brief" | "Notes" | "Action Plan">("Brief");
   const [notes, setNotes] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -20,8 +22,8 @@ function ConsultantConsultations() {
     if (!activeSession) return;
     setIsGenerating(true);
     try {
-      completeCall(activeSession.id, 5, "Consultant feedback", notes, activeSession.topic);
-      await new Promise(r => setTimeout(r, 2000));
+      await completeCall(activeSession.id, 5, "Consultant feedback", notes, activeSession.topic);
+      refreshData();
       alert("Report Drafted successfully! The client can now view and download the PDF.");
     } catch(e) {
       console.error(e);

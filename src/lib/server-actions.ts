@@ -298,28 +298,27 @@ Return a JSON object with this exact structure:
 Transcript/Notes:
 ${data.transcript}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-      }
-    });
-
-    let text = response.text || '{}';
-    if (text.startsWith('```json')) {
-      text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
-    } else if (text.startsWith('```')) {
-      text = text.replace(/^```\n/, '').replace(/\n```$/, '');
-    }
-
     let reportData;
     try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+        }
+      });
+
+      let text = response.text || '{}';
+      if (text.startsWith('```json')) {
+        text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+      } else if (text.startsWith('```')) {
+        text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+      }
       reportData = JSON.parse(text);
     } catch (e) {
-      console.error("Failed to parse Gemini response", e, text);
+      console.error("Failed to generate or parse Gemini response", e);
       reportData = {
-        summary: "Meeting completed. AI summary generation failed.",
+        summary: "Meeting completed. AI summary generation failed or was unavailable.",
         recommendations: ["Check logs for errors."],
         actionItems: ["Review meeting notes manually."]
       };

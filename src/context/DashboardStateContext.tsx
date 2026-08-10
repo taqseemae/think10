@@ -222,7 +222,7 @@ interface DashboardContextType {
   deleteMultipleBookings: (bookingIds: string[]) => Promise<void>;
   rescheduleBooking: (bookingId: string, newSlot: string) => void;
   triggerServiceRecovery: (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => void;
-  completeCall: (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => void;
+  completeCall: (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => Promise<void>;
   fetchBookings: () => void;
 
   // Action Items
@@ -319,7 +319,7 @@ const EMPTY_DASHBOARD_CTX: DashboardContextType = {
   deleteMultipleBookings: async () => {},
   rescheduleBooking: () => {},
   triggerServiceRecovery: () => {},
-  completeCall: () => {},
+  completeCall: async () => {},
   fetchBookings: () => {},
   actionItems: [],
   addActionItem: () => {},
@@ -1052,36 +1052,32 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     );
   };
 
-  const completeCall = (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => {
-    import("@/lib/server-actions").then(async ({ updateBookingStatusFn, generateMeetingSummaryFn }) => {
-      let reportData = null;
-      if (transcript && topic) {
-        try {
-          reportData = await generateMeetingSummaryFn({ data: { bookingId, transcript, topic } });
-        } catch (err) {
-          console.error("AI Summary generation failed", err);
-          reportData = {
-            summary: "AI Summary generation failed. Please review the notes.",
-            recommendations: ["System was unable to generate recommendations."],
-            actionItems: []
-          };
-          // Try to save the fallback report
-          import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
-            updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
-          });
-        }
-      } else {
+  const completeCall = async (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => {
+    const { updateBookingStatusFn, generateMeetingSummaryFn } = await import("@/lib/server-actions");
+    let reportData = null;
+    if (transcript && topic) {
+      try {
+        reportData = await generateMeetingSummaryFn({ data: { bookingId, transcript, topic } });
+      } catch (err) {
+        console.error("AI Summary generation failed", err);
+        reportData = {
+          summary: "AI Summary generation failed. Please review the notes.",
+          recommendations: ["System was unable to generate recommendations."],
+          actionItems: []
+        };
         await updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
       }
+    } else {
+      await updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
+    }
 
-      setBookings((prev) =>
-        prev.map((b) =>
-          b.id === bookingId
-            ? { ...b, status: "COMPLETED", rating, feedback, report: reportData || b.report }
-            : b
-        )
-      );
-    });
+    setBookings((prev) =>
+      prev.map((b) =>
+        b.id === bookingId
+          ? { ...b, status: "COMPLETED", rating, feedback, report: reportData || b.report }
+          : b
+      )
+    );
   };
 
   // Action Items functions
