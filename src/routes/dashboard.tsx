@@ -89,7 +89,7 @@ function DashboardLayout() {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-[color:var(--t10-offwhite)] text-foreground">
+    <div className="flex min-h-screen flex-col bg-[color:var(--t10-offwhite)] text-foreground dashboard-theme">
       {/* Dashboard Sticky Header */}
       <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/95 shadow-sm backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">

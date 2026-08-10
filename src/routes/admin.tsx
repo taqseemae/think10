@@ -80,7 +80,7 @@ function AdminLayout() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-neutral-100 font-sans text-neutral-900">
+    <div className="flex h-screen w-full bg-[color:var(--t10-offwhite)] font-sans text-[color:var(--t10-navy)] dashboard-theme">
       {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r border-neutral-200 bg-white shadow-sm shrink-0 h-full overflow-y-auto z-10 relative">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-neutral-200">
@@ -190,7 +190,7 @@ function AdminLoginView() {
   };
 
   return (
-    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4 dashboard-theme">
       <div className="w-full max-w-md bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-2xl overflow-hidden p-8 md:p-10">
         <div className="flex flex-col items-center justify-center space-y-2 mb-6">
             <img src="/logo/t10-brand-logo.svg" alt="Think10" className="h-10 w-auto mb-2" />
