@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Calendar, Filter, Clock, Users, ArrowUpRight, CheckCircle2, XCircle, Video, FileText, Download } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { useConsultantState } from "@/context/ConsultantStateContext";
@@ -138,13 +138,21 @@ function ConsultantBookings() {
                       </p>
                     </div>
                     {booking.meetLink && (
-                      <div className="mt-2">
-                        <button
-                          onClick={() => setActiveCallSession(booking)}
+                      <div className="mt-2 flex gap-4">
+                        <a
+                          href={booking.meetLink}
+                          target="_blank"
+                          rel="noreferrer"
                           className="text-sm font-medium text-[color:var(--t10-emerald)] hover:underline flex items-center gap-1"
                         >
-                          <Video className="w-4 h-4" /> Join Secure Session
-                        </button>
+                          <Video className="w-4 h-4" /> Join Google Meet
+                        </a>
+                        <Link
+                          to="/consultant/consultations"
+                          className="text-sm font-medium text-[color:var(--t10-navy)] hover:underline flex items-center gap-1"
+                        >
+                          <FileText className="w-4 h-4" /> Take Notes & Draft Report
+                        </Link>
                       </div>
                     )}
                     

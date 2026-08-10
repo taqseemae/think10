@@ -132,6 +132,7 @@ function ConsultantLayout() {
             <Link
               key={item.to}
               to={item.to}
+              activeOptions={{ exact: true }}
               className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 [&.active]:bg-[color:var(--t10-mint)] [&.active]:text-[color:var(--t10-emerald)] transition-colors"
             >
               <item.icon className="h-5 w-5" />
@@ -218,6 +219,7 @@ function ConsultantLayout() {
                 <Link
                   key={item.to}
                   to={item.to}
+                  activeOptions={{ exact: true }}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-neutral-600 [&.active]:bg-[color:var(--t10-mint)] [&.active]:text-[color:var(--t10-emerald)]"
                 >
