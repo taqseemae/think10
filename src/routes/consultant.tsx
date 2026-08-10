@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/context/AuthContext";
 import { ConsultantStateProvider } from "@/context/ConsultantStateContext";
+import { useTheme } from "@/context/ThemeContext";
 import {
   LayoutDashboard,
   CalendarRange,
@@ -74,6 +75,7 @@ function ConsultantLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { themeStyle } = useTheme();
 
   useEffect(() => {
     if (authLoading || docLoading) return;
@@ -115,7 +117,7 @@ function ConsultantLayout() {
   ].filter(item => item.show !== false);
 
   return (
-    <div className="flex h-screen w-full bg-[color:var(--t10-offwhite)] font-sans text-[color:var(--t10-navy)] dashboard-theme">
+    <div className="flex h-screen w-full bg-[color:var(--t10-offwhite)] font-sans text-[color:var(--t10-navy)]" style={themeStyle as React.CSSProperties}>
       {/* Sidebar (Desktop) */}
       <aside className="hidden md:flex w-64 flex-col border-r border-neutral-200 bg-white shadow-sm shrink-0 h-full overflow-y-auto z-10 relative">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-neutral-200">
@@ -249,6 +251,7 @@ function ConsultantAuthView() {
 
   const [mode, setMode] = useState<Mode>("login");
   const [animating, setAnimating] = useState(false);
+  const { themeStyle } = useTheme();
 
   const switchMode = (next: Mode) => {
     if (next === mode || animating) return;
@@ -359,7 +362,7 @@ function ConsultantAuthView() {
   );
 
   return (
-    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4 dashboard-theme">
+    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4" style={themeStyle as React.CSSProperties}>
       <div className="w-full max-w-4xl bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-2xl overflow-hidden min-h-[580px]">
         <div className="flex flex-col md:flex-row h-full">
 

@@ -501,20 +501,3 @@
 }
 
 /* Removed animated icons as per user request */
-
-.dashboard-theme {
-  --t10-navy: #0F172A; /* Slate 900 */
-  --t10-navy-2: #1E293B; /* Slate 800 */
-  --t10-emerald: #4F46E5; /* Indigo 600 */
-  --t10-green: #6366F1; /* Indigo 500 */
-  --t10-mint: #EEF2FF; /* Indigo 50 */
-  --t10-offwhite: #F8FAFC; /* Slate 50 */
-  --t10-grey: #64748B; /* Slate 500 */
-  --t10-border: #E2E8F0; /* Slate 200 */
-
-  --background: var(--t10-offwhite);
-  --foreground: var(--t10-navy);
-  --primary: var(--t10-emerald);
-  --border: var(--t10-border);
-  --card: #ffffff;
-}

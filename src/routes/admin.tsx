@@ -1,6 +1,7 @@
 import { createFileRoute, Link, Outlet, useNavigate } from "@tanstack/react-router";
 import { AdminStateProvider, useAdminState, type AdminRole } from "@/context/AdminStateContext";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useEffect } from "react";
 import {
   LayoutDashboard,
@@ -64,6 +65,7 @@ function AdminLayout() {
   const { adminRole } = useAdminState();
   const { logout, currentUser, userDoc } = useAuth() as any;
   const navigate = useNavigate();
+  const { themeStyle } = useTheme();
 
   // Sidebar groups: main navigation order
   const NAV_ITEMS = [
@@ -80,7 +82,7 @@ function AdminLayout() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-[color:var(--t10-offwhite)] font-sans text-[color:var(--t10-navy)] dashboard-theme">
+    <div className="flex h-screen w-full bg-[color:var(--t10-offwhite)] font-sans text-[color:var(--t10-navy)]" style={themeStyle as React.CSSProperties}>
       {/* Sidebar */}
       <aside className="flex w-64 flex-col border-r border-neutral-200 bg-white shadow-sm shrink-0 h-full overflow-y-auto z-10 relative">
         <div className="flex h-16 shrink-0 items-center px-6 border-b border-neutral-200">
@@ -176,6 +178,7 @@ function AdminLoginView() {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPw, setShowLoginPw] = useState(false);
+  const { themeStyle } = useTheme();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +193,7 @@ function AdminLoginView() {
   };
 
   return (
-    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4 dashboard-theme">
+    <div className="min-h-screen bg-[color:var(--t10-offwhite)] t10-grid-bg flex flex-col justify-center items-center p-4" style={themeStyle as React.CSSProperties}>
       <div className="w-full max-w-md bg-white rounded-3xl border border-[color:var(--t10-border)] shadow-2xl overflow-hidden p-8 md:p-10">
         <div className="flex flex-col items-center justify-center space-y-2 mb-6">
             <img src="/logo/t10-brand-logo.svg" alt="Think10" className="h-10 w-auto mb-2" />

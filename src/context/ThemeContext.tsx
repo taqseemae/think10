@@ -190,6 +190,7 @@ interface ThemeContextType {
   colorScheme: ColorScheme;
   setColorSchemeId: (id: string) => void;
   availableSchemes: ColorScheme[];
+  themeStyle: React.CSSProperties;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -219,26 +220,20 @@ export function ThemeProvider({
     }
   };
 
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    const root = document.documentElement;
-
-    // Set CSS Custom Properties for live panel styling
-    root.style.setProperty("--t10-navy", activeScheme.styles.navy);
-    root.style.setProperty("--t10-navy-2", activeScheme.styles.navy2);
-    root.style.setProperty("--t10-emerald", activeScheme.styles.emerald);
-    root.style.setProperty("--t10-green", activeScheme.styles.green);
-    root.style.setProperty("--t10-mint", activeScheme.styles.mint);
-    root.style.setProperty("--t10-offwhite", activeScheme.styles.offwhite);
-    root.style.setProperty("--t10-grey", activeScheme.styles.grey);
-    root.style.setProperty("--t10-border", activeScheme.styles.border);
-
-    // SVG Logo Colors
-    root.style.setProperty("--logo-text-color", activeScheme.styles.logoText);
-    root.style.setProperty("--logo-grad-start", activeScheme.styles.logoGrad[0]);
-    root.style.setProperty("--logo-grad-mid", activeScheme.styles.logoGrad[1]);
-    root.style.setProperty("--logo-grad-end", activeScheme.styles.logoGrad[2]);
-  }, [activeScheme]);
+  const themeStyle = {
+    "--t10-navy": activeScheme.styles.navy,
+    "--t10-navy-2": activeScheme.styles.navy2,
+    "--t10-emerald": activeScheme.styles.emerald,
+    "--t10-green": activeScheme.styles.green,
+    "--t10-mint": activeScheme.styles.mint,
+    "--t10-offwhite": activeScheme.styles.offwhite,
+    "--t10-grey": activeScheme.styles.grey,
+    "--t10-border": activeScheme.styles.border,
+    "--logo-text-color": activeScheme.styles.logoText,
+    "--logo-grad-start": activeScheme.styles.logoGrad[0],
+    "--logo-grad-mid": activeScheme.styles.logoGrad[1],
+    "--logo-grad-end": activeScheme.styles.logoGrad[2],
+  } as React.CSSProperties;
 
   return (
     <ThemeContext.Provider
@@ -246,6 +241,7 @@ export function ThemeProvider({
         colorScheme: activeScheme,
         setColorSchemeId,
         availableSchemes: COLOR_SCHEMES,
+        themeStyle,
       }}
     >
       {children}
@@ -261,6 +257,7 @@ export function useTheme() {
       colorScheme: defaultScheme,
       setColorSchemeId: () => {},
       availableSchemes: COLOR_SCHEMES,
+      themeStyle: {} as React.CSSProperties,
     };
   }
   return context;

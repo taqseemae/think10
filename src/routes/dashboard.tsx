@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useEffect } from "react";
 
+import { useTheme } from "@/context/ThemeContext";
+
 export const Route = createFileRoute("/dashboard")({
   component: DashboardLayout,
   head: () => ({
@@ -38,6 +40,7 @@ function DashboardLayout() {
     isLoggedIn,
   } = useDashboardState();
   const { authLoading, docLoading, userDoc, currentUser } = useAuth();
+  const { themeStyle } = useTheme();
 
   const navigate = useNavigate();
 
@@ -89,7 +92,7 @@ function DashboardLayout() {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-[color:var(--t10-offwhite)] text-foreground dashboard-theme">
+    <div className="flex min-h-screen flex-col bg-[color:var(--t10-offwhite)] text-foreground" style={themeStyle as React.CSSProperties}>
       {/* Dashboard Sticky Header */}
       <header className="sticky top-0 z-40 border-b border-[color:var(--t10-border)] bg-white/95 shadow-sm backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
