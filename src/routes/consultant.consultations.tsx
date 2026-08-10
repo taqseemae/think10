@@ -13,7 +13,7 @@ function ConsultantConsultations() {
   const { completeCall } = useDashboardState();
   const [activeTab, setActiveTab] = useState<"Brief" | "Notes" | "Action Plan">("Brief");
   const [notes, setNotes] = useState("");
-  const [recordingLink, setRecordingLink] = useState("");
+  const [recordingFile, setRecordingFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // For demo, just grab the first CONFIRMED booking, or the first booking if none are confirmed
@@ -23,7 +23,26 @@ function ConsultantConsultations() {
     if (!activeSession) return;
     setIsGenerating(true);
     try {
-      await completeCall(activeSession.id, 5, "Consultant feedback", notes, activeSession.topic, recordingLink);
+      let finalLink = "";
+      if (recordingFile) {
+        const formData = new FormData();
+        formData.append("video", recordingFile);
+        
+        // Ensure this goes to the correct backend port
+        const res = await fetch("http://localhost:5000/api/upload-video", {
+          method: "POST",
+          body: formData
+        });
+        
+        if (res.ok) {
+          const data = await res.json();
+          finalLink = data.url;
+        } else {
+          alert("Failed to upload the video. The report will be drafted without it.");
+        }
+      }
+
+      await completeCall(activeSession.id, 5, "Consultant feedback", notes, activeSession.topic, finalLink);
       refreshData();
       alert("Report Drafted successfully! The client can now view and download the PDF.");
     } catch(e) {
@@ -48,60 +67,61 @@ function ConsultantConsultations() {
         <div>
           <h2 className="text-lg font-bold">{activeSession.topic || "Strategy Session"}</h2>
           <p className="text-neutral-400 text-sm flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-            Recording Active (Consent Given) • 12:45 Elapsed
+            {activeSession.status === "COMPLETED" ? (
+              <>Session Completed</>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Session is Active
+              </>
+            )}
           </p>
         </div>
-        <div className="text-right">
-          <p className="font-mono text-xl font-bold">47:15</p>
-          <p className="text-xs text-neutral-400">Remaining</p>
-        </div>
+        {activeSession.status !== "COMPLETED" && (
+          <div className="text-right">
+            <p className="font-mono text-xl font-bold">60:00</p>
+            <p className="text-xs text-neutral-400">Allocated</p>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         
         {/* Main Video Area */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <div className="flex-1 bg-black rounded-xl border border-neutral-800 overflow-hidden relative group flex items-center justify-center">
-            {/* Mock Video Grid */}
-            <div className="absolute inset-0 grid grid-cols-2 gap-1 bg-neutral-900">
-              <div className="bg-neutral-800 flex items-center justify-center relative">
-                <div className="h-24 w-24 rounded-full bg-neutral-700 flex items-center justify-center">
-                  <span className="text-3xl text-neutral-500 font-bold">{activeSession.userName?.substring(0,2).toUpperCase() || "CL"}</span>
-                </div>
-                <div className="absolute bottom-4 left-4 bg-black/60 px-2 py-1 rounded text-xs text-white backdrop-blur-sm">
-                  {activeSession.userName || "Client"}
-                </div>
-              </div>
-              <div className="bg-neutral-800 flex items-center justify-center relative">
-                <div className="h-24 w-24 rounded-full bg-[color:var(--t10-navy)] flex items-center justify-center">
-                  <span className="text-3xl text-white font-bold">YOU</span>
-                </div>
-                <div className="absolute bottom-4 left-4 bg-black/60 px-2 py-1 rounded text-xs text-white backdrop-blur-sm">
-                  {activeSession.expertName || "Consultant"}
-                </div>
-              </div>
-            </div>
-
-            {/* Floating Controls */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-neutral-900/80 backdrop-blur-md p-2 rounded-2xl border border-neutral-700 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button className="p-3 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white transition-colors">
-                <Mic className="w-5 h-5" />
-              </button>
-              <button className="p-3 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white transition-colors">
-                <Video className="w-5 h-5" />
-              </button>
-              <button className="p-3 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white transition-colors">
-                <MonitorUp className="w-5 h-5" />
-              </button>
-              <button className="p-3 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white transition-colors">
-                <Settings className="w-5 h-5" />
-              </button>
-              <div className="w-px h-8 bg-neutral-600 mx-1"></div>
-              <button className="p-3 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors">
-                <PhoneOff className="w-5 h-5" />
-              </button>
-            </div>
+          <div className="flex-1 bg-neutral-100 rounded-xl border border-neutral-200 overflow-hidden relative group flex flex-col items-center justify-center p-8 text-center">
+            {activeSession.status === "COMPLETED" ? (
+               activeSession.recordingUrl ? (
+                 <video src={activeSession.recordingUrl} controls className="w-full h-full object-contain bg-black" />
+               ) : (
+                 <div className="text-neutral-500 flex flex-col items-center">
+                   <Video className="w-12 h-12 mb-4 opacity-50" />
+                   <p>No recording available for this session.</p>
+                 </div>
+               )
+            ) : (
+               <div className="max-w-md">
+                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Video className="w-8 h-8" />
+                 </div>
+                 <h3 className="text-xl font-bold text-neutral-900 mb-2">Ready to join your session?</h3>
+                 <p className="text-neutral-500 mb-8">
+                   You are using Google Meet for this consultation. Click the button below to join the meeting.
+                 </p>
+                 {activeSession.meetLink ? (
+                   <a 
+                     href={activeSession.meetLink}
+                     target="_blank"
+                     rel="noreferrer"
+                     className="inline-flex items-center gap-2 bg-[color:var(--t10-emerald)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
+                   >
+                     <Video className="w-5 h-5" /> Join Google Meet
+                   </a>
+                 ) : (
+                   <p className="text-red-500 font-medium">No meeting link provided.</p>
+                 )}
+               </div>
+            )}
           </div>
         </div>
 
@@ -174,14 +194,13 @@ function ConsultantConsultations() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 ></textarea>
-                <h3 className="font-bold text-neutral-900 mb-2">Meeting Recording (Optional)</h3>
-                <p className="text-xs text-neutral-500 mb-2">Paste the Google Drive recording link here to share it with the client.</p>
+                <h3 className="font-bold text-neutral-900 mb-2">Meeting Recording (MP4)</h3>
+                <p className="text-xs text-neutral-500 mb-2">Upload the recorded MP4 file of the session here.</p>
                 <input
-                  type="url"
+                  type="file"
+                  accept="video/mp4,video/webm"
                   className="w-full border border-neutral-200 rounded-lg p-3 text-sm outline-none focus:border-[color:var(--t10-emerald)]"
-                  placeholder="https://drive.google.com/file/d/..."
-                  value={recordingLink}
-                  onChange={(e) => setRecordingLink(e.target.value)}
+                  onChange={(e) => setRecordingFile(e.target.files?.[0] || null)}
                 />
               </div>
             )}
