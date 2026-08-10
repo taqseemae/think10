@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState } from "@/context/AdminStateContext";
-import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban, Trash2 } from "lucide-react";
+import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban, Trash2, Download } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { useState } from "react";
 import { GenericCallModal } from "@/components/GenericCallModal";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -34,6 +35,55 @@ function BookingsAdminPage() {
       await deleteMultipleBookings(selectedIds);
       setSelectedIds([]);
     }
+  };
+
+  const downloadMeetingPDF = (booking: any) => {
+    if (!booking.report) return;
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    doc.setFontSize(20);
+    doc.text(`Think10 Strategy Session Report`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(14);
+    doc.text(`Topic: ${booking.topic}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Expert: ${booking.expertName || "Advisor"}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Date: ${booking.when}`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(16);
+    doc.text(`Executive Summary`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    const splitSummary = doc.splitTextToSize(booking.report.summary || "", 170);
+    doc.text(splitSummary, 20, yPos);
+    yPos += (splitSummary.length * 7) + 10;
+    
+    doc.setFontSize(16);
+    doc.text(`Recommendations`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.recommendations?.forEach((rec: string, idx: number) => {
+      const splitRec = doc.splitTextToSize(`${idx + 1}. ${rec}`, 170);
+      doc.text(splitRec, 20, yPos);
+      yPos += (splitRec.length * 7) + 5;
+    });
+    yPos += 5;
+    
+    doc.setFontSize(16);
+    doc.text(`Action Items`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.actionItems?.forEach((act: string, idx: number) => {
+      const splitAct = doc.splitTextToSize(`[ ] ${act}`, 170);
+      doc.text(splitAct, 20, yPos);
+      yPos += (splitAct.length * 7) + 5;
+    });
+    
+    doc.save(`Think10_Report_${booking.id}.pdf`);
   };
 
   return (
@@ -172,6 +222,15 @@ function BookingsAdminPage() {
                               >
                                 <CheckCircle className="mr-2 h-4 w-4" />
                                 Mark Completed
+                              </DropdownMenuItem>
+                            )}
+                            {booking.status === "COMPLETED" && booking.report && (
+                              <DropdownMenuItem
+                                onClick={() => downloadMeetingPDF(booking)}
+                                className="cursor-pointer text-blue-600 font-medium flex items-center"
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Download Report PDF
                               </DropdownMenuItem>
                             )}
                             {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
