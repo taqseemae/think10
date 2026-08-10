@@ -782,9 +782,11 @@ function Page() {
 
                 {/* Media options */}
                 <div className="flex gap-4 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold text-[color:var(--t10-navy)]">
-                  <button className="flex items-center gap-1.5 hover:text-[color:var(--t10-emerald)]">
-                    <Video className="h-4 w-4" /> Download Session Recording (.mp4)
-                  </button>
+                  {selectedReportBooking.recordingUrl && (
+                    <a href={selectedReportBooking.recordingUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[color:var(--t10-emerald)]">
+                      <Video className="h-4 w-4" /> Watch / Download Session Recording
+                    </a>
+                  )}
                   <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300">
                     <Download className="h-4 w-4" /> Export Report Details (.pdf)
                   </button>

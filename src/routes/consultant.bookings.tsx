@@ -152,12 +152,24 @@ function ConsultantBookings() {
                       <div className="mt-4 p-4 border border-neutral-200 rounded-lg bg-neutral-50 text-sm">
                         <h5 className="font-bold text-neutral-900 mb-2">AI Session Report</h5>
                         <p className="text-neutral-700 mb-4">{booking.report.summary}</p>
-                        <button
-                          onClick={() => downloadMeetingPDF(booking)}
-                          className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300"
-                        >
-                          <Download className="h-4 w-4" /> Export Report Details (.pdf)
-                        </button>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => downloadMeetingPDF(booking)}
+                            className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300"
+                          >
+                            <Download className="h-4 w-4" /> Export Report (.pdf)
+                          </button>
+                          {booking.recordingUrl && (
+                            <a
+                              href={booking.recordingUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-2 rounded bg-[color:var(--t10-navy)] px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                            >
+                              <Video className="h-4 w-4" /> Play Recording
+                            </a>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
