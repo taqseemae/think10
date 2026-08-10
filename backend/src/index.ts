@@ -249,14 +249,51 @@ app.post('/api/bookings/create', requireAuth, async (req, res) => {
     const db = await getDb();
     const bookingData = req.body;
 
-    // Generate Google Meet link
-    const meetId = Math.random().toString(36).substring(2, 5) + '-' +
-                   Math.random().toString(36).substring(2, 6) + '-' +
-                   Math.random().toString(36).substring(2, 5);
-    const meetLink = `https://meet.google.com/${meetId}`;
+    let meetLink = '';
+    let googleEventId = '';
+
+    try {
+      // Use relative path to import the shared google-auth module
+      const { getCalendarClient } = await import('../../src/lib/google-auth.js');
+      const calendar = await getCalendarClient();
+      
+      const event = await calendar.events.insert({
+        calendarId: 'primary',
+        conferenceDataVersion: 1,
+        sendUpdates: 'all',
+        requestBody: {
+          summary: `Think10 Strategy Session: ${bookingData.topic}`,
+          description: `Strategy session between ${bookingData.userName} and ${bookingData.consultantName}\nTopic: ${bookingData.topic}`,
+          start: { dateTime: bookingData.startTime || bookingData.when, timeZone: bookingData.timezone || 'UTC' },
+          end: { dateTime: bookingData.endTime || bookingData.when, timeZone: bookingData.timezone || 'UTC' },
+          attendees: [
+            { email: bookingData.userEmail, displayName: bookingData.userName },
+            { email: bookingData.consultantEmail, displayName: bookingData.consultantName },
+          ],
+          conferenceData: {
+            createRequest: {
+              requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+              conferenceSolutionKey: { type: 'hangoutsMeet' },
+            },
+          },
+        },
+      });
+      googleEventId = event.data.id || '';
+      const meetEntry = event.data.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video');
+      meetLink = meetEntry?.uri || event.data.hangoutLink || '';
+      
+      if (!meetLink) {
+         throw new Error('Google Calendar did not generate a Meet link.');
+      }
+    } catch (e: any) {
+      console.warn('[Think10] Google Calendar API error in express backend:', e?.message);
+      // Fallback or throw
+      throw new Error(`Google Meet generation failed: ${e?.message}`);
+    }
 
     const result = await db.collection('bookings').insertOne({
       ...bookingData,
+      googleEventId,
       meetLink,
       status: 'CONFIRMED',
       createdAt: new Date(),

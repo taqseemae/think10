@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Calendar, Filter, Clock, Users, ArrowUpRight, CheckCircle2, XCircle, Video } from "lucide-react";
+import { Calendar, Filter, Clock, Users, ArrowUpRight, CheckCircle2, XCircle, Video, FileText, Download } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
 import { GenericCallModal } from "@/components/GenericCallModal";
@@ -13,6 +14,55 @@ function ConsultantBookings() {
   const { bookings, updateBookingStatus, cancelBooking, rescheduleBooking } = useConsultantState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
   const [rescheduleTarget, setRescheduleTarget] = useState<any | null>(null);
+
+  const downloadMeetingPDF = (booking: any) => {
+    if (!booking.report) return;
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    doc.setFontSize(20);
+    doc.text(`Think10 Strategy Session Report`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(14);
+    doc.text(`Topic: ${booking.topic}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Client: ${booking.userName || booking.userEmail || "Client"}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Date: ${booking.when}`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(16);
+    doc.text(`Executive Summary`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    const splitSummary = doc.splitTextToSize(booking.report.summary || "", 170);
+    doc.text(splitSummary, 20, yPos);
+    yPos += (splitSummary.length * 7) + 10;
+    
+    doc.setFontSize(16);
+    doc.text(`Recommendations`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.recommendations?.forEach((rec: string, idx: number) => {
+      const splitRec = doc.splitTextToSize(`${idx + 1}. ${rec}`, 170);
+      doc.text(splitRec, 20, yPos);
+      yPos += (splitRec.length * 7) + 5;
+    });
+    yPos += 5;
+    
+    doc.setFontSize(16);
+    doc.text(`Action Items`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.actionItems?.forEach((act: string, idx: number) => {
+      const splitAct = doc.splitTextToSize(`[ ] ${act}`, 170);
+      doc.text(splitAct, 20, yPos);
+      yPos += (splitAct.length * 7) + 5;
+    });
+    
+    doc.save(`Think10_Report_${booking.id}.pdf`);
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -94,6 +144,19 @@ function ConsultantBookings() {
                           className="text-sm font-medium text-[color:var(--t10-emerald)] hover:underline flex items-center gap-1"
                         >
                           <Video className="w-4 h-4" /> Join Secure Session
+                        </button>
+                      </div>
+                    )}
+                    
+                    {booking.status === "COMPLETED" && booking.report && (
+                      <div className="mt-4 p-4 border border-neutral-200 rounded-lg bg-neutral-50 text-sm">
+                        <h5 className="font-bold text-neutral-900 mb-2">AI Session Report</h5>
+                        <p className="text-neutral-700 mb-4">{booking.report.summary}</p>
+                        <button
+                          onClick={() => downloadMeetingPDF(booking)}
+                          className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300"
+                        >
+                          <Download className="h-4 w-4" /> Export Report Details (.pdf)
                         </button>
                       </div>
                     )}

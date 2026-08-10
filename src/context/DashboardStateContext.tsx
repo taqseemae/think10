@@ -222,7 +222,7 @@ interface DashboardContextType {
   deleteMultipleBookings: (bookingIds: string[]) => Promise<void>;
   rescheduleBooking: (bookingId: string, newSlot: string) => void;
   triggerServiceRecovery: (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => void;
-  completeCall: (bookingId: string, rating: number, feedback: string) => void;
+  completeCall: (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => void;
   fetchBookings: () => void;
 
   // Action Items
@@ -505,6 +505,15 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Action Items
   const [actionItems, setActionItems] = useState<ActionItem[]>([]);
+
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    import("@/lib/server-actions").then(({ getActionItemsFn }) => {
+      getActionItemsFn()
+        .then((items) => setActionItems(items as ActionItem[]))
+        .catch(console.error);
+    });
+  }, [currentUser?.uid]);
 
   // Billing & Credits
   const [credits, setCredits] = useState<number>(0);
@@ -1043,11 +1052,35 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     );
   };
 
-  const completeCall = (bookingId: string, rating: number, feedback: string) => {
-    import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
-      updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } })
-        .then(() => setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: "COMPLETED", rating, feedback } : b)))
-        .catch(err => console.error(err));
+  const completeCall = (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => {
+    import("@/lib/server-actions").then(async ({ updateBookingStatusFn, generateMeetingSummaryFn }) => {
+      let reportData = null;
+      if (transcript && topic) {
+        try {
+          reportData = await generateMeetingSummaryFn({ data: { bookingId, transcript, topic } });
+        } catch (err) {
+          console.error("AI Summary generation failed", err);
+          reportData = {
+            summary: "AI Summary generation failed. Please review the notes.",
+            recommendations: ["System was unable to generate recommendations."],
+            actionItems: []
+          };
+          // Try to save the fallback report
+          import("@/lib/server-actions").then(({ updateBookingStatusFn }) => {
+            updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
+          });
+        }
+      } else {
+        await updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
+      }
+
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === bookingId
+            ? { ...b, status: "COMPLETED", rating, feedback, report: reportData || b.report }
+            : b
+        )
+      );
     });
   };
 
@@ -1060,33 +1093,57 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     sourceLink?: string,
     notes?: string
   ) => {
-    const newTask: ActionItem = {
-      id: "task_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
-      title,
-      done: false,
-      owner,
-      deadline,
-      source,
-      sourceLink,
-      notes,
-    };
-    setActionItems((prev) => [newTask, ...prev]);
+    import("@/lib/server-actions").then(({ createActionItemFn }) => {
+      createActionItemFn({ data: { title, owner, deadline, source, sourceLink, notes } })
+        .then((id) => {
+          const newTask: ActionItem = {
+            id,
+            title,
+            done: false,
+            owner,
+            deadline,
+            source,
+            sourceLink,
+            notes,
+          };
+          setActionItems((prev) => [newTask, ...prev]);
+        })
+        .catch(console.error);
+    });
   };
 
   const toggleActionItem = (id: string) => {
-    setActionItems((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
+    const item = actionItems.find((i) => i.id === id);
+    if (!item) return;
+    import("@/lib/server-actions").then(({ updateActionItemStatusFn }) => {
+      updateActionItemStatusFn({ data: { id, done: !item.done } })
+        .then(() => {
+          setActionItems((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+          );
+        })
+        .catch(console.error);
+    });
   };
 
   const updateActionItem = (id: string, updates: Partial<ActionItem>) => {
-    setActionItems((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
-    );
+    import("@/lib/server-actions").then(({ updateActionItemStatusFn }) => {
+      updateActionItemStatusFn({ data: { id, done: updates.done || false, updates } })
+        .then(() => {
+          setActionItems((prev) =>
+            prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
+          );
+        })
+        .catch(console.error);
+    });
   };
 
   const deleteActionItem = (id: string) => {
-    setActionItems((prev) => prev.filter((t) => t.id !== id));
+    import("@/lib/server-actions").then(({ deleteActionItemFn }) => {
+      deleteActionItemFn({ data: { id } })
+        .then(() => setActionItems((prev) => prev.filter((t) => t.id !== id)))
+        .catch(console.error);
+    });
   };
 
   // Documents functions

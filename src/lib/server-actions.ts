@@ -279,6 +279,76 @@ export const getConsultantBookingsFn = createServerFn({ method: 'GET' })
     }) as unknown as BookingSession[];
   });
 
+export const generateMeetingSummaryFn = createServerFn({ method: 'POST' })
+  .validator((d: { bookingId: string; transcript: string; topic: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    const { GoogleGenAI } = await import('@google/genai');
+    
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    
+    const prompt = `You are an expert business consultant AI for Think10.
+Analyze the following meeting transcript/notes for the topic: "${data.topic}".
+Return a JSON object with this exact structure:
+{
+  "summary": "Executive summary of the discussion (1 paragraph)",
+  "recommendations": ["Recommendation 1", "Recommendation 2"],
+  "actionItems": ["Action 1", "Action 2"]
+}
+Transcript/Notes:
+${data.transcript}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+      }
+    });
+
+    let text = response.text || '{}';
+    if (text.startsWith('```json')) {
+      text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+    } else if (text.startsWith('```')) {
+      text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+    }
+
+    let reportData;
+    try {
+      reportData = JSON.parse(text);
+    } catch (e) {
+      console.error("Failed to parse Gemini response", e, text);
+      reportData = {
+        summary: "Meeting completed. AI summary generation failed.",
+        recommendations: ["Check logs for errors."],
+        actionItems: ["Review meeting notes manually."]
+      };
+    }
+    
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    await db.collection('bookings').updateOne(
+      { _id: new ObjectId(data.bookingId) },
+      { $set: { report: reportData, status: 'COMPLETED', updatedAt: new Date().toISOString() } }
+    );
+    
+    // Also add action items to the user's action_items collection
+    if (reportData.actionItems && Array.isArray(reportData.actionItems)) {
+      const itemsToInsert = reportData.actionItems.map((item: string) => ({
+        userId: token.uid,
+        title: item,
+        status: 'TO_DO',
+        createdAt: new Date().toISOString(),
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 1 week
+      }));
+      if (itemsToInsert.length > 0) {
+         await db.collection('action_items').insertMany(itemsToInsert);
+      }
+    }
+    
+    return reportData;
+  });
+
 // --- Tickets ---
 export const createSupportTicketFn = createServerFn({ method: 'POST' })
   .validator((d: Omit<SupportTicket, "id">) => d)
@@ -776,6 +846,70 @@ export const getPublicConsultantsFn = createServerFn({ method: 'GET' })
     });
 
     return dbConsultants;
+  });
+
+export const getActionItemsFn = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const token = await requireAuth();
+    const db = await getDb();
+    const items = await db.collection('action_items')
+      .find({ userId: token.uid })
+      .sort({ createdAt: -1 })
+      .toArray();
+    return items.map((t: any) => ({
+      id: t._id.toString(),
+      title: t.title,
+      owner: t.owner || "Founder",
+      deadline: t.deadline || new Date().toISOString(),
+      source: t.source || "Manual",
+      sourceLink: t.sourceLink || "",
+      notes: t.notes || "",
+      done: t.status === "COMPLETED"
+    }));
+  });
+
+export const createActionItemFn = createServerFn({ method: 'POST' })
+  .validator((d: any) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    const db = await getDb();
+    const result = await db.collection('action_items').insertOne({
+      userId: token.uid,
+      title: data.title,
+      owner: data.owner,
+      deadline: data.deadline,
+      source: data.source,
+      sourceLink: data.sourceLink,
+      notes: data.notes,
+      status: "TO_DO",
+      createdAt: new Date().toISOString()
+    });
+    return result.insertedId.toString();
+  });
+
+export const updateActionItemStatusFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: string; done: boolean; updates?: any }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    await db.collection('action_items').updateOne(
+      { _id: new ObjectId(data.id), userId: token.uid },
+      { $set: { 
+          status: data.done ? "COMPLETED" : "TO_DO",
+          ...(data.updates || {})
+        } 
+      }
+    );
+  });
+
+export const deleteActionItemFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    await db.collection('action_items').deleteOne({ _id: new ObjectId(data.id), userId: token.uid });
   });
 
 

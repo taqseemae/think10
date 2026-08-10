@@ -26,12 +26,63 @@ import { RescheduleModal } from "@/components/RescheduleModal";
 
 export const Route = createFileRoute("/dashboard/sessions")({ component: Page });
 
+import { jsPDF } from "jspdf";
+
 function Page() {
   const { bookings, cancelBooking, deleteBooking, completeCall, triggerServiceRecovery, rescheduleBooking, role } = useDashboardState();
 
   const [rescheduleTarget, setRescheduleTarget] = useState<BookingSession | null>(null);
   const [activeCallSession, setActiveCallSession] = useState<BookingSession | null>(null);
   const [callStep, setCallStep] = useState<"DEVICE_CHECK" | "CONSENT" | "ACTIVE" | "FEEDBACK">("DEVICE_CHECK");
+
+  const downloadMeetingPDF = (booking: BookingSession) => {
+    if (!booking.report) return;
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    doc.setFontSize(20);
+    doc.text(`Think10 Strategy Session Report`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(14);
+    doc.text(`Topic: ${booking.topic}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Consultant: ${booking.expertName}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Date: ${booking.when}`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(16);
+    doc.text(`Executive Summary`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    const splitSummary = doc.splitTextToSize(booking.report.summary || "", 170);
+    doc.text(splitSummary, 20, yPos);
+    yPos += (splitSummary.length * 7) + 10;
+    
+    doc.setFontSize(16);
+    doc.text(`Recommendations`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.recommendations?.forEach((rec: string, idx: number) => {
+      const splitRec = doc.splitTextToSize(`${idx + 1}. ${rec}`, 170);
+      doc.text(splitRec, 20, yPos);
+      yPos += (splitRec.length * 7) + 5;
+    });
+    yPos += 5;
+    
+    doc.setFontSize(16);
+    doc.text(`Action Items`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.actionItems?.forEach((act: string, idx: number) => {
+      const splitAct = doc.splitTextToSize(`[ ] ${act}`, 170);
+      doc.text(splitAct, 20, yPos);
+      yPos += (splitAct.length * 7) + 5;
+    });
+    
+    doc.save(`Think10_Report_${booking.id}.pdf`);
+  };
 
   // Call room parameters
   const [micActive, setMicActive] = useState(true);
@@ -132,7 +183,8 @@ function Page() {
 
   const handleCompleteCallSubmit = () => {
     if (!activeCallSession) return;
-    completeCall(activeCallSession.id, rating, feedbackText);
+    const transcript = callChatMessages.map(m => `[${m.time}] ${m.sender === "me" ? "Client" : "Consultant"}: ${m.text}`).join('\n') || "Session was completed without any chat messages.";
+    completeCall(activeCallSession.id, rating, feedbackText, transcript, activeCallSession.topic);
     setActiveCallSession(null);
     setFeedbackText("");
   };
@@ -733,7 +785,7 @@ function Page() {
                   <button className="flex items-center gap-1.5 hover:text-[color:var(--t10-emerald)]">
                     <Video className="h-4 w-4" /> Download Session Recording (.mp4)
                   </button>
-                  <button className="flex items-center gap-1.5 hover:text-[color:var(--t10-emerald)]">
+                  <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300">
                     <Download className="h-4 w-4" /> Export Report Details (.pdf)
                   </button>
                 </div>
