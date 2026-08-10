@@ -376,25 +376,6 @@ app.get('/api/earnings/:consultantId', requireAuth, async (req, res) => {
 
 // ── Quality Cases ──────────────────────────────────────────────────────────────
 // POST /api/quality/cases — create a quality/compliance case
-app.post('/api/daily/webhook', express.json(), async (req, res) => {
-  try {
-    const { event, payload } = req.body;
-    if (event === 'recording.ready') {
-      const db = await getDb();
-      const recordingUrl = payload.recordingUrl;
-      const roomName = payload.roomName;
-      await db.collection('bookings').updateOne(
-        { roomName: roomName },
-        { $set: { recordingUrl, updatedAt: new Date() } }
-      );
-    }
-    res.status(200).send('OK');
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// POST /api/quality/cases — create a quality/compliance case
 app.post('/api/quality/cases', requireAuth, async (req, res) => {
   try {
     const db = await getDb();

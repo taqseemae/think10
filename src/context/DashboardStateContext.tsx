@@ -222,7 +222,7 @@ interface DashboardContextType {
   deleteMultipleBookings: (bookingIds: string[]) => Promise<void>;
   rescheduleBooking: (bookingId: string, newSlot: string) => void;
   triggerServiceRecovery: (bookingId: string, type: "TECH_FAILURE" | "NO_SHOW") => void;
-  completeCall: (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => Promise<void>;
+  completeCall: (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string, recordingUrl?: string) => Promise<void>;
   fetchBookings: () => void;
 
   // Action Items
@@ -319,7 +319,7 @@ const EMPTY_DASHBOARD_CTX: DashboardContextType = {
   deleteMultipleBookings: async () => {},
   rescheduleBooking: () => {},
   triggerServiceRecovery: () => {},
-  completeCall: async () => {},
+  completeCall: async (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string, recordingUrl?: string) => {},
   fetchBookings: () => {},
   actionItems: [],
   addActionItem: () => {},
@@ -1052,31 +1052,33 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     );
   };
 
-  const completeCall = async (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string) => {
+  const completeCall = async (bookingId: string, rating: number, feedback: string, transcript?: string, topic?: string, recordingUrl?: string) => {
     const { updateBookingStatusFn, generateMeetingSummaryFn } = await import("@/lib/server-actions");
     let reportData = null;
-    if (transcript && topic) {
-      try {
-        reportData = await generateMeetingSummaryFn({ data: { bookingId, transcript, topic } });
-      } catch (err) {
-        console.error("AI Summary generation failed", err);
-        reportData = {
-          summary: "AI Summary generation failed. Please review the notes.",
-          recommendations: ["System was unable to generate recommendations."],
-          actionItems: []
-        };
-        await updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
-      }
-    } else {
-      await updateBookingStatusFn({ data: { id: bookingId, status: "COMPLETED" } });
+    try {
+      reportData = await generateMeetingSummaryFn(transcript || "", topic || "General Consultation");
+    } catch (e) {
+      console.error("AI Generation failed:", e);
+      reportData = {
+        summary: "The session was completed successfully. AI report generation failed.",
+        actionItems: ["Review session notes manually."],
+        recommendations: ["Follow up with the consultant for manual insights."]
+      };
     }
-
+    const updateData: any = { 
+      status: "COMPLETED", 
+      rating, 
+      feedback, 
+      report: reportData,
+    };
+    if (recordingUrl && recordingUrl.trim() !== "") {
+      updateData.recordingUrl = recordingUrl.trim();
+    }
+    
+    await updateBookingStatusFn(bookingId, updateData);
+    
     setBookings((prev) =>
-      prev.map((b) =>
-        b.id === bookingId
-          ? { ...b, status: "COMPLETED", rating, feedback, report: reportData || b.report }
-          : b
-      )
+      prev.map((b) => (b.id === bookingId ? { ...b, ...updateData } : b))
     );
   };
 

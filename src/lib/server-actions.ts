@@ -178,61 +178,41 @@ export const createBookingFn = createServerFn({ method: 'POST' })
 
     let meetLink = '';
     let googleEventId = '';
-    let dailyRoomName = '';
     
     try {
-      if (process.env.DAILY_API_KEY) {
-        // Create Daily.co room
-        const response = await fetch('https://api.daily.co/v1/rooms', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.DAILY_API_KEY}`
-          },
-          body: JSON.stringify({
-            properties: {
-              enable_chat: true,
-              enable_recording: "cloud"
-            }
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error(`Daily API error: ${response.statusText}`);
-        }
-        
-        const roomData = await response.json();
-        meetLink = roomData.url;
-        dailyRoomName = roomData.name;
-      } else {
-        // Fallback dummy link if API key is missing during testing
-        meetLink = `https://think10.daily.co/dummy-${Date.now()}`;
-        dailyRoomName = `dummy-${Date.now()}`;
-        console.warn('[Think10] DAILY_API_KEY missing. Using dummy meetLink.');
-      }
-
-      // Create Calendar Invite with the Daily Link instead of Meet
       const { getCalendarClient } = await import('@/lib/google-auth');
       const calendar = await getCalendarClient();
       const event = await calendar.events.insert({
         calendarId: 'primary',
+        conferenceDataVersion: 1,
         sendUpdates: 'all',
         requestBody: {
           summary: `Think10 Strategy Session: ${data.topic}`,
-          description: `Strategy session between ${data.userName} and ${data.consultantName}\nTopic: ${data.topic}\n\nJoin the meeting here: ${meetLink}`,
-          location: meetLink,
+          description: `Strategy session between ${data.userName} and ${data.consultantName}\nTopic: ${data.topic}`,
           start: { dateTime: data.startTime, timeZone: data.timezone },
           end: { dateTime: data.endTime, timeZone: data.timezone },
           attendees: [
             { email: data.userEmail, displayName: data.userName },
             { email: data.consultantEmail, displayName: data.consultantName },
           ],
+          conferenceData: {
+            createRequest: {
+              requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+              conferenceSolutionKey: { type: 'hangoutsMeet' },
+            },
+          },
         },
       });
       googleEventId = event.data.id || '';
-    } catch (apiError: any) {
-      console.warn('[Think10] Video/Calendar API error:', apiError?.message);
-      throw new Error(`Failed to create meeting room: ${apiError?.message}`);
+      const meetEntry = event.data.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video');
+      meetLink = meetEntry?.uri || event.data.hangoutLink || '';
+      
+      if (!meetLink) {
+        throw new Error('Google Calendar did not generate a Meet link. Please ensure your Workspace account supports Meet generation.');
+      }
+    } catch (calendarError: any) {
+      console.warn('[Think10] Google Calendar API error:', calendarError?.message);
+      throw new Error(`Google Meet generation failed: ${calendarError?.message}. Please ensure Google Account is connected in Admin.`);
     }
 
     const bookingData = {
@@ -241,7 +221,6 @@ export const createBookingFn = createServerFn({ method: 'POST' })
       status: 'CONFIRMED',
       googleEventId,
       meetLink,
-      dailyRoomName,
       emailSent: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
