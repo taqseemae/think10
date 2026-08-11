@@ -100,6 +100,7 @@ export type BookingSession = {
   preCallFiles?: string[];
   report?: SessionReport;
   meetLink?: string;
+  recordingUrl?: string;
   rating?: number;
   feedback?: string;
 };
@@ -1074,8 +1075,7 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     if (recordingUrl && recordingUrl.trim() !== "") {
       updateData.recordingUrl = recordingUrl.trim();
     }
-    
-    await updateBookingStatusFn(bookingId, updateData);
+    await updateBookingStatusFn({ data: { id: bookingId, ...updateData } });
     
     setBookings((prev) =>
       prev.map((b) => (b.id === bookingId ? { ...b, ...updateData } : b))

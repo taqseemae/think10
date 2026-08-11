@@ -244,12 +244,19 @@ export const createBookingFn = createServerFn({ method: 'POST' })
   });
 
 export const updateBookingStatusFn = createServerFn({ method: 'POST' })
-  .validator((d: { id: string, status: string }) => d)
+  .validator((d: { id: string, status: string, rating?: number, feedback?: string, report?: any, recordingUrl?: string }) => d)
   .handler(async ({ data }) => {
     const token = await requireAuth();
     const db = await getDb();
     const { ObjectId } = await import('mongodb');
-    await db.collection('bookings').updateOne({ _id: new ObjectId(data.id) }, { $set: { status: data.status, updatedAt: new Date().toISOString() } });
+    
+    const updateFields: any = { status: data.status, updatedAt: new Date().toISOString() };
+    if (data.rating !== undefined) updateFields.rating = data.rating;
+    if (data.feedback !== undefined) updateFields.feedback = data.feedback;
+    if (data.report !== undefined) updateFields.report = data.report;
+    if (data.recordingUrl !== undefined) updateFields.recordingUrl = data.recordingUrl;
+
+    await db.collection('bookings').updateOne({ _id: new ObjectId(data.id) }, { $set: updateFields });
     return true;
   });
 
