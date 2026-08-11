@@ -70,7 +70,10 @@ export const Route = createFileRoute("/api/recall-webhook")({
               });
               if (botRes.ok) {
                 const botData = await botRes.json();
-                const meetId = botData.meeting_url?.meeting_id; // e.g., "abc-defg-hij"
+                const meetUrl = typeof botData.meeting_url === 'string' ? botData.meeting_url : '';
+                const meetIdMatch = meetUrl.match(/meet\.google\.com\/([^?]+)/);
+                const meetId = meetIdMatch ? meetIdMatch[1] : null;
+
                 if (meetId) {
                   // Find booking whose meetLink contains this meetId
                   booking = await db.collection("bookings").findOne({
@@ -140,7 +143,17 @@ export const Route = createFileRoute("/api/recall-webhook")({
           }
 
           if (event.event === "bot.video_ready") {
-            updateData.recordingUrl = event.data?.video_url;
+            if (RECALL_API_KEY) {
+              const botRes = await fetch(`${RECALL_BASE}/bot/${botId}`, {
+                headers: { Authorization: `Token ${RECALL_API_KEY}` },
+              });
+              if (botRes.ok) {
+                const botData = await botRes.json();
+                if (botData.video_url) {
+                  updateData.recordingUrl = botData.video_url;
+                }
+              }
+            }
             updateData.status = "COMPLETED";
           }
 
