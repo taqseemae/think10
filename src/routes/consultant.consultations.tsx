@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2 } from "lucide-react";
+import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2, RefreshCw } from "lucide-react";
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
+import { inviteRecallBotFn, fetchRecallDataFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/consultant/consultations")({
   component: ConsultantConsultations,
@@ -13,36 +14,67 @@ function ConsultantConsultations() {
   const { completeCall } = useDashboardState();
   const [activeTab, setActiveTab] = useState<"Brief" | "Notes" | "Action Plan">("Brief");
   const [notes, setNotes] = useState("");
-  const [recordingFile, setRecordingFile] = useState<File | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isBotInvited, setIsBotInvited] = useState(false);
+  const [isFetchingData, setIsFetchingData] = useState(false);
 
   // For demo, just grab the first CONFIRMED booking, or the first booking if none are confirmed
   const activeSession = bookings.find(b => b.status === "CONFIRMED") || bookings[0];
+
+  const handleJoinMeeting = async () => {
+    if (!activeSession?.meetLink) return;
+    
+    // Open the meeting link in a new tab
+    window.open(activeSession.meetLink, "_blank");
+    
+    // Dispatch the Recall.ai bot
+    if (!isBotInvited && !activeSession.recallBotId) {
+      setIsBotInvited(true);
+      try {
+        await inviteRecallBotFn({ data: { bookingId: activeSession.id, meetLink: activeSession.meetLink } });
+        refreshData();
+      } catch (e) {
+        console.error("Failed to invite bot:", e);
+      }
+    }
+  };
+
+  const handleFetchRecallData = async () => {
+    if (!activeSession?.recallBotId) return;
+    setIsFetchingData(true);
+    try {
+      const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
+      if (data) {
+        alert(`Recall Bot Status: ${data.botStatus}\nVideo URL: ${data.videoUrl ? 'Ready' : 'Not Ready'}\nTranscript: ${data.transcript ? 'Ready' : 'Not Ready'}`);
+        refreshData();
+      } else {
+        alert("Failed to fetch Recall data.");
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFetchingData(false);
+    }
+  };
 
   const handleDraftReport = async () => {
     if (!activeSession) return;
     setIsGenerating(true);
     try {
-      let finalLink = "";
-      if (recordingFile) {
-        const formData = new FormData();
-        formData.append("video", recordingFile);
-        
-        // Ensure this goes to the correct backend port
-        const res = await fetch("http://localhost:5000/api/upload-video", {
-          method: "POST",
-          body: formData
-        });
-        
-        if (res.ok) {
-          const data = await res.json();
-          finalLink = data.url;
-        } else {
-          alert("Failed to upload the video. The report will be drafted without it.");
+      // First try to fetch the latest recall data to ensure we have the transcript and video
+      let finalLink = activeSession.recordingUrl || "";
+      let fullTranscript = notes;
+
+      if (activeSession.recallBotId) {
+        const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
+        if (data?.videoUrl) finalLink = data.videoUrl;
+        if (data?.transcript) {
+           // Combine bot transcript with manual notes
+           fullTranscript = `Consultant Notes:\n${notes}\n\nAutomated Transcript:\n${data.transcript}`;
         }
       }
 
-      await completeCall(activeSession.id, 5, "Consultant feedback", notes, activeSession.topic, finalLink);
+      await completeCall(activeSession.id, 5, "Consultant feedback", fullTranscript, activeSession.topic, finalLink);
       refreshData();
       alert("Report Drafted successfully! The client can now view and download the PDF.");
     } catch(e) {
@@ -109,14 +141,13 @@ function ConsultantConsultations() {
                    You are using Google Meet for this consultation. Click the button below to join the meeting.
                  </p>
                  {activeSession.meetLink ? (
-                   <a 
-                     href={activeSession.meetLink}
-                     target="_blank"
-                     rel="noreferrer"
+                   <button 
+                     onClick={handleJoinMeeting}
                      className="inline-flex items-center gap-2 bg-[color:var(--t10-emerald)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
                    >
-                     <Video className="w-5 h-5" /> Join Google Meet
-                   </a>
+                     {isBotInvited ? <Loader2 className="w-5 h-5 animate-spin" /> : <Video className="w-5 h-5" />}
+                     Join Google Meet & Record
+                   </button>
                  ) : (
                    <p className="text-red-500 font-medium">No meeting link provided.</p>
                  )}
@@ -194,14 +225,24 @@ function ConsultantConsultations() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 ></textarea>
-                <h3 className="font-bold text-neutral-900 mb-2">Meeting Recording (MP4)</h3>
-                <p className="text-xs text-neutral-500 mb-2">Upload the recorded MP4 file of the session here.</p>
-                <input
-                  type="file"
-                  accept="video/mp4,video/webm"
-                  className="w-full border border-neutral-200 rounded-lg p-3 text-sm outline-none focus:border-[color:var(--t10-emerald)]"
-                  onChange={(e) => setRecordingFile(e.target.files?.[0] || null)}
-                />
+                <h3 className="font-bold text-neutral-900 mb-2">Automated Recording</h3>
+                <p className="text-xs text-neutral-500 mb-4">
+                  The AI Notetaker automatically joins when you start the meeting. Use the button below to manually check if the recording is ready.
+                </p>
+                {activeSession.recallBotId ? (
+                  <button
+                    onClick={handleFetchRecallData}
+                    disabled={isFetchingData}
+                    className="w-full border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
+                  >
+                    {isFetchingData ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Check AI Bot Status (Dev Mode)
+                  </button>
+                ) : (
+                  <div className="w-full border border-neutral-200 bg-neutral-50 rounded-lg p-3 text-sm text-neutral-400 text-center">
+                    Join the meeting first to activate the bot.
+                  </div>
+                )}
               </div>
             )}
 

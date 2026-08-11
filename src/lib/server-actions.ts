@@ -920,3 +920,118 @@ export const deleteActionItemFn = createServerFn({ method: 'POST' })
 
 
 
+
+// --- Recall.ai Integration ---
+
+export const inviteRecallBotFn = createServerFn({ method: 'POST' })
+  .validator((d: { bookingId: string; meetLink: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    if (!process.env.RECALL_API_KEY) {
+      console.warn("RECALL_API_KEY is not set. Cannot invite bot.");
+      return null;
+    }
+
+    try {
+      const response = await fetch("https://api.recall.ai/api/v1/bot", {
+        method: "POST",
+        headers: {
+          "Authorization": `Token ${process.env.RECALL_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          meeting_url: data.meetLink,
+          bot_name: "Think10 AI Notetaker",
+          transcription_options: { provider: "default" },
+          metadata: { bookingId: data.bookingId }
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.error("Failed to invite Recall bot:", err);
+        throw new Error("Recall API Error");
+      }
+
+      const bot = await response.json();
+      
+      // Save the bot ID to the booking so we can fetch it later
+      const db = await getDb();
+      const { ObjectId } = await import('mongodb');
+      await db.collection('bookings').updateOne(
+        { _id: new ObjectId(data.bookingId) },
+        { $set: { recallBotId: bot.id } }
+      );
+      
+      return bot;
+    } catch (e) {
+      console.error(e);
+      throw new Error("Failed to invite bot");
+    }
+  });
+
+export const fetchRecallDataFn = createServerFn({ method: 'POST' })
+  .validator((d: { bookingId: string; botId: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    if (!process.env.RECALL_API_KEY) return null;
+
+    try {
+      const response = await fetch(`https://api.recall.ai/api/v1/bot/${data.botId}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Token ${process.env.RECALL_API_KEY}`
+        }
+      });
+      
+      if (!response.ok) return null;
+      const bot = await response.json();
+      
+      const db = await getDb();
+      const { ObjectId } = await import('mongodb');
+      
+      const updateData: any = {};
+      let hasUpdates = false;
+
+      // Extract MP4
+      if (bot.video_url) {
+        updateData.recordingUrl = bot.video_url;
+        hasUpdates = true;
+      }
+      
+      // Fetch Transcript if available
+      let transcriptText = "";
+      if (bot.status === "done") {
+        const transcriptRes = await fetch(`https://api.recall.ai/api/v1/bot/${data.botId}/transcript`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Token ${process.env.RECALL_API_KEY}`
+          }
+        });
+        if (transcriptRes.ok) {
+          const tData = await transcriptRes.json();
+          // Typically returns array of words or utterances
+          if (Array.isArray(tData)) {
+            transcriptText = tData.map((utterance: any) => `${utterance.speaker}: ${utterance.text}`).join("\n");
+          } else if (tData.text) {
+             transcriptText = tData.text;
+          } else {
+             transcriptText = JSON.stringify(tData);
+          }
+          hasUpdates = true;
+        }
+      }
+
+      if (hasUpdates) {
+        await db.collection('bookings').updateOne(
+          { _id: new ObjectId(data.bookingId) },
+          { $set: updateData }
+        );
+      }
+      
+      return { botStatus: bot.status, videoUrl: bot.video_url, transcript: transcriptText };
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  });

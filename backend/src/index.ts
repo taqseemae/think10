@@ -131,6 +131,55 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 
 app.use(express.json());
 
+// ── Recall.ai Webhook ────────────────────────────────────────────────────────
+app.post('/api/recall-webhook', async (req, res) => {
+  try {
+    const event = req.body;
+    console.log("[Recall Webhook] Received event:", event.event);
+
+    const db = await getDb();
+    const { ObjectId } = require('mongodb');
+
+    const botId = event.data?.bot_id;
+    if (!botId) return res.status(400).send('No bot_id in payload');
+
+    // Find the booking associated with this bot
+    const booking = await db.collection('bookings').findOne({ recallBotId: botId });
+    if (!booking) {
+      console.warn(`[Recall Webhook] No booking found for bot ${botId}`);
+      return res.status(200).send('OK'); // Acknowledge anyway
+    }
+
+    const updateData: any = {};
+
+    if (event.event === 'bot.video_ready') {
+      updateData.recordingUrl = event.data.video_url;
+      updateData.status = 'COMPLETED';
+    } 
+    else if (event.event === 'bot.transcript_ready') {
+      // Fetch the actual transcript from the API since webhook only gives status
+      // (Simplified logic: usually you fetch it, but we can just mark it ready and fetch on demand, 
+      // or we can just fetch it here if we had the API key)
+      // Since this is a webhook, we'll let the manual fetch action handle the deep fetch for now,
+      // or we can fetch it if we configure the backend .env with the key.
+      console.log(`[Recall Webhook] Transcript ready for bot ${botId}`);
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      await db.collection('bookings').updateOne(
+        { _id: new ObjectId(booking._id) },
+        { $set: updateData }
+      );
+      console.log(`[Recall Webhook] Updated booking ${booking._id}`);
+    }
+
+    res.status(200).send('OK');
+  } catch (err) {
+    console.error('[Recall Webhook Error]', err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
 // ── Firebase Admin Middleware ────────────────────────────────────────────────
 const requireAuth = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const authHeader = req.headers.authorization;
