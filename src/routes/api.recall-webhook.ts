@@ -54,19 +54,50 @@ export const Route = createFileRoute("/api/recall-webhook")({
             return new Response("No bot_id in payload", { status: 400 });
           }
 
-          // Find the booking associated with this bot
-          const booking = await db
-            .collection("bookings")
-            .findOne({ recallBotId: botId });
+          // 1. Try finding by recallBotId (if triggered by button)
+          let booking = await db.collection("bookings").findOne({ recallBotId: botId });
+
+          // 2. If not found, it might be an AUTO-RECORDED bot from calendar.
+          // Try to find the booking by matching the meeting URL or ID.
+          const RECALL_API_KEY = process.env.RECALL_API_KEY;
+          const RECALL_BASE = "https://us-west-2.recall.ai/api/v1";
+
+          if (!booking && RECALL_API_KEY) {
+            console.log(`[Recall Webhook] Bot ${botId} not found by ID, checking if it's an auto-record bot...`);
+            try {
+              const botRes = await fetch(`${RECALL_BASE}/bot/${botId}`, {
+                headers: { Authorization: `Token ${RECALL_API_KEY}` },
+              });
+              if (botRes.ok) {
+                const botData = await botRes.json();
+                const meetId = botData.meeting_url?.meeting_id; // e.g., "abc-defg-hij"
+                if (meetId) {
+                  // Find booking whose meetLink contains this meetId
+                  booking = await db.collection("bookings").findOne({
+                    meetLink: { $regex: meetId, $options: "i" }
+                  });
+                  
+                  if (booking) {
+                    console.log(`[Recall Webhook] 🔗 Auto-linked bot ${botId} to booking ${booking._id}`);
+                    // Save the botId to this booking so future webhooks find it quickly
+                    await db.collection("bookings").updateOne(
+                      { _id: new ObjectId(booking._id) },
+                      { $set: { recallBotId: botId } }
+                    );
+                  }
+                }
+              }
+            } catch (e) {
+              console.error("[Recall Webhook] Error resolving auto-record bot:", e);
+            }
+          }
 
           if (!booking) {
-            console.warn(`[Recall Webhook] No booking found for bot ${botId}`);
+            console.warn(`[Recall Webhook] No booking found for bot ${botId} even after checking meeting URL`);
             return new Response("OK", { status: 200 });
           }
 
           const updateData: Record<string, any> = {};
-          const RECALL_API_KEY = process.env.RECALL_API_KEY;
-          const RECALL_BASE = "https://us-west-2.recall.ai/api/v1";
 
           // Helper to fetch transcript
           const fetchTranscript = async () => {
