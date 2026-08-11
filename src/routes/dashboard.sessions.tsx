@@ -781,13 +781,22 @@ function Page() {
                 </div>
 
                 {/* Media options */}
+                {selectedReportBooking.recordingUrl && (
+                  <div className="mt-4 border-t border-[color:var(--t10-border)] pt-4 space-y-3">
+                    <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                      <Video className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Session Recording
+                    </span>
+                    <div className="rounded-xl overflow-hidden bg-black border border-neutral-800">
+                      <video 
+                        src={selectedReportBooking.recordingUrl} 
+                        controls 
+                        className="w-full h-auto max-h-[300px] object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-4 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold text-[color:var(--t10-navy)]">
-                  {selectedReportBooking.recordingUrl && (
-                    <a href={selectedReportBooking.recordingUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 hover:text-[color:var(--t10-emerald)]">
-                      <Video className="h-4 w-4" /> Watch / Download Session Recording
-                    </a>
-                  )}
-                  <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300">
+                  <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300 w-full justify-center">
                     <Download className="h-4 w-4" /> Export Report Details (.pdf)
                   </button>
                 </div>

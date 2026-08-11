@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAdminState } from "@/context/AdminStateContext";
-import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban, Trash2, Download } from "lucide-react";
+import { CalendarCheck, Search, Filter, MoreHorizontal, Video, Clock, CheckCircle, Ban, Trash2, Download, X, BookOpen, FileText } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { useState } from "react";
 import { GenericCallModal } from "@/components/GenericCallModal";
@@ -13,6 +13,7 @@ export const Route = createFileRoute("/admin/bookings")({
 function BookingsAdminPage() {
   const { bookings, updateBookingStatus, cancelBooking, deleteBooking, deleteMultipleBookings } = useAdminState();
   const [activeCallSession, setActiveCallSession] = useState<any | null>(null);
+  const [selectedReportBooking, setSelectedReportBooking] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleToggleSelect = (id: string) => {
@@ -225,13 +226,22 @@ function BookingsAdminPage() {
                               </DropdownMenuItem>
                             )}
                             {booking.status === "COMPLETED" && booking.report && (
-                              <DropdownMenuItem
-                                onClick={() => downloadMeetingPDF(booking)}
-                                className="cursor-pointer text-blue-600 font-medium flex items-center"
-                              >
-                                <Download className="mr-2 h-4 w-4" />
-                                Download Report PDF
-                              </DropdownMenuItem>
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => setSelectedReportBooking(booking)}
+                                  className="cursor-pointer text-[color:var(--t10-navy)] font-medium flex items-center"
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  View Report & Recording
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => downloadMeetingPDF(booking)}
+                                  className="cursor-pointer text-blue-600 font-medium flex items-center"
+                                >
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Download Report PDF
+                                </DropdownMenuItem>
+                              </>
                             )}
                             {booking.status !== "CANCELLED" && booking.status !== "COMPLETED" && (
                               <DropdownMenuItem
@@ -260,12 +270,100 @@ function BookingsAdminPage() {
       </div>
 
       {activeCallSession && (
-        <GenericCallModal
-          expertName={activeCallSession.expertName || "Expert"}
-          expertRole={activeCallSession.expertRole || "Advisor"}
-          topic={activeCallSession.topic || "Strategy Session"}
-          onClose={() => setActiveCallSession(null)}
+        <GenericCallModal 
+          activeCallSession={activeCallSession}
+          setActiveCallSession={setActiveCallSession}
+          isClient={false}
         />
+      )}
+
+      {/* STRATEGY CONSULTATION REPORT DIALOG */}
+      {selectedReportBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="max-w-xl w-full rounded-2xl border border-[color:var(--t10-border)] bg-white p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[color:var(--t10-border)] pb-3">
+              <div>
+                <span className="text-[10px] font-bold text-[color:var(--t10-emerald)] uppercase tracking-wider">
+                  Advisor Consultation Report
+                </span>
+                <h3 className="text-base font-bold text-[color:var(--t10-navy)]">
+                  Meeting Recap: {selectedReportBooking.expertName}
+                </h3>
+              </div>
+              <button
+                onClick={() => setSelectedReportBooking(null)}
+                className="rounded-full p-1 hover:bg-neutral-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {selectedReportBooking.report && (
+              <div className="space-y-4 text-xs">
+                {/* Summary */}
+                <div className="space-y-1">
+                  <span className="font-bold text-[color:var(--t10-grey)] uppercase tracking-wider text-[10px]">
+                    Executive Summary
+                  </span>
+                  <p className="text-[color:var(--t10-navy)] leading-relaxed font-medium bg-[color:var(--t10-offwhite)] rounded-lg p-3">
+                    {selectedReportBooking.report.summary}
+                  </p>
+                </div>
+
+                {/* Recommendations */}
+                <div className="space-y-2">
+                  <span className="font-bold text-[color:var(--t10-grey)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                    <BookOpen className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Advisor Strategic Guidance
+                  </span>
+                  <ul className="space-y-1.5 pl-1.5">
+                    {selectedReportBooking.report.recommendations.map((rec: string, rIdx: number) => (
+                      <li key={rIdx} className="flex items-start gap-1.5 leading-relaxed text-[color:var(--t10-navy)]">
+                        <span className="text-[color:var(--t10-emerald)] font-bold">•</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Action Items */}
+                <div className="space-y-2 rounded-xl bg-[color:var(--t10-mint)]/40 p-4 border border-emerald-100">
+                  <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Action Plan Tasks Generated
+                  </span>
+                  <ul className="space-y-1.5">
+                    {selectedReportBooking.report.actionItems.map((act: string, aIdx: number) => (
+                      <li key={aIdx} className="flex items-start gap-1.5 text-[color:var(--t10-navy)]">
+                        <span className="text-[color:var(--t10-emerald)] font-bold mt-0.5">✓</span>
+                        <span>{act} (Added directly to Action Plans)</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Media options */}
+                {selectedReportBooking.recordingUrl && (
+                  <div className="mt-4 border-t border-[color:var(--t10-border)] pt-4 space-y-3">
+                    <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                      <Video className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Session Recording
+                    </span>
+                    <div className="rounded-xl overflow-hidden bg-black border border-neutral-800">
+                      <video 
+                        src={selectedReportBooking.recordingUrl} 
+                        controls 
+                        className="w-full h-auto max-h-[300px] object-contain"
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="flex gap-4 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold text-[color:var(--t10-navy)]">
+                  <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300 w-full justify-center">
+                    <Download className="h-4 w-4" /> Export Report Details (.pdf)
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
