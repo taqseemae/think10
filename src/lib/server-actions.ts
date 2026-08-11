@@ -959,7 +959,17 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   };
 
   if (joinAt) {
-    payload.join_at = new Date(joinAt).toISOString();
+    try {
+      const targetTime = new Date(joinAt).getTime();
+      const now = Date.now();
+      // If the meeting starts in more than 2 minutes, schedule it.
+      // Otherwise, omit join_at so it joins immediately.
+      if (targetTime > now + 2 * 60 * 1000) {
+        payload.join_at = new Date(targetTime).toISOString();
+      }
+    } catch (e) {
+      console.warn("[Think10] Failed to parse joinAt time, skipping join_at parameter", e);
+    }
   }
 
   const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
@@ -973,8 +983,8 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
 
   if (!response.ok) {
     const err = await response.text();
-    console.error("Failed to invite Recall bot:", err);
-    throw new Error("Recall API Error");
+    console.error("Failed to invite Recall bot:", err, "Payload:", JSON.stringify(payload));
+    throw new Error("Recall API Error: " + err);
   }
 
   const bot = await response.json();
