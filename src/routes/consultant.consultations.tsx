@@ -22,7 +22,11 @@ function ConsultantConsultations() {
   const activeSession = bookings.find(b => b.status === "CONFIRMED") || bookings[0];
 
   const handleJoinMeeting = async () => {
-    if (!activeSession?.meetLink) return;
+    // Step 1: Check if meetLink exists
+    if (!activeSession?.meetLink) {
+      alert("❌ No meeting link found on this booking! Please make sure a Google Meet link is set.");
+      return;
+    }
     
     // Open the meeting link in a new tab
     window.open(activeSession.meetLink, "_blank");
@@ -31,11 +35,20 @@ function ConsultantConsultations() {
     if (!isBotInvited && !activeSession.recallBotId) {
       setIsBotInvited(true);
       try {
-        await inviteRecallBotFn({ data: { bookingId: activeSession.id, meetLink: activeSession.meetLink } });
+        alert(`⏳ Bot ko invite kar rahe hain meeting mein...\nMeet Link: ${activeSession.meetLink}`);
+        const bot = await inviteRecallBotFn({ data: { bookingId: activeSession.id, meetLink: activeSession.meetLink } });
+        if (bot) {
+          alert(`✅ Bot successfully invited!\nBot ID: ${bot.id}\n\nBot 30 seconds mein meeting mein join karega. Usse 'Admit' karna mat bhoolein!`);
+        } else {
+          alert("❌ Bot invite failed — check server logs or RECALL_API_KEY.");
+        }
         refreshData();
-      } catch (e) {
+      } catch (e: any) {
+        alert(`❌ Bot invite error: ${e?.message || e}`);
         console.error("Failed to invite bot:", e);
       }
+    } else {
+      alert(`ℹ️ Bot pehle se invite hai.\nBot ID: ${activeSession.recallBotId || 'saving...'}`);
     }
   };
 
