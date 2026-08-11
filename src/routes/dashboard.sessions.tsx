@@ -738,7 +738,7 @@ function Page() {
               </button>
             </div>
 
-            {selectedReportBooking.report && (
+            {selectedReportBooking.report ? (
               <div className="space-y-4 text-xs">
                 {/* Summary */}
                 <div className="space-y-1">
@@ -756,7 +756,7 @@ function Page() {
                     <BookOpen className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Advisor Strategic Guidance
                   </span>
                   <ul className="space-y-1.5 pl-1.5">
-                    {selectedReportBooking.report.recommendations.map((rec, rIdx) => (
+                    {selectedReportBooking.report.recommendations?.map((rec: string, rIdx: number) => (
                       <li key={rIdx} className="flex items-start gap-1.5 leading-relaxed text-[color:var(--t10-navy)]">
                         <span className="text-[color:var(--t10-emerald)] font-bold">•</span>
                         <span>{rec}</span>
@@ -771,7 +771,7 @@ function Page() {
                     <CheckCircle className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Action Plan Tasks Generated
                   </span>
                   <ul className="space-y-1.5">
-                    {selectedReportBooking.report.actionItems.map((act, aIdx) => (
+                    {selectedReportBooking.report.actionItems?.map((act: string, aIdx: number) => (
                       <li key={aIdx} className="flex items-start gap-1.5 text-[color:var(--t10-navy)]">
                         <span className="text-[color:var(--t10-emerald)] font-bold mt-0.5">✓</span>
                         <span>{act} (Added directly to Action Plans)</span>
@@ -779,27 +779,45 @@ function Page() {
                     ))}
                   </ul>
                 </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-neutral-50 text-neutral-500 rounded-lg text-sm text-center">
+                The advisor is currently drafting your consultation report. Check back soon.
+              </div>
+            )}
 
-                {/* Media options */}
-                {selectedReportBooking.recordingUrl && (
-                  <div className="mt-4 border-t border-[color:var(--t10-border)] pt-4 space-y-3">
-                    <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
-                      <Video className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Session Recording
-                    </span>
-                    <div className="rounded-xl overflow-hidden bg-black border border-neutral-800">
-                      <video 
-                        src={selectedReportBooking.recordingUrl} 
-                        controls 
-                        className="w-full h-auto max-h-[300px] object-contain"
-                      />
-                    </div>
-                  </div>
-                )}
-                <div className="flex gap-4 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold text-[color:var(--t10-navy)]">
-                  <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300 w-full justify-center">
-                    <Download className="h-4 w-4" /> Export Report Details (.pdf)
-                  </button>
+            {/* Media options */}
+            {selectedReportBooking.recordingUrl && (
+              <div className="mt-4 border-t border-[color:var(--t10-border)] pt-4 space-y-3">
+                <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                  <Video className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Session Recording
+                </span>
+                <div className="rounded-xl overflow-hidden bg-black border border-neutral-800">
+                  <video 
+                    src={selectedReportBooking.recordingUrl} 
+                    controls 
+                    className="w-full h-auto max-h-[300px] object-contain"
+                  />
                 </div>
+              </div>
+            )}
+
+            {selectedReportBooking.transcript && (
+              <div className="mt-4 border-t border-[color:var(--t10-border)] pt-4 space-y-3">
+                <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                  <FileText className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Automated Transcript
+                </span>
+                <div className="rounded-xl overflow-y-auto max-h-[200px] bg-neutral-50 border border-neutral-200 p-4 text-xs whitespace-pre-wrap font-mono text-neutral-700">
+                  {selectedReportBooking.transcript}
+                </div>
+              </div>
+            )}
+
+            {selectedReportBooking.report && (
+              <div className="flex gap-4 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold text-[color:var(--t10-navy)]">
+                <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300 w-full justify-center">
+                  <Download className="h-4 w-4" /> Export Report Details (.pdf)
+                </button>
               </div>
             )}
           </div>

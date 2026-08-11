@@ -156,17 +156,19 @@ function ConsultantBookings() {
                       </div>
                     )}
                     
-                    {booking.status === "COMPLETED" && booking.report && (
+                    {booking.status === "COMPLETED" && (booking.report || booking.recordingUrl) && (
                       <div className="mt-4 p-4 border border-neutral-200 rounded-lg bg-neutral-50 text-sm">
-                        <h5 className="font-bold text-neutral-900 mb-2">AI Session Report</h5>
-                        <p className="text-neutral-700 mb-4">{booking.report.summary}</p>
+                        <h5 className="font-bold text-neutral-900 mb-2">Session Details</h5>
+                        {booking.report && <p className="text-neutral-700 mb-4">{booking.report.summary}</p>}
                         <div className="flex gap-2">
-                          <button
-                            onClick={() => downloadMeetingPDF(booking)}
-                            className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300"
-                          >
-                            <Download className="h-4 w-4" /> Export Report (.pdf)
-                          </button>
+                          {booking.report && (
+                            <button
+                              onClick={() => downloadMeetingPDF(booking)}
+                              className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300"
+                            >
+                              <Download className="h-4 w-4" /> Export Report (.pdf)
+                            </button>
+                          )}
                           {booking.recordingUrl && (
                             <a
                               href={booking.recordingUrl}
@@ -176,6 +178,14 @@ function ConsultantBookings() {
                             >
                               <Video className="h-4 w-4" /> Play Recording
                             </a>
+                          )}
+                          {booking.transcript && (
+                            <button
+                              onClick={() => alert("Transcript:\n\n" + booking.transcript)}
+                              className="flex items-center gap-2 rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+                            >
+                              <FileText className="h-4 w-4" /> View Transcript
+                            </button>
                           )}
                         </div>
                       </div>
