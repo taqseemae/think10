@@ -232,10 +232,20 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     };
 
     const res = await db.collection('bookings').insertOne(bookingData);
+    const bookingIdStr = res.insertedId.toString();
+
+    // Schedule the Recall bot automatically
+    try {
+      if (meetLink) {
+        await _scheduleRecallBot(bookingIdStr, meetLink, data.startTime);
+      }
+    } catch (e) {
+      console.warn('[Think10] Failed to schedule Recall bot:', e);
+    }
     
     try {
       const { sendBookingConfirmationToUser, sendBookingNotificationToConsultant } = await import('@/lib/email');
-      const emailData = { ...data, googleMeetLink: meetLink, bookingId: res.insertedId.toString() };
+      const emailData = { ...data, googleMeetLink: meetLink, bookingId: bookingIdStr };
       await Promise.all([
         sendBookingConfirmationToUser(emailData),
         sendBookingNotificationToConsultant(emailData),
@@ -245,7 +255,7 @@ export const createBookingFn = createServerFn({ method: 'POST' })
       console.warn('[Think10] Failed to send booking emails:', e);
     }
 
-    return { bookingId: res.insertedId.toString(), meetLink };
+    return { bookingId: bookingIdStr, meetLink };
   });
 
 export const updateBookingStatusFn = createServerFn({ method: 'POST' })
@@ -928,54 +938,63 @@ export const deleteActionItemFn = createServerFn({ method: 'POST' })
 
 // --- Recall.ai Integration ---
 
+async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: string) {
+  if (!process.env.RECALL_API_KEY) {
+    console.warn("RECALL_API_KEY is not set. Cannot invite bot.");
+    return null;
+  }
+
+  const payload: any = {
+    meeting_url: meetLink,
+    bot_name: "Think10 AI Notetaker",
+    ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } : {}),
+    metadata: { bookingId },
+    recording_config: {
+      transcript: {
+        provider: {
+          recallai_streaming: {}
+        }
+      }
+    }
+  };
+
+  if (joinAt) {
+    payload.join_at = new Date(joinAt).toISOString();
+  }
+
+  const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
+    method: "POST",
+    headers: {
+      "Authorization": `Token ${process.env.RECALL_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error("Failed to invite Recall bot:", err);
+    throw new Error("Recall API Error");
+  }
+
+  const bot = await response.json();
+  
+  const db = await (await import('@/lib/mongodb')).getDb();
+  const { ObjectId } = await import('mongodb');
+  await db.collection('bookings').updateOne(
+    { _id: new ObjectId(bookingId) },
+    { $set: { recallBotId: bot.id } }
+  );
+  
+  return bot;
+}
+
 export const inviteRecallBotFn = createServerFn({ method: 'POST' })
   .validator((d: { bookingId: string; meetLink: string }) => d)
   .handler(async ({ data }) => {
     const token = await requireAuth();
-    if (!process.env.RECALL_API_KEY) {
-      console.warn("RECALL_API_KEY is not set. Cannot invite bot.");
-      return null;
-    }
-
     try {
-      const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
-        method: "POST",
-        headers: {
-          "Authorization": `Token ${process.env.RECALL_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          meeting_url: data.meetLink,
-          bot_name: "Think10 AI Notetaker",
-          ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } : {}),
-          metadata: { bookingId: data.bookingId },
-          recording_config: {
-            transcript: {
-              provider: {
-                recallai_streaming: {}
-              }
-            }
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.text();
-        console.error("Failed to invite Recall bot:", err);
-        throw new Error("Recall API Error");
-      }
-
-      const bot = await response.json();
-      
-      // Save the bot ID to the booking so we can fetch it later
-      const db = await getDb();
-      const { ObjectId } = await import('mongodb');
-      await db.collection('bookings').updateOne(
-        { _id: new ObjectId(data.bookingId) },
-        { $set: { recallBotId: bot.id } }
-      );
-      
-      return bot;
+      return await _scheduleRecallBot(data.bookingId, data.meetLink);
     } catch (e) {
       console.error(e);
       throw new Error("Failed to invite bot");

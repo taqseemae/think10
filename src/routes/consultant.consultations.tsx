@@ -3,7 +3,7 @@ import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2, RefreshCw
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
-import { inviteRecallBotFn, fetchRecallDataFn } from "@/lib/server-actions";
+import { fetchRecallDataFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/consultant/consultations")({
   component: ConsultantConsultations,
@@ -15,7 +15,6 @@ function ConsultantConsultations() {
   const [activeTab, setActiveTab] = useState<"Brief" | "Notes" | "Action Plan">("Brief");
   const [notes, setNotes] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isBotInvited, setIsBotInvited] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
 
   // For demo, just grab the first CONFIRMED booking, or the first booking if none are confirmed
@@ -30,30 +29,13 @@ function ConsultantConsultations() {
     
     // Open the meeting link in a new tab
     window.open(activeSession.meetLink, "_blank");
-    
-    // Dispatch the Recall.ai bot
-    if (!isBotInvited && !activeSession.recallBotId) {
-      setIsBotInvited(true);
-      try {
-        alert(`⏳ Bot ko invite kar rahe hain meeting mein...\nMeet Link: ${activeSession.meetLink}`);
-        const bot = await inviteRecallBotFn({ data: { bookingId: activeSession.id, meetLink: activeSession.meetLink } });
-        if (bot) {
-          alert(`✅ Bot successfully invited!\nBot ID: ${bot.id}\n\nBot 30 seconds mein meeting mein join karega. Usse 'Admit' karna mat bhoolein!`);
-        } else {
-          alert("❌ Bot invite failed — check server logs or RECALL_API_KEY.");
-        }
-        refreshData();
-      } catch (e: any) {
-        alert(`❌ Bot invite error: ${e?.message || e}`);
-        console.error("Failed to invite bot:", e);
-      }
-    } else {
-      alert(`ℹ️ Bot pehle se invite hai.\nBot ID: ${activeSession.recallBotId || 'saving...'}`);
-    }
   };
 
   const handleFetchRecallData = async () => {
-    if (!activeSession?.recallBotId) return;
+    if (!activeSession?.recallBotId) {
+      alert("Bot is scheduled but hasn't joined yet, or Bot ID is missing.");
+      return;
+    }
     setIsFetchingData(true);
     try {
       const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
@@ -145,21 +127,25 @@ function ConsultantConsultations() {
                  </div>
                )
             ) : (
-               <div className="max-w-md">
+                 <div className="max-w-md">
                  <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Video className="w-8 h-8" />
                  </div>
                  <h3 className="text-xl font-bold text-neutral-900 mb-2">Ready to join your session?</h3>
-                 <p className="text-neutral-500 mb-8">
+                 <p className="text-neutral-500 mb-4">
                    You are using Google Meet for this consultation. Click the button below to join the meeting.
                  </p>
+                 <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg mb-8 flex items-start gap-2 text-left">
+                   <div className="mt-0.5">ℹ️</div>
+                   <div>The <strong>Think10 AI Notetaker</strong> is scheduled to automatically join at the start of the meeting. You do not need to manually invite or admit it.</div>
+                 </div>
                  {activeSession.meetLink ? (
                    <button 
                      onClick={handleJoinMeeting}
                      className="inline-flex items-center gap-2 bg-[color:var(--t10-emerald)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
                    >
-                     {isBotInvited ? <Loader2 className="w-5 h-5 animate-spin" /> : <Video className="w-5 h-5" />}
-                     Join Google Meet & Record
+                     <Video className="w-5 h-5" />
+                     Join Google Meet
                    </button>
                  ) : (
                    <p className="text-red-500 font-medium">No meeting link provided.</p>
