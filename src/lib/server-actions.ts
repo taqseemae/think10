@@ -947,7 +947,8 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   const payload: any = {
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
-    ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_meet: { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } } : {}),
+    // Disabled to use Option 2 (Anonymous Guest Join) instead of SSO
+    // ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_meet: { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } } : {}),
     metadata: { bookingId },
     recording_config: {
       transcript: {
