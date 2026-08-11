@@ -182,6 +182,14 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     try {
       const { getCalendarClient } = await import('@/lib/google-auth');
       const calendar = await getCalendarClient();
+      const attendees = [
+        { email: data.userEmail, displayName: data.userName },
+        { email: data.consultantEmail, displayName: data.consultantName },
+      ];
+      if (process.env.RECALL_BOT_EMAIL) {
+        attendees.push({ email: process.env.RECALL_BOT_EMAIL, displayName: 'Think10 Bot' });
+      }
+
       const event = await calendar.events.insert({
         calendarId: 'primary',
         conferenceDataVersion: 1,
@@ -191,10 +199,7 @@ export const createBookingFn = createServerFn({ method: 'POST' })
           description: `Strategy session between ${data.userName} and ${data.consultantName}\nTopic: ${data.topic}`,
           start: { dateTime: data.startTime, timeZone: data.timezone },
           end: { dateTime: data.endTime, timeZone: data.timezone },
-          attendees: [
-            { email: data.userEmail, displayName: data.userName },
-            { email: data.consultantEmail, displayName: data.consultantName },
-          ],
+          attendees,
           conferenceData: {
             createRequest: {
               requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -942,6 +947,7 @@ export const inviteRecallBotFn = createServerFn({ method: 'POST' })
         body: JSON.stringify({
           meeting_url: data.meetLink,
           bot_name: "Think10 AI Notetaker",
+          ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } : {}),
           metadata: { bookingId: data.bookingId },
           recording_config: {
             transcript: {
