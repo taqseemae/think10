@@ -15,6 +15,7 @@ import {
   Sparkles,
   AlertTriangle,
   X,
+  Video
 } from "lucide-react";
 import { useEffect } from "react";
 
@@ -81,6 +82,7 @@ function DashboardLayout() {
     { to: "/dashboard/zyne", label: "Ask Zyne", Icon: MessageSquare, show: true },
     { to: "/dashboard/advisors", label: "Advisors", Icon: Users, show: role !== "Cancelled" },
     { to: "/dashboard/sessions", label: "Bookings", Icon: Calendar, show: true },
+    { to: "/dashboard/recordings", label: "Recordings", Icon: Video, show: true },
     { to: "/dashboard/action-plans", label: "Action Plans", Icon: ClipboardList, show: true },
     { to: "/dashboard/business-profile", label: "My Business", Icon: Folder, show: true },
     { to: "/dashboard/documents", label: "Documents", Icon: FileText, show: true },

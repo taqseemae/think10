@@ -20,8 +20,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  RefreshCw,
   UserCog,
+  Video
 } from "lucide-react";
 import { useState } from "react";
 
@@ -76,6 +76,7 @@ function AdminLayout() {
     { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings & Delivery" },
     { to: "/admin/finance", icon: CircleDollarSign, label: "Revenue & Finance" },
     { to: "/admin/quality", icon: ShieldAlert, label: "Quality, Risk & Support" },
+    { to: "/admin/recordings", icon: Video, label: "Recordings & Transcripts" },
     { to: "/admin/crm", icon: Building2, label: "Enterprise CRM" },
     { to: "/admin/growth", icon: TrendingUp, label: "Growth & Content" },
     { to: "/admin/settings", icon: Settings, label: "Reports & Settings" },
