@@ -942,7 +942,6 @@ export const inviteRecallBotFn = createServerFn({ method: 'POST' })
         body: JSON.stringify({
           meeting_url: data.meetLink,
           bot_name: "Think10 AI Notetaker",
-          transcription_options: { provider: "default" },
           metadata: { bookingId: data.bookingId }
         })
       });
