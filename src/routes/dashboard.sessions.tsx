@@ -327,12 +327,12 @@ function Page() {
                     <p className="text-[10px] text-[color:var(--t10-grey)]">
                       {b.when} · {b.topic}
                     </p>
-                    {b.status === "COMPLETED" && b.report && (
+                    {b.status === "COMPLETED" && (b.report || b.recordingUrl) && (
                       <button
                         onClick={() => setSelectedReportBooking(b)}
                         className="inline-flex items-center gap-1 text-[11px] font-semibold text-[color:var(--t10-emerald)] hover:underline mt-1"
                       >
-                        <FileText className="h-3 w-3" /> View Consultation Report
+                        <FileText className="h-3 w-3" /> View Consultation Report & Recording
                       </button>
                     )}
                     {(b.status === "TECH_FAILURE" || b.status === "NO_SHOW") && (

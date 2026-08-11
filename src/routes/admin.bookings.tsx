@@ -225,7 +225,7 @@ function BookingsAdminPage() {
                                 Mark Completed
                               </DropdownMenuItem>
                             )}
-                            {booking.status === "COMPLETED" && booking.report && (
+                            {booking.status === "COMPLETED" && (booking.report || booking.recordingUrl) && (
                               <>
                                 <DropdownMenuItem
                                   onClick={() => setSelectedReportBooking(booking)}
