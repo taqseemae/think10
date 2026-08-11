@@ -48,8 +48,9 @@ export const Route = createFileRoute("/api/recall-webhook")({
           const db = await getDb();
           const { ObjectId } = await import("mongodb");
 
-          const botId = event.data?.bot_id;
+          const botId = event.data?.bot_id || event.data?.bot?.id;
           if (!botId) {
+            console.error("[Recall Webhook] ❌ No bot_id found in payload:", JSON.stringify(event));
             return new Response("No bot_id in payload", { status: 400 });
           }
 
