@@ -270,10 +270,11 @@ function BookingsAdminPage() {
       </div>
 
       {activeCallSession && (
-        <GenericCallModal 
-          activeCallSession={activeCallSession}
-          setActiveCallSession={setActiveCallSession}
-          isClient={false}
+        <GenericCallModal
+          expertName={activeCallSession.expertName || "Expert"}
+          expertRole={activeCallSession.expertRole || "Advisor"}
+          topic={activeCallSession.topic || "Strategy Session"}
+          onClose={() => setActiveCallSession(null)}
         />
       )}
 
