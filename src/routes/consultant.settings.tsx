@@ -98,16 +98,9 @@ function ConsultantSettings() {
           </div>
         </div>
 
-        {/* Integrations & Security */}
+        {/* Security & Policies */}
         <div className="space-y-6">
           
-          <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6">
-            <h3 className="font-bold text-neutral-900 flex items-center gap-2 mb-4"><Globe className="w-5 h-5 text-neutral-400" /> Integrations</h3>
-            <div className="space-y-4">
-              <ConsultantGoogleConnect />
-            </div>
-          </div>
-
           <div className="bg-white rounded-xl border border-neutral-200 shadow-sm p-6">
             <h3 className="font-bold text-neutral-900 flex items-center gap-2 mb-4"><Lock className="w-5 h-5 text-neutral-400" /> Security</h3>
             <div className="space-y-4">
@@ -147,66 +140,6 @@ function ConsultantSettings() {
         </div>
 
       </div>
-    </div>
-  );
-}
-
-import { useState, useEffect } from "react";
-import { getGoogleAuthUrlFn } from "@/lib/server-actions";
-import { useAuth } from "@/context/AuthContext";
-import { Calendar, CheckCircle } from "lucide-react";
-
-function ConsultantGoogleConnect() {
-  const [authUrl, setAuthUrl] = useState("");
-  const { currentUser, userDoc } = useAuth();
-  
-  // Note: We need a server action to specifically check user connection status.
-  // For now, we'll assume it's connected if we have tokens. We can add checkUserGoogleConnectionFn later.
-  const [connected, setConnected] = useState<boolean | null>(null);
-  
-  const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const oauthSuccess = urlParams.get("google_connected") === "true";
-
-  useEffect(() => {
-    async function init() {
-      if (!currentUser) return;
-      try {
-        const urlResult = await getGoogleAuthUrlFn({ data: { userId: currentUser.uid } });
-        setAuthUrl(urlResult.url);
-        // Add logic to check connection status if needed
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    init();
-  }, [currentUser]);
-
-  return (
-    <div className="space-y-3">
-      {oauthSuccess && (
-        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-800 text-xs p-2 rounded border border-emerald-200">
-          <CheckCircle className="w-4 h-4" /> Successfully connected!
-        </div>
-      )}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="bg-neutral-100 p-2 rounded-full">
-          <Calendar className="w-5 h-5 text-neutral-600" />
-        </div>
-        <div>
-          <p className="text-sm font-bold text-neutral-900">Google Calendar</p>
-          <p className="text-xs text-neutral-500">Host your own Google Meet sessions</p>
-        </div>
-      </div>
-      <button 
-        onClick={() => { if(authUrl) window.location.href = authUrl; }}
-        disabled={!authUrl}
-        className="w-full text-center px-4 py-2 bg-[color:var(--t10-emerald)] hover:bg-[color:var(--t10-green)] text-white rounded-lg text-sm font-bold transition-all disabled:opacity-50"
-      >
-        Connect Google Account
-      </button>
-      <p className="text-[10px] text-neutral-400 text-center">
-        Connecting your calendar allows you to be the host of your own sessions.
-      </p>
     </div>
   );
 }

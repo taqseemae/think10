@@ -32,33 +32,24 @@ export function getOAuthClient() {
 }
 
 /**
- * Returns the Google OAuth2 authorization URL to send admin/user to Google login.
+ * Returns the Google OAuth2 authorization URL to send admin to Google login.
  */
-export function getAuthorizationUrl(state?: string): string {
+export function getAuthorizationUrl(): string {
   const oauth2Client = getOAuthClient();
-  const options: any = {
+  return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: SCOPES,
     prompt: 'consent', // Force refresh_token on every connect
-  };
-  if (state) {
-    options.state = state;
-  }
-  return oauth2Client.generateAuthUrl(options);
+  });
 }
 
 /**
  * Exchanges authorization code for tokens and saves them to MongoDB.
  */
-export async function exchangeCodeForTokens(code: string, state?: string): Promise<void> {
+export async function exchangeCodeForTokens(code: string): Promise<void> {
   const oauth2Client = getOAuthClient();
   const { tokens } = await oauth2Client.getToken(code);
-  
-  if (state && state.length > 5) { // Assuming state is a userId if it's long enough
-    await saveUserGoogleTokens(state, tokens);
-  } else {
-    await saveGoogleTokens(tokens);
-  }
+  await saveGoogleTokens(tokens);
 }
 
 /**
@@ -80,24 +71,6 @@ export async function saveGoogleTokens(tokens: any): Promise<void> {
 }
 
 /**
- * Saves Google OAuth tokens to MongoDB users collection.
- */
-export async function saveUserGoogleTokens(userId: string, tokens: any): Promise<void> {
-  const db = await getDb();
-  await db.collection('users').updateOne(
-    { uid: userId },
-    {
-      $set: {
-        googleTokens: {
-          ...tokens,
-          updatedAt: new Date().toISOString(),
-        }
-      },
-    }
-  );
-}
-
-/**
  * Loads Google OAuth tokens from MongoDB.
  */
 export async function loadGoogleTokens(): Promise<any | null> {
@@ -105,17 +78,6 @@ export async function loadGoogleTokens(): Promise<any | null> {
   const doc = await db.collection('system_config').findOne({ key: 'google_oauth_tokens' });
   if (!doc) return null;
   const { _id, key, updatedAt, ...tokens } = doc;
-  return tokens;
-}
-
-/**
- * Loads User-specific Google OAuth tokens from MongoDB.
- */
-export async function loadUserGoogleTokens(userId: string): Promise<any | null> {
-  const db = await getDb();
-  const doc = await db.collection('users').findOne({ uid: userId });
-  if (!doc || !doc.googleTokens) return null;
-  const { updatedAt, ...tokens } = doc.googleTokens;
   return tokens;
 }
 
@@ -142,41 +104,10 @@ export async function getAuthorizedOAuthClient() {
 }
 
 /**
- * Returns an authorized Google OAuth2 client for a specific user.
- * Returns null if the user has no tokens.
- */
-export async function getAuthorizedOAuthClientForUser(userId: string) {
-  const tokens = await loadUserGoogleTokens(userId);
-  if (!tokens || !tokens.refresh_token) {
-    return null;
-  }
-
-  const oauth2Client = getOAuthClient();
-  oauth2Client.setCredentials(tokens);
-
-  // Auto-refresh token if expired
-  oauth2Client.on('tokens', async (newTokens) => {
-    const merged = { ...tokens, ...newTokens };
-    await saveUserGoogleTokens(userId, merged);
-  });
-
-  return oauth2Client;
-}
-
-/**
  * Returns an authorized Google Calendar API client.
  */
 export async function getCalendarClient() {
   const auth = await getAuthorizedOAuthClient();
-  return google.calendar({ version: 'v3', auth });
-}
-
-/**
- * Returns an authorized Google Calendar API client for a specific user.
- */
-export async function getCalendarClientForUser(userId: string) {
-  const auth = await getAuthorizedOAuthClientForUser(userId);
-  if (!auth) return null;
   return google.calendar({ version: 'v3', auth });
 }
 
@@ -186,18 +117,6 @@ export async function getCalendarClientForUser(userId: string) {
 export async function isGoogleConnected(): Promise<boolean> {
   try {
     const tokens = await loadGoogleTokens();
-    return !!(tokens?.refresh_token);
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Checks if a specific user has connected their Google account.
- */
-export async function isUserGoogleConnected(userId: string): Promise<boolean> {
-  try {
-    const tokens = await loadUserGoogleTokens(userId);
     return !!(tokens?.refresh_token);
   } catch {
     return false;
