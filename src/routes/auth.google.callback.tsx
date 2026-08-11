@@ -24,24 +24,25 @@ function GoogleCallbackPage() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     const error = params.get("error");
+    const state = params.get("state");
 
     if (error || !code) {
       setErrorMsg(error || "No authorization code received from Google.");
       setStatus("error");
-      setTimeout(() => navigate({ to: "/admin/google-connect", search: { error: error || "no_code" } as any }), 2500);
+      setTimeout(() => navigate({ to: state ? "/consultant/settings" : "/admin/google-connect", search: { error: error || "no_code" } as any }), 2500);
       return;
     }
 
     // Exchange code for tokens via server action
-    exchangeGoogleCodeFn({ data: { code } })
+    exchangeGoogleCodeFn({ data: { code, state: state || undefined } })
       .then(() => {
         setStatus("success");
-        setTimeout(() => navigate({ to: "/admin/google-connect", search: { google_connected: "true" } as any }), 2000);
+        setTimeout(() => navigate({ to: state ? "/consultant/settings" : "/admin/google-connect", search: { google_connected: "true" } as any }), 2000);
       })
       .catch((err) => {
         setErrorMsg(err?.message || "Token exchange failed.");
         setStatus("error");
-        setTimeout(() => navigate({ to: "/admin/google-connect", search: { error: err?.message || "failed" } as any }), 2500);
+        setTimeout(() => navigate({ to: state ? "/consultant/settings" : "/admin/google-connect", search: { error: err?.message || "failed" } as any }), 2500);
       });
   }, []);
 

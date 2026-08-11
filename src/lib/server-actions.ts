@@ -180,8 +180,11 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     let googleEventId = '';
     
     try {
-      const { getCalendarClient } = await import('@/lib/google-auth');
-      const calendar = await getCalendarClient();
+      const { getCalendarClient, getCalendarClientForUser } = await import('@/lib/google-auth');
+      let calendar = await getCalendarClientForUser(data.consultantId);
+      if (!calendar) {
+        calendar = await getCalendarClient();
+      }
       const event = await calendar.events.insert({
         calendarId: 'primary',
         conferenceDataVersion: 1,
@@ -693,16 +696,17 @@ export const getGoogleConnectionStatusFn = createServerFn({ method: 'GET' })
   });
 
 export const getGoogleAuthUrlFn = createServerFn({ method: 'GET' })
-  .handler(async () => {
+  .validator((d?: { userId?: string }) => d || {})
+  .handler(async ({ data }) => {
     const { getAuthorizationUrl } = await import('@/lib/google-auth');
-    return { url: getAuthorizationUrl() };
+    return { url: getAuthorizationUrl(data.userId) };
   });
 
 export const exchangeGoogleCodeFn = createServerFn({ method: 'POST' })
-  .validator((d: { code: string }) => d)
+  .validator((d: { code: string; state?: string }) => d)
   .handler(async ({ data }) => {
     const { exchangeCodeForTokens } = await import('@/lib/google-auth');
-    await exchangeCodeForTokens(data.code);
+    await exchangeCodeForTokens(data.code, data.state);
     return { success: true };
   });
 
