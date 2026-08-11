@@ -933,7 +933,7 @@ export const inviteRecallBotFn = createServerFn({ method: 'POST' })
     }
 
     try {
-      const response = await fetch("https://api.recall.ai/api/v1/bot", {
+      const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
         method: "POST",
         headers: {
           "Authorization": `Token ${process.env.RECALL_API_KEY}`,
@@ -977,7 +977,7 @@ export const fetchRecallDataFn = createServerFn({ method: 'POST' })
     if (!process.env.RECALL_API_KEY) return null;
 
     try {
-      const response = await fetch(`https://api.recall.ai/api/v1/bot/${data.botId}`, {
+      const response = await fetch(`https://us-west-2.recall.ai/api/v1/bot/${data.botId}`, {
         method: "GET",
         headers: {
           "Authorization": `Token ${process.env.RECALL_API_KEY}`
@@ -1002,7 +1002,7 @@ export const fetchRecallDataFn = createServerFn({ method: 'POST' })
       // Fetch Transcript if available
       let transcriptText = "";
       if (bot.status === "done") {
-        const transcriptRes = await fetch(`https://api.recall.ai/api/v1/bot/${data.botId}/transcript`, {
+        const transcriptRes = await fetch(`https://us-west-2.recall.ai/api/v1/bot/${data.botId}/transcript`, {
           method: "GET",
           headers: {
             "Authorization": `Token ${process.env.RECALL_API_KEY}`

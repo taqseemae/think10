@@ -41,7 +41,7 @@ export const Route = createFileRoute("/api/recall-webhook")({
               if (RECALL_API_KEY) {
                 // Fetch full bot details for video URL
                 const botRes = await fetch(
-                  `https://api.recall.ai/api/v1/bot/${botId}`,
+                  `https://us-west-2.recall.ai/api/v1/bot/${botId}`,
                   {
                     headers: {
                       Authorization: `Token ${RECALL_API_KEY}`,
@@ -58,7 +58,7 @@ export const Route = createFileRoute("/api/recall-webhook")({
 
                 // Fetch transcript
                 const transcriptRes = await fetch(
-                  `https://api.recall.ai/api/v1/bot/${botId}/transcript`,
+                  `https://us-west-2.recall.ai/api/v1/bot/${botId}/transcript`,
                   {
                     headers: {
                       Authorization: `Token ${RECALL_API_KEY}`,
