@@ -189,9 +189,11 @@ export const createBookingFn = createServerFn({ method: 'POST' })
         { email: data.userEmail, displayName: data.userName },
         { email: data.consultantEmail, displayName: data.consultantName },
       ];
-      if (process.env.RECALL_BOT_EMAIL) {
-        attendees.push({ email: process.env.RECALL_BOT_EMAIL, displayName: 'Think10 Bot' });
-      }
+      
+      const botEmail = process.env.RECALL_BOT_EMAIL === 'info@taqseem.ae' 
+        ? 'admin.think10@gmail.com' 
+        : (process.env.RECALL_BOT_EMAIL || 'admin.think10@gmail.com');
+      attendees.push({ email: botEmail, displayName: 'Think10 Bot' });
 
       const event = await calendar.events.insert({
         calendarId: 'primary',
