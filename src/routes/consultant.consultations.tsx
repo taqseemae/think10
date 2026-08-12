@@ -3,7 +3,7 @@ import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2, RefreshCw
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
-import { fetchRecallDataFn } from "@/lib/server-actions";
+import { fetchRecallDataFn, callBotNowFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/consultant/consultations")({
   component: ConsultantConsultations,
@@ -60,7 +60,6 @@ function ConsultantConsultations() {
     }
     setIsCallingBot(true);
     try {
-      const { callBotNowFn } = await import("@/lib/server-actions");
       await callBotNowFn({ data: { bookingId: activeSession.id, meetLink: activeSession.meetLink } });
       alert("AI Notetaker has been called! It should join the meeting shortly.");
       refreshData();
