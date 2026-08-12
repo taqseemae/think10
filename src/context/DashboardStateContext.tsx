@@ -966,12 +966,11 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
       preCallFiles: files,
     };
 
-    // Save to MongoDB instead of local state
     import("@/lib/server-actions").then(({ createBookingFn }) => {
       createBookingFn({ data: newBooking })
-        .then(() => {
+        .then((res) => {
           // Manually update UI since we don't have real-time listeners anymore
-          setBookings(prev => [{ ...newBooking, id: "optimistic_" + Date.now() } as any, ...prev]);
+          setBookings(prev => [{ ...newBooking, id: res.bookingId, meetLink: res.meetLink } as any, ...prev]);
         })
         .catch(err => console.error("Error creating booking", err));
     });
