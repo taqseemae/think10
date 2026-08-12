@@ -17,8 +17,18 @@ function ConsultantConsultations() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
 
-  // For demo, just grab the first CONFIRMED booking, or the first booking if none are confirmed
-  const activeSession = bookings.find(b => b.status === "CONFIRMED") || bookings[0];
+  const [selectedSessionId, setSelectedSessionId] = useState<string>("");
+
+  // Default to the first CONFIRMED booking or the very first booking if none selected
+  const activeSession = selectedSessionId 
+    ? bookings.find(b => b.id === selectedSessionId) 
+    : (bookings.find(b => b.status === "CONFIRMED") || bookings[0]);
+
+  useEffect(() => {
+    if (activeSession && !selectedSessionId) {
+      setSelectedSessionId(activeSession.id);
+    }
+  }, [activeSession, selectedSessionId]);
 
   const handleJoinMeeting = async () => {
     // Step 1: Check if meetLink exists
@@ -90,9 +100,22 @@ function ConsultantConsultations() {
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
       {/* Top Banner */}
-      <div className="bg-neutral-900 rounded-xl p-4 flex justify-between items-center text-white shrink-0">
+      <div className="bg-neutral-900 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center text-white shrink-0 gap-4">
         <div>
-          <h2 className="text-lg font-bold">{activeSession.topic || "Strategy Session"}</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-bold">{activeSession.topic || "Strategy Session"}</h2>
+            <select
+              value={selectedSessionId}
+              onChange={(e) => setSelectedSessionId(e.target.value)}
+              className="bg-neutral-800 border border-neutral-700 text-sm text-white rounded px-2 py-1 outline-none focus:border-emerald-500"
+            >
+              {bookings.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.topic || "Meeting"} - {b.when ? new Date(b.when).toLocaleString() : ""} ({b.status})
+                </option>
+              ))}
+            </select>
+          </div>
           <p className="text-neutral-400 text-sm flex items-center gap-2 mt-1">
             {activeSession.status === "COMPLETED" ? (
               <>Session Completed</>
