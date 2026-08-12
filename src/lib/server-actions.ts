@@ -200,8 +200,6 @@ export const createBookingFn = createServerFn({ method: 'POST' })
           start: { dateTime: data.startTime, timeZone: data.timezone },
           end: { dateTime: data.endTime, timeZone: data.timezone },
           attendees,
-          guestsCanModify: true,
-          guestsCanInviteOthers: true,
           conferenceData: {
             createRequest: {
               requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -949,7 +947,8 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   const payload: any = {
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
-    ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_meet: { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } } : {}),
+    // Disabled to use Option 2 (Anonymous Guest Join) instead of SSO
+    // ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_meet: { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } } : {}),
     metadata: { bookingId },
     recording_config: {
       transcript: {
