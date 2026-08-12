@@ -3,7 +3,7 @@ import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2, RefreshCw
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState } from "react";
-import { fetchRecallDataFn, callBotNowFn } from "@/lib/server-actions";
+import { fetchFirefliesDataFn, callBotNowFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/consultant/consultations")({
   component: ConsultantConsultations,
@@ -39,7 +39,7 @@ function ConsultantConsultations() {
     }
     setIsFetchingData(true);
     try {
-      const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
+      const data = await fetchFirefliesDataFn({ data: { bookingId: activeSession.id, title: `Think10 Strategy Session: ${activeSession.topic}` } });
       if (data) {
         alert(`Recall Bot Status: ${data.botStatus}\nVideo URL: ${data.videoUrl ? 'Ready' : 'Not Ready'}\nTranscript: ${data.transcript ? 'Ready' : 'Not Ready'}`);
         refreshData();
@@ -80,8 +80,8 @@ function ConsultantConsultations() {
       let finalLink = activeSession.recordingUrl || "";
       let fullTranscript = notes;
 
-      if (activeSession.recallBotId) {
-        const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
+      if (activeSession.topic) {
+        const data = await fetchFirefliesDataFn({ data: { bookingId: activeSession.id, title: `Think10 Strategy Session: ${activeSession.topic}` } });
         if (data?.videoUrl) finalLink = data.videoUrl;
         if (data?.transcript) {
            // Combine bot transcript with manual notes
@@ -257,7 +257,7 @@ function ConsultantConsultations() {
                     {isCallingBot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
                     Call Bot Now
                   </button>
-                  {activeSession.recallBotId && (
+                  {activeSession.topic && (
                     <button
                       onClick={handleFetchRecallData}
                       disabled={isFetchingData}
