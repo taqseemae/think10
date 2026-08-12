@@ -227,9 +227,9 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
           startTime: now.toISOString(),
           endTime: end.toISOString(),
           timezone: "Asia/Dubai",
-          topic: preCall.challenge?.trim() || "Instant Test Meeting",
+          topic: "Instant Test Meeting",
           sessionType,
-          preCallAnswers: preCall,
+          preCallAnswers: { challenge: "Instant Test Run", questions: "", additionalDocs: "" },
           preCallFiles: [],
         },
       });
@@ -371,6 +371,22 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
               <span className="flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-full ring-2 ring-[color:var(--t10-emerald)]" /> Today
               </span>
+            </div>
+
+            <div className="pt-4 border-t border-[color:var(--t10-border)]">
+              <button
+                onClick={handleInstantBooking}
+                disabled={booking}
+                className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
+              >
+                {booking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Creating instant meeting...
+                  </>
+                ) : (
+                  <span>⚡ Quick Test: Start Instant Meeting Now</span>
+                )}
+              </button>
             </div>
           </div>
         )}
@@ -524,17 +540,6 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                       <Video className="h-4 w-4" />
                       Confirm Booking & Generate Meet Link
                     </>
-                  )}
-                </button>
-                <button
-                  onClick={handleInstantBooking}
-                  disabled={booking}
-                  className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
-                >
-                  {booking ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <span>⚡ Test Instant Meeting (Join Now)</span>
                   )}
                 </button>
               </div>
