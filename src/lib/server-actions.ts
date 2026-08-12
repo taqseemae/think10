@@ -999,6 +999,12 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   return bot;
 }
 
+export const callBotNowFn = createServerFn({ method: 'POST' })
+  .validator((d: { bookingId: string; meetLink: string }) => d)
+  .handler(async ({ data }) => {
+    return await _scheduleRecallBot(data.bookingId, data.meetLink);
+  });
+
 export const inviteRecallBotFn = createServerFn({ method: 'POST' })
   .validator((d: { bookingId: string; meetLink: string }) => d)
   .handler(async ({ data }) => {

@@ -16,6 +16,7 @@ function ConsultantConsultations() {
   const [notes, setNotes] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isFetchingData, setIsFetchingData] = useState(false);
+  const [isCallingBot, setIsCallingBot] = useState(false);
 
   // For demo, just grab the first CONFIRMED booking, or the first booking if none are confirmed
   const activeSession = bookings.find(b => b.status === "CONFIRMED") || bookings[0];
@@ -51,6 +52,26 @@ function ConsultantConsultations() {
       setIsFetchingData(false);
     }
   };
+
+  const handleCallBotNow = async () => {
+    if (!activeSession?.meetLink) {
+      alert("No meeting link available to call the bot into.");
+      return;
+    }
+    setIsCallingBot(true);
+    try {
+      const { callBotNowFn } = await import("@/lib/server-actions");
+      await callBotNowFn({ data: { bookingId: activeSession.id, meetLink: activeSession.meetLink } });
+      alert("AI Notetaker has been called! It should join the meeting shortly.");
+      refreshData();
+    } catch (e) {
+      console.error(e);
+      alert("Failed to call AI Notetaker.");
+    } finally {
+      setIsCallingBot(false);
+    }
+  };
+
 
   const handleDraftReport = async () => {
     if (!activeSession) return;
@@ -226,22 +247,28 @@ function ConsultantConsultations() {
                 ></textarea>
                 <h3 className="font-bold text-neutral-900 mb-2">Automated Recording</h3>
                 <p className="text-xs text-neutral-500 mb-4">
-                  The AI Notetaker automatically joins when you start the meeting. Use the button below to manually check if the recording is ready.
+                  The AI Notetaker automatically joins at the scheduled time. If you started early, use the button below to call it now.
                 </p>
-                {activeSession.recallBotId ? (
+                <div className="flex gap-2">
                   <button
-                    onClick={handleFetchRecallData}
-                    disabled={isFetchingData}
-                    className="w-full border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
+                    onClick={handleCallBotNow}
+                    disabled={isCallingBot}
+                    className="flex-1 bg-[color:var(--t10-emerald)] text-white hover:bg-[color:var(--t10-green)] rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
                   >
-                    {isFetchingData ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Check AI Bot Status (Dev Mode)
+                    {isCallingBot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
+                    Call Bot Now
                   </button>
-                ) : (
-                  <div className="w-full border border-neutral-200 bg-neutral-50 rounded-lg p-3 text-sm text-neutral-400 text-center">
-                    Join the meeting first to activate the bot.
-                  </div>
-                )}
+                  {activeSession.recallBotId && (
+                    <button
+                      onClick={handleFetchRecallData}
+                      disabled={isFetchingData}
+                      className="flex-1 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
+                    >
+                      {isFetchingData ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                      Check Status
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
