@@ -947,8 +947,7 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   const payload: any = {
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
-    // Disabled to use Option 2 (Anonymous Guest Join) instead of SSO
-    // ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_meet: { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } } : {}),
+    ...(process.env.RECALL_LOGIN_GROUP_ID ? { google_meet: { google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID } } : {}),
     metadata: { bookingId },
     recording_config: {
       transcript: {
@@ -960,7 +959,17 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   };
 
   if (joinAt) {
-    payload.join_at = joinAt;
+    try {
+      const targetTime = new Date(joinAt).getTime();
+      const now = Date.now();
+      // If the meeting starts in more than 2 minutes, schedule it.
+      // Otherwise, omit join_at so it joins immediately.
+      if (targetTime > now + 2 * 60 * 1000) {
+        payload.join_at = new Date(targetTime).toISOString();
+      }
+    } catch (e) {
+      console.warn("[Think10] Failed to parse joinAt time, skipping join_at parameter", e);
+    }
   }
 
   const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
