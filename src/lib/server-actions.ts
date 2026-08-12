@@ -173,8 +173,11 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     
     const db = await getDb();
     const { isSlotAvailable } = await import('@/lib/availability');
-    const available = await isSlotAvailable(data.consultantId, data.startTime, data.endTime);
-    if (!available) throw new Error('Slot unavailable');
+    const isInstant = data.topic === "Instant Test Meeting";
+    if (!isInstant) {
+      const available = await isSlotAvailable(data.consultantId, data.startTime, data.endTime);
+      if (!available) throw new Error('Slot unavailable');
+    }
 
     let meetLink = '';
     let googleEventId = '';
