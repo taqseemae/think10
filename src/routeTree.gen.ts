@@ -41,7 +41,6 @@ import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminGoogleConnectRouteImport } from './routes/admin.google-connect'
 import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
 import { Route as AdminQualityRouteImport } from './routes/admin.quality'
-import { Route as AdminRecordingsRouteImport } from './routes/admin.recordings'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
@@ -54,7 +53,6 @@ import { Route as ConsultantConsultationsRouteImport } from './routes/consultant
 import { Route as ConsultantEarningsRouteImport } from './routes/consultant.earnings'
 import { Route as ConsultantPerformanceRouteImport } from './routes/consultant.performance'
 import { Route as ConsultantProfileRouteImport } from './routes/consultant.profile'
-import { Route as ConsultantRecordingsRouteImport } from './routes/consultant.recordings'
 import { Route as ConsultantSettingsRouteImport } from './routes/consultant.settings'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as DashboardActionPlansRouteImport } from './routes/dashboard.action-plans'
@@ -63,7 +61,6 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing
 import { Route as DashboardBusinessProfileRouteImport } from './routes/dashboard.business-profile'
 import { Route as DashboardCommunityRouteImport } from './routes/dashboard.community'
 import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
-import { Route as DashboardRecordingsRouteImport } from './routes/dashboard.recordings'
 import { Route as DashboardSessionsRouteImport } from './routes/dashboard.sessions'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardZyneRouteImport } from './routes/dashboard.zyne'
@@ -232,11 +229,6 @@ const AdminQualityRoute = AdminQualityRouteImport.update({
   path: '/quality',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminRecordingsRoute = AdminRecordingsRouteImport.update({
-  id: '/recordings',
-  path: '/recordings',
-  getParentRoute: () => AdminRoute,
-} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -297,11 +289,6 @@ const ConsultantProfileRoute = ConsultantProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => ConsultantRoute,
 } as any)
-const ConsultantRecordingsRoute = ConsultantRecordingsRouteImport.update({
-  id: '/recordings',
-  path: '/recordings',
-  getParentRoute: () => ConsultantRoute,
-} as any)
 const ConsultantSettingsRoute = ConsultantSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -341,11 +328,6 @@ const DashboardCommunityRoute = DashboardCommunityRouteImport.update({
 const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardRecordingsRoute = DashboardRecordingsRouteImport.update({
-  id: '/recordings',
-  path: '/recordings',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
@@ -411,7 +393,6 @@ export interface FileRoutesByFullPath {
   '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
-  '/admin/recordings': typeof AdminRecordingsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
@@ -423,7 +404,6 @@ export interface FileRoutesByFullPath {
   '/consultant/earnings': typeof ConsultantEarningsRoute
   '/consultant/performance': typeof ConsultantPerformanceRoute
   '/consultant/profile': typeof ConsultantProfileRoute
-  '/consultant/recordings': typeof ConsultantRecordingsRoute
   '/consultant/settings': typeof ConsultantSettingsRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
@@ -431,7 +411,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
-  '/dashboard/recordings': typeof DashboardRecordingsRoute
   '/dashboard/sessions': typeof DashboardSessionsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/zyne': typeof DashboardZyneRoute
@@ -471,7 +450,6 @@ export interface FileRoutesByTo {
   '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
-  '/admin/recordings': typeof AdminRecordingsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
@@ -483,7 +461,6 @@ export interface FileRoutesByTo {
   '/consultant/earnings': typeof ConsultantEarningsRoute
   '/consultant/performance': typeof ConsultantPerformanceRoute
   '/consultant/profile': typeof ConsultantProfileRoute
-  '/consultant/recordings': typeof ConsultantRecordingsRoute
   '/consultant/settings': typeof ConsultantSettingsRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
@@ -491,7 +468,6 @@ export interface FileRoutesByTo {
   '/dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
-  '/dashboard/recordings': typeof DashboardRecordingsRoute
   '/dashboard/sessions': typeof DashboardSessionsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/zyne': typeof DashboardZyneRoute
@@ -535,7 +511,6 @@ export interface FileRoutesById {
   '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
-  '/admin/recordings': typeof AdminRecordingsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
@@ -547,7 +522,6 @@ export interface FileRoutesById {
   '/consultant/earnings': typeof ConsultantEarningsRoute
   '/consultant/performance': typeof ConsultantPerformanceRoute
   '/consultant/profile': typeof ConsultantProfileRoute
-  '/consultant/recordings': typeof ConsultantRecordingsRoute
   '/consultant/settings': typeof ConsultantSettingsRoute
   '/dashboard/action-plans': typeof DashboardActionPlansRoute
   '/dashboard/advisors': typeof DashboardAdvisorsRoute
@@ -555,7 +529,6 @@ export interface FileRoutesById {
   '/dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
-  '/dashboard/recordings': typeof DashboardRecordingsRoute
   '/dashboard/sessions': typeof DashboardSessionsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/zyne': typeof DashboardZyneRoute
@@ -600,7 +573,6 @@ export interface FileRouteTypes {
     | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
-    | '/admin/recordings'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
@@ -612,7 +584,6 @@ export interface FileRouteTypes {
     | '/consultant/earnings'
     | '/consultant/performance'
     | '/consultant/profile'
-    | '/consultant/recordings'
     | '/consultant/settings'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
@@ -620,7 +591,6 @@ export interface FileRouteTypes {
     | '/dashboard/business-profile'
     | '/dashboard/community'
     | '/dashboard/documents'
-    | '/dashboard/recordings'
     | '/dashboard/sessions'
     | '/dashboard/settings'
     | '/dashboard/zyne'
@@ -660,7 +630,6 @@ export interface FileRouteTypes {
     | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
-    | '/admin/recordings'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
@@ -672,7 +641,6 @@ export interface FileRouteTypes {
     | '/consultant/earnings'
     | '/consultant/performance'
     | '/consultant/profile'
-    | '/consultant/recordings'
     | '/consultant/settings'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
@@ -680,7 +648,6 @@ export interface FileRouteTypes {
     | '/dashboard/business-profile'
     | '/dashboard/community'
     | '/dashboard/documents'
-    | '/dashboard/recordings'
     | '/dashboard/sessions'
     | '/dashboard/settings'
     | '/dashboard/zyne'
@@ -723,7 +690,6 @@ export interface FileRouteTypes {
     | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
-    | '/admin/recordings'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
@@ -735,7 +701,6 @@ export interface FileRouteTypes {
     | '/consultant/earnings'
     | '/consultant/performance'
     | '/consultant/profile'
-    | '/consultant/recordings'
     | '/consultant/settings'
     | '/dashboard/action-plans'
     | '/dashboard/advisors'
@@ -743,7 +708,6 @@ export interface FileRouteTypes {
     | '/dashboard/business-profile'
     | '/dashboard/community'
     | '/dashboard/documents'
-    | '/dashboard/recordings'
     | '/dashboard/sessions'
     | '/dashboard/settings'
     | '/dashboard/zyne'
@@ -1008,13 +972,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQualityRouteImport
       parentRoute: typeof AdminRoute
     }
-    '/admin/recordings': {
-      id: '/admin/recordings'
-      path: '/recordings'
-      fullPath: '/admin/recordings'
-      preLoaderRoute: typeof AdminRecordingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -1099,13 +1056,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ConsultantProfileRouteImport
       parentRoute: typeof ConsultantRoute
     }
-    '/consultant/recordings': {
-      id: '/consultant/recordings'
-      path: '/recordings'
-      fullPath: '/consultant/recordings'
-      preLoaderRoute: typeof ConsultantRecordingsRouteImport
-      parentRoute: typeof ConsultantRoute
-    }
     '/consultant/settings': {
       id: '/consultant/settings'
       path: '/settings'
@@ -1160,13 +1110,6 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/dashboard/documents'
       preLoaderRoute: typeof DashboardDocumentsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/recordings': {
-      id: '/dashboard/recordings'
-      path: '/recordings'
-      fullPath: '/dashboard/recordings'
-      preLoaderRoute: typeof DashboardRecordingsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/sessions': {
@@ -1224,7 +1167,6 @@ interface AdminRouteChildren {
   AdminGoogleConnectRoute: typeof AdminGoogleConnectRoute
   AdminGrowthRoute: typeof AdminGrowthRoute
   AdminQualityRoute: typeof AdminQualityRoute
-  AdminRecordingsRoute: typeof AdminRecordingsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1240,7 +1182,6 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGoogleConnectRoute: AdminGoogleConnectRoute,
   AdminGrowthRoute: AdminGrowthRoute,
   AdminQualityRoute: AdminQualityRoute,
-  AdminRecordingsRoute: AdminRecordingsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -1268,7 +1209,6 @@ interface ConsultantRouteChildren {
   ConsultantEarningsRoute: typeof ConsultantEarningsRoute
   ConsultantPerformanceRoute: typeof ConsultantPerformanceRoute
   ConsultantProfileRoute: typeof ConsultantProfileRoute
-  ConsultantRecordingsRoute: typeof ConsultantRecordingsRoute
   ConsultantSettingsRoute: typeof ConsultantSettingsRoute
   ConsultantIndexRoute: typeof ConsultantIndexRoute
 }
@@ -1281,7 +1221,6 @@ const ConsultantRouteChildren: ConsultantRouteChildren = {
   ConsultantEarningsRoute: ConsultantEarningsRoute,
   ConsultantPerformanceRoute: ConsultantPerformanceRoute,
   ConsultantProfileRoute: ConsultantProfileRoute,
-  ConsultantRecordingsRoute: ConsultantRecordingsRoute,
   ConsultantSettingsRoute: ConsultantSettingsRoute,
   ConsultantIndexRoute: ConsultantIndexRoute,
 }
@@ -1297,7 +1236,6 @@ interface DashboardRouteChildren {
   DashboardBusinessProfileRoute: typeof DashboardBusinessProfileRoute
   DashboardCommunityRoute: typeof DashboardCommunityRoute
   DashboardDocumentsRoute: typeof DashboardDocumentsRoute
-  DashboardRecordingsRoute: typeof DashboardRecordingsRoute
   DashboardSessionsRoute: typeof DashboardSessionsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardZyneRoute: typeof DashboardZyneRoute
@@ -1311,7 +1249,6 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardBusinessProfileRoute: DashboardBusinessProfileRoute,
   DashboardCommunityRoute: DashboardCommunityRoute,
   DashboardDocumentsRoute: DashboardDocumentsRoute,
-  DashboardRecordingsRoute: DashboardRecordingsRoute,
   DashboardSessionsRoute: DashboardSessionsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardZyneRoute: DashboardZyneRoute,
