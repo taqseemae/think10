@@ -372,22 +372,6 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                 <span className="h-3 w-3 rounded-full ring-2 ring-[color:var(--t10-emerald)]" /> Today
               </span>
             </div>
-
-            <div className="pt-4 border-t border-[color:var(--t10-border)]">
-              <button
-                onClick={handleInstantBooking}
-                disabled={booking}
-                className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
-              >
-                {booking ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Creating instant meeting...
-                  </>
-                ) : (
-                  <span>⚡ Quick Test: Start Instant Meeting Now</span>
-                )}
-              </button>
-            </div>
           </div>
         )}
 
@@ -446,6 +430,22 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={handleInstantBooking}
+                disabled={booking}
+                className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
+              >
+                {booking ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Creating instant meeting...
+                  </>
+                ) : (
+                  <span>⚡ Quick Test: Start Instant Meeting Now</span>
+                )}
+              </button>
             </div>
 
             {/* Pre-call questionnaire */}
