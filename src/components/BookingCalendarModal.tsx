@@ -207,6 +207,45 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
     }
   };
 
+  const handleInstantBooking = async () => {
+    if (!currentUser) return;
+    setBooking(true);
+    setBookingError(null);
+    try {
+      const now = new Date();
+      const end = new Date(now.getTime() + 30 * 60 * 1000);
+      const result = await createBookingFn({
+        data: {
+          userId: currentUser.uid,
+          userEmail: currentUser.email || userDoc?.email || "",
+          userName: currentUser.displayName || userDoc?.displayName || "Client",
+          consultantId: expert.slug,
+          consultantName: expert.name,
+          consultantEmail: expert.email || `${expert.slug}@think10.ae`,
+          expertSlug: expert.slug,
+          expertRole: expert.role,
+          startTime: now.toISOString(),
+          endTime: end.toISOString(),
+          timezone: "Asia/Dubai",
+          topic: preCall.challenge?.trim() || "Instant Test Meeting",
+          sessionType,
+          preCallAnswers: preCall,
+          preCallFiles: [],
+        },
+      });
+
+      setBookingResult(result);
+      setStep(3);
+
+      dashboardState?.fetchBookings();
+    } catch (err: any) {
+      setBookingError(err?.message || "Booking failed. Please try again.");
+      alert("Instant Booking Error: " + (err?.message || err));
+    } finally {
+      setBooking(false);
+    }
+  };
+
   const formatSelectedDateTime = () => {
     if (!selectedSlot) return "";
     try {
@@ -469,24 +508,36 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                   )}
                 </button>
               </div>
-            ) : (
-              <button
-                onClick={handleConfirmBooking}
-                disabled={!selectedSlot || !preCall.challenge.trim() || booking}
-                className="w-full rounded-lg bg-[color:var(--t10-emerald)] py-3 text-sm font-bold text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
-              >
-                {booking ? (
-                  <>
+              <div className="space-y-2">
+                <button
+                  onClick={handleConfirmBooking}
+                  disabled={!selectedSlot || !preCall.challenge.trim() || booking}
+                  className="w-full rounded-lg bg-[color:var(--t10-emerald)] py-3 text-sm font-bold text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
+                >
+                  {booking ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Creating your Google Meet session...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="h-4 w-4" />
+                      Confirm Booking & Generate Meet Link
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleInstantBooking}
+                  disabled={booking}
+                  className="w-full rounded-lg bg-orange-500 py-3 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-50 transition-all shadow flex items-center justify-center gap-2"
+                >
+                  {booking ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Creating your Google Meet session...
-                  </>
-                ) : (
-                  <>
-                    <Video className="h-4 w-4" />
-                    Confirm Booking & Generate Meet Link
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <span>⚡ Test Instant Meeting (Join Now)</span>
+                  )}
+                </button>
+              </div>
             )}
             <p className="text-center text-[10px] text-[color:var(--t10-grey)]">
               A Google Calendar invite will be sent to your email after confirmation.
