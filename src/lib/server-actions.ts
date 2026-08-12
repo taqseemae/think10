@@ -203,6 +203,8 @@ export const createBookingFn = createServerFn({ method: 'POST' })
           start: { dateTime: data.startTime, timeZone: data.timezone },
           end: { dateTime: data.endTime, timeZone: data.timezone },
           attendees,
+          guestsCanModify: true,
+          guestsCanInviteOthers: true,
           conferenceData: {
             createRequest: {
               requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
