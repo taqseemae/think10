@@ -524,6 +524,7 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                   )}
                 </button>
               </div>
+            ) : (
               <div className="space-y-2">
                 <button
                   onClick={handleConfirmBooking}
