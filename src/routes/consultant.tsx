@@ -25,8 +25,7 @@ import {
   ArrowRight,
   Briefcase,
   ArrowLeft,
-  Clock,
-  Video
+  Clock
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -110,7 +109,6 @@ function ConsultantLayout() {
     { to: "/consultant/bookings", icon: CalendarRange, label: "Bookings", show: isOnboarded },
     { to: "/consultant/availability", icon: Clock, label: "My Availability", show: isOnboarded },
     { to: "/consultant/consultations", icon: MonitorPlay, label: "Consultations", show: isOnboarded },
-    { to: "/consultant/recordings", icon: Video, label: "Recordings", show: isOnboarded },
     { to: "/consultant/clients", icon: Users, label: "Clients", show: isOnboarded },
     { to: "/consultant/performance", icon: BarChart2, label: "Performance", show: isOnboarded },
     { to: "/consultant/earnings", icon: CircleDollarSign, label: "Earnings", show: isOnboarded },
