@@ -957,8 +957,7 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
     bot_name: "Think10 AI Notetaker",
     ...(process.env.RECALL_LOGIN_GROUP_ID ? { 
       google_meet: { 
-        google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID,
-        automatic_admit: true
+        google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID
       } 
     } : {}),
     metadata: { bookingId },
