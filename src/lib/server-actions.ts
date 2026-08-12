@@ -243,8 +243,12 @@ export const createBookingFn = createServerFn({ method: 'POST' })
         const isInstant = data.topic === "Instant Test Meeting";
         await _scheduleRecallBot(bookingIdStr, meetLink, isInstant ? undefined : data.startTime);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn('[Think10] Failed to schedule Recall bot:', e);
+      await db.collection('bookings').updateOne(
+        { _id: res.insertedId },
+        { $set: { botError: e.message || 'Unknown error' } }
+      );
     }
     
     try {
@@ -970,15 +974,13 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   if (joinAt) {
     try {
       const targetTime = new Date(joinAt).getTime();
-      const now = Date.now();
-      // If the meeting starts in more than 2 minutes, schedule it.
-      // Otherwise, omit join_at so it joins immediately.
-      if (targetTime > now + 2 * 60 * 1000) {
-        payload.join_at = new Date(targetTime).toISOString();
-      }
+      payload.join_at = new Date(targetTime).toISOString();
     } catch (e) {
-      console.warn("[Think10] Failed to parse joinAt time, skipping join_at parameter", e);
+      console.warn("[Think10] Failed to parse joinAt time, using current time", e);
+      payload.join_at = new Date().toISOString();
     }
+  } else {
+    payload.join_at = new Date().toISOString();
   }
 
   const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
