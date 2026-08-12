@@ -1057,7 +1057,13 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
     const { updateBookingStatusFn, generateMeetingSummaryFn } = await import("@/lib/server-actions");
     let reportData = null;
     try {
-      reportData = await generateMeetingSummaryFn(transcript || "", topic || "General Consultation");
+      reportData = await generateMeetingSummaryFn({
+        data: {
+          bookingId,
+          transcript: transcript || "",
+          topic: topic || "General Consultation",
+        }
+      });
     } catch (e) {
       console.error("AI Generation failed:", e);
       reportData = {
