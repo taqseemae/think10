@@ -237,7 +237,8 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     // Schedule the Recall bot automatically
     try {
       if (meetLink) {
-        await _scheduleRecallBot(bookingIdStr, meetLink, data.startTime);
+        const isInstant = data.topic === "Instant Test Meeting";
+        await _scheduleRecallBot(bookingIdStr, meetLink, isInstant ? undefined : data.startTime);
       }
     } catch (e) {
       console.warn('[Think10] Failed to schedule Recall bot:', e);
