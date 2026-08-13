@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2, RefreshCw } from "lucide-react";
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useConsultantState } from "@/context/ConsultantStateContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fetchRecallDataFn, callBotNowFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/consultant/consultations")({
@@ -22,6 +22,15 @@ function ConsultantConsultations() {
   const activeSession = [...bookings]
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .find(b => b.status === "CONFIRMED") || bookings[0];
+
+  // Auto-poll every 8s when a session is active so botStatus banner updates automatically
+  useEffect(() => {
+    if (!activeSession || activeSession.status === "COMPLETED") return;
+    const interval = setInterval(() => {
+      refreshData();
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [activeSession?.id, activeSession?.status]);
 
   const handleJoinMeeting = async () => {
     // Step 1: Check if meetLink exists

@@ -972,11 +972,13 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   const payload: any = {
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
-    // SSO removed as user is on standard @gmail.com without Workspace SSO
-    // automatic_admit tells Recall to bypass the waiting room / lobby
-    google_meet: {
-      automatic_admit: true
-    },
+    // Use SSO login group to bypass Google Meet waiting room automatically
+    // If RECALL_LOGIN_GROUP_ID is set, bot signs in and bypasses lobby
+    ...(process.env.RECALL_LOGIN_GROUP_ID ? {
+      google_meet: {
+        google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID,
+      }
+    } : {}),
     metadata: { bookingId },
     recording_config: {
       transcript: {
