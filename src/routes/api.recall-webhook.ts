@@ -121,8 +121,21 @@ export const Route = createFileRoute("/api/recall-webhook")({
           if (event.event === "bot.status_change") {
             const status = event.data?.status?.code;
             console.log(`[Recall Webhook] Bot status: ${status}`);
+            // Track status in DB for real-time UI updates
+            updateData.botStatus = status;
+
+            if (status === "in_waiting_room") {
+              updateData.botStatus = "in_waiting_room";
+              console.log("[Recall Webhook] 🔔 Bot is in waiting room — consultant must admit it");
+            }
+
+            if (status === "in_call_not_recording" || status === "in_call_recording") {
+              updateData.botStatus = "in_call";
+              console.log("[Recall Webhook] 🎙️ Bot joined the call!");
+            }
 
             if ((status === "done" || status === "call_ended") && RECALL_API_KEY) {
+              updateData.botStatus = "done";
               // Fetch bot details for video URL
               const botRes = await fetch(`${RECALL_BASE}/bot/${botId}`, {
                 headers: { Authorization: `Token ${RECALL_API_KEY}` },
@@ -136,6 +149,18 @@ export const Route = createFileRoute("/api/recall-webhook")({
               }
               await fetchTranscript();
             }
+          }
+
+          // Top-level named events (newer Recall API format)
+          if (event.event === "bot.in_waiting_room") {
+            updateData.botStatus = "in_waiting_room";
+            console.log("[Recall Webhook] 🔔 Bot is in waiting room — consultant must admit it");
+          }
+          if (event.event === "bot.joining_call") {
+            updateData.botStatus = "joining";
+          }
+          if (event.event === "bot.in_call_not_recording" || event.event === "bot.in_call_recording") {
+            updateData.botStatus = "in_call";
           }
 
           if (event.event === "bot.video_ready") {

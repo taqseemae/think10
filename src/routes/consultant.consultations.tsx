@@ -134,6 +134,33 @@ function ConsultantConsultations() {
         )}
       </div>
 
+      {/* Bot Waiting Room Alert — shown when bot is pending admission */}
+      {activeSession.botStatus === "in_waiting_room" && activeSession.meetLink && (
+        <div className="bg-orange-500 text-white rounded-xl p-4 flex items-center justify-between shrink-0 animate-pulse">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔔</span>
+            <div>
+              <p className="font-bold text-sm">AI Notetaker is waiting in the lobby!</p>
+              <p className="text-xs text-orange-100">Open your Google Meet and click <strong>"Admit"</strong> to let the bot join.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => window.open(activeSession.meetLink, "_blank")}
+            className="bg-white text-orange-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-orange-50 transition shrink-0"
+          >
+            Open Meet & Admit →
+          </button>
+        </div>
+      )}
+
+      {activeSession.botStatus === "in_call" && (
+        <div className="bg-emerald-600 text-white rounded-xl px-4 py-2 flex items-center gap-2 shrink-0 text-sm">
+          <span>🎙️</span>
+          <span className="font-semibold">AI Notetaker is recording this session.</span>
+        </div>
+      )}
+
+
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         
         {/* Main Video Area */}
@@ -159,7 +186,7 @@ function ConsultantConsultations() {
                  </p>
                  <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg mb-8 flex items-start gap-2 text-left">
                    <div className="mt-0.5">ℹ️</div>
-                   <div>The <strong>Think10 AI Notetaker</strong> is scheduled to automatically join at the start of the meeting. You do not need to manually invite or admit it.</div>
+                   <div>The <strong>Think10 AI Notetaker</strong> will join the meeting lobby shortly after you start the call. When you see it waiting, click <strong>"Admit"</strong> in Google Meet to let it in.</div>
                  </div>
                  {activeSession.meetLink ? (
                    <button 
