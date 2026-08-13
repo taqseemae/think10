@@ -960,6 +960,10 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
     // SSO removed as user is on standard @gmail.com without Workspace SSO
+    // automatic_admit tells Recall to bypass the waiting room / lobby
+    google_meet: {
+      automatic_admit: true
+    },
     metadata: { bookingId },
     recording_config: {
       transcript: {
