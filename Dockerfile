@@ -12,6 +12,8 @@ RUN npm install --legacy-peer-deps --include=optional
 # Copy rest of the source code
 COPY . .
 
+# Limit memory usage during build to prevent OOM kills on smaller servers
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 # Build with Node server preset
 RUN NITRO_PRESET=node-server npm run build
 
