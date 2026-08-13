@@ -202,12 +202,14 @@ export type Expert = {
   availability: string[];
   verified: boolean;
   initials: string;
+  email?: string;
 };
 
 export const EXPERTS: Expert[] = [
   {
     slug: "tariq-al-mansoor",
     name: "Tariq Al-Mansoor",
+    email: "tahiruddinsk111@gmail.com",
     role: "E-commerce & Marketplace Lead",
     bio: "Former Head of E-commerce at major GCC retail group. Scaled 15+ DTC and Amazon UAE listings to AED 10M+ annual GMV.",
     experienceYears: 14,
@@ -223,6 +225,7 @@ export const EXPERTS: Expert[] = [
   {
     slug: "fatima-al-zahra",
     name: "Fatima Al-Zahra",
+    email: "tahiruddinsk111@gmail.com",
     role: "Retail Operations & Sourcing Director",
     bio: "Specialist in GCC retail expansion, mall lease negotiations, and supply chain logistics between Turkey, China & UAE.",
     experienceYears: 12,
@@ -238,6 +241,7 @@ export const EXPERTS: Expert[] = [
   {
     slug: "sarah-jenkins",
     name: "Sarah Jenkins",
+    email: "tahiruddinsk111@gmail.com",
     role: "DTC Performance & CAC Specialist",
     bio: "Ex-Meta performance marketer who managed AED 25M+ media spend across GCC. Expert in Shopify conversion rate & ad attribution.",
     experienceYears: 10,
@@ -253,6 +257,7 @@ export const EXPERTS: Expert[] = [
   {
     slug: "vikram-sharma",
     name: "Vikram Sharma",
+    email: "tahiruddinsk111@gmail.com",
     role: "Fractional CFO & Unit Economics Expert",
     bio: "Helped 30+ regional startups build investor-ready P&L financial models, manage cash runway, and structure pricing ladders.",
     experienceYears: 16,
