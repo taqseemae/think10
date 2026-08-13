@@ -190,9 +190,7 @@ export const createBookingFn = createServerFn({ method: 'POST' })
         { email: data.consultantEmail, displayName: data.consultantName },
       ];
       
-      const botEmail = process.env.RECALL_BOT_EMAIL === 'info@taqseem.ae' 
-        ? 'admin.think10@gmail.com' 
-        : (process.env.RECALL_BOT_EMAIL || 'admin.think10@gmail.com');
+      const botEmail = process.env.RECALL_BOT_EMAIL || 'info@taqseem.ae';
       attendees.push({ email: botEmail, displayName: 'Think10 Bot' });
 
       const event = await calendar.events.insert({
@@ -972,7 +970,12 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   const payload: any = {
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
-    // No SSO — bot joins as guest, consultant admits from lobby
+    // Use SSO login group to bypass Google Meet waiting room automatically
+    ...(process.env.RECALL_LOGIN_GROUP_ID ? {
+      google_meet: {
+        google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID,
+      }
+    } : {}),
     metadata: { bookingId },
     recording_config: {
       transcript: {
