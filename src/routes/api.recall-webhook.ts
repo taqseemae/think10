@@ -1,28 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getDb } from "@/lib/mongodb";
-import { createHmac, timingSafeEqual } from "crypto";
+import { Webhook } from "svix";
 
 // Verify that the webhook request is genuinely from Recall.ai
-function verifyRecallSignature(body: string, signatureHeader: string | null): boolean {
+function verifyRecallSignature(body: string, headers: Headers): boolean {
   const secret = process.env.RECALL_WEBHOOK_SECRET;
   if (!secret) {
     // If no secret configured, skip verification (not recommended for production)
     console.warn("[Recall Webhook] RECALL_WEBHOOK_SECRET not set — skipping signature check");
     return true;
   }
-  if (!signatureHeader) {
-    console.warn("[Recall Webhook] No signature header received");
-    return false;
-  }
+  
   try {
-    const hmac = createHmac("sha256", secret);
-    hmac.update(body);
-    const expectedSig = "sha256=" + hmac.digest("hex");
-    const sigBuffer = Buffer.from(signatureHeader);
-    const expectedBuffer = Buffer.from(expectedSig);
-    if (sigBuffer.length !== expectedBuffer.length) return false;
-    return timingSafeEqual(sigBuffer, expectedBuffer);
-  } catch {
+    const wh = new Webhook(secret);
+    // Convert Headers object to a plain record for Svix
+    const headerPayload: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      headerPayload[key] = value;
+    });
+    
+    // Svix verify throws an error if signature is invalid
+    wh.verify(body, headerPayload);
+    return true;
+  } catch (err: any) {
+    console.error("[Recall Webhook] Signature verification failed:", err.message);
     return false;
   }
 }
@@ -34,10 +35,8 @@ export const Route = createFileRoute("/api/recall-webhook")({
         try {
           // Read raw body text for signature verification
           const rawBody = await request.text();
-          const signatureHeader = request.headers.get("x-recall-signature");
-
-          // Verify signature
-          if (!verifyRecallSignature(rawBody, signatureHeader)) {
+          // Verify signature using Svix
+          if (!verifyRecallSignature(rawBody, request.headers)) {
             console.error("[Recall Webhook] ❌ Invalid signature — request rejected");
             return new Response("Unauthorized", { status: 401 });
           }
