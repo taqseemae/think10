@@ -3,7 +3,7 @@ import { Mic, Video, MonitorUp, PhoneOff, FileText, Settings, Loader2, RefreshCw
 import { useDashboardState } from "@/context/DashboardStateContext";
 import { useConsultantState } from "@/context/ConsultantStateContext";
 import { useState, useEffect } from "react";
-import { fetchRecallDataFn, callBotNowFn } from "@/lib/server-actions";
+import { fetchNylasDataFn, callBotNowFn } from "@/lib/server-actions";
 
 export const Route = createFileRoute("/consultant/consultations")({
   component: ConsultantConsultations,
@@ -43,19 +43,19 @@ function ConsultantConsultations() {
     window.open(activeSession.meetLink, "_blank");
   };
 
-  const handleFetchRecallData = async () => {
-    if (!activeSession?.recallBotId) {
+  const handleFetchNylasData = async () => {
+    if (!activeSession?.nylasBotId) {
       alert("Bot is scheduled but hasn't joined yet, or Bot ID is missing.");
       return;
     }
     setIsFetchingData(true);
     try {
-      const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
+      const data = await fetchNylasDataFn({ data: { bookingId: activeSession.id, botId: activeSession.nylasBotId } });
       if (data) {
-        alert(`Recall Bot Status: ${data.botStatus}\nVideo URL: ${data.videoUrl ? 'Ready' : 'Not Ready'}\nTranscript: ${data.transcript ? 'Ready' : 'Not Ready'}`);
+        alert(`Nylas Bot Status: ${data.status}\nMedia: ${data.media?.recording_url ? 'Ready' : 'Not Ready'}\nTranscript: ${data.media?.transcript_url ? 'Ready' : 'Not Ready'}`);
         refreshData();
       } else {
-        alert("Failed to fetch Recall data.");
+        alert("Failed to fetch Nylas data.");
       }
     } catch (e) {
       console.error(e);
@@ -91,12 +91,14 @@ function ConsultantConsultations() {
       let finalLink = activeSession.recordingUrl || "";
       let fullTranscript = notes;
 
-      if (activeSession.recallBotId) {
-        const data = await fetchRecallDataFn({ data: { bookingId: activeSession.id, botId: activeSession.recallBotId } });
-        if (data?.videoUrl) finalLink = data.videoUrl;
-        if (data?.transcript) {
+      if (activeSession.nylasBotId) {
+        const data = await fetchNylasDataFn({ data: { bookingId: activeSession.id, botId: activeSession.nylasBotId } });
+        if (data?.media?.recording_url) finalLink = data.media.recording_url;
+        if (data?.media?.transcript_url) {
+           // We will fetch the transcript URL contents or rely on summary if available
+           let transcriptContent = data.media.summary || data.media.transcript_url;
            // Combine bot transcript with manual notes
-           fullTranscript = `Consultant Notes:\n${notes}\n\nAutomated Transcript:\n${data.transcript}`;
+           fullTranscript = `Consultant Notes:\n${notes}\n\nAutomated Transcript/Summary:\n${transcriptContent}`;
         }
       }
 
@@ -295,9 +297,9 @@ function ConsultantConsultations() {
                     {isCallingBot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
                     Call Bot Now
                   </button>
-                  {activeSession.recallBotId && (
+                  {activeSession.nylasBotId && (
                     <button
-                      onClick={handleFetchRecallData}
+                      onClick={handleFetchNylasData}
                       disabled={isFetchingData}
                       className="flex-1 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
                     >

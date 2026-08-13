@@ -190,7 +190,7 @@ export const createBookingFn = createServerFn({ method: 'POST' })
         { email: data.consultantEmail, displayName: data.consultantName },
       ];
       
-      const botEmail = process.env.RECALL_BOT_EMAIL || 'info@taqseem.ae';
+      const botEmail = process.env.NYLAS_BOT_EMAIL || 'info@taqseem.ae';
       attendees.push({ email: botEmail, displayName: 'Think10 Bot' });
 
       const event = await calendar.events.insert({
@@ -239,14 +239,14 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     const res = await db.collection('bookings').insertOne(bookingData);
     const bookingIdStr = res.insertedId.toString();
 
-    // Schedule the Recall bot automatically
+    // Schedule the Nylas bot automatically
     try {
       if (meetLink) {
         const isInstant = data.topic === "Instant Test Meeting";
-        await _scheduleRecallBot(bookingIdStr, meetLink, isInstant ? undefined : data.startTime);
+        await _scheduleNylasBot(bookingIdStr, meetLink, isInstant ? undefined : data.startTime);
       }
     } catch (e: any) {
-      console.warn('[Think10] Failed to schedule Recall bot:', e);
+      console.warn('[Think10] Failed to schedule Nylas bot:', e);
       await db.collection('bookings').updateOne(
         { _id: res.insertedId },
         { $set: { botError: e.message || 'Unknown error' } }
@@ -956,28 +956,20 @@ export const deleteActionItemFn = createServerFn({ method: 'POST' })
     await db.collection('action_items').deleteOne({ _id: new ObjectId(data.id), userId: token.uid });
   });
 
+// --- Nylas Integration ---
 
-
-
-// --- Recall.ai Integration ---
-
-async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: string) {
-  if (!process.env.RECALL_API_KEY) {
-    console.warn("RECALL_API_KEY is not set. Cannot invite bot.");
+async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: string) {
+  if (!process.env.NYLAS_API_KEY || !process.env.NYLAS_GRANT_ID) {
+    console.warn("NYLAS_API_KEY or NYLAS_GRANT_ID is not set. Cannot invite bot.");
     return null;
   }
 
   const payload: any = {
-    meeting_url: meetLink,
-    bot_name: "Think10 AI Notetaker",
-    // No SSO — bot joins as guest, consultant admits manually
-    metadata: { bookingId },
-    recording_config: {
-      transcript: {
-        provider: {
-          recallai_streaming: {}
-        }
-      }
+    meeting_link: meetLink,
+    name: "Think10 AI Notetaker",
+    meeting_settings: {
+      summary: true,
+      action_items: true
     }
   };
 
@@ -985,19 +977,18 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
     try {
       const targetTime = new Date(joinAt).getTime();
       const now = Date.now();
-      // Only set join_at if the meeting is at least 60 seconds in the future
       if (targetTime > now + 60000) {
-        payload.join_at = new Date(targetTime).toISOString();
+        payload.join_time = Math.floor(targetTime / 1000); // Nylas expects unix timestamp in seconds
       }
     } catch (e) {
       console.warn("[Think10] Failed to parse joinAt time", e);
     }
   }
 
-  const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
+  const response = await fetch(`https://api.us.nylas.com/v3/grants/${process.env.NYLAS_GRANT_ID}/notetakers`, {
     method: "POST",
     headers: {
-      "Authorization": `Token ${process.env.RECALL_API_KEY}`,
+      "Authorization": `Bearer ${process.env.NYLAS_API_KEY}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)
@@ -1005,17 +996,18 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
 
   if (!response.ok) {
     const err = await response.text();
-    console.error("Failed to invite Recall bot:", err, "Payload:", JSON.stringify(payload));
-    throw new Error("Recall API Error: " + err);
+    console.error("Failed to invite Nylas bot:", err, "Payload:", JSON.stringify(payload));
+    throw new Error("Nylas API Error: " + err);
   }
 
-  const bot = await response.json();
+  const result = await response.json();
+  const bot = result.data;
   
   const db = await (await import('@/lib/mongodb')).getDb();
   const { ObjectId } = await import('mongodb');
   await db.collection('bookings').updateOne(
     { _id: new ObjectId(bookingId) },
-    { $set: { recallBotId: bot.id } }
+    { $set: { nylasBotId: bot.id, botStatus: 'scheduled' } }
   );
   
   return bot;
@@ -1024,37 +1016,38 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
 export const callBotNowFn = createServerFn({ method: 'POST' })
   .validator((d: { bookingId: string; meetLink: string }) => d)
   .handler(async ({ data }) => {
-    return await _scheduleRecallBot(data.bookingId, data.meetLink);
+    return await _scheduleNylasBot(data.bookingId, data.meetLink);
   });
 
-export const inviteRecallBotFn = createServerFn({ method: 'POST' })
+export const inviteNylasBotFn = createServerFn({ method: 'POST' })
   .validator((d: { bookingId: string; meetLink: string }) => d)
   .handler(async ({ data }) => {
     const token = await requireAuth();
     try {
-      return await _scheduleRecallBot(data.bookingId, data.meetLink);
+      return await _scheduleNylasBot(data.bookingId, data.meetLink);
     } catch (e) {
       console.error(e);
       throw new Error("Failed to invite bot");
     }
   });
 
-export const fetchRecallDataFn = createServerFn({ method: 'POST' })
+export const fetchNylasDataFn = createServerFn({ method: 'POST' })
   .validator((d: { bookingId: string; botId: string }) => d)
   .handler(async ({ data }) => {
     const token = await requireAuth();
-    if (!process.env.RECALL_API_KEY) return null;
+    if (!process.env.NYLAS_API_KEY || !process.env.NYLAS_GRANT_ID) return null;
 
     try {
-      const response = await fetch(`https://us-west-2.recall.ai/api/v1/bot/${data.botId}`, {
+      const response = await fetch(`https://api.us.nylas.com/v3/grants/${process.env.NYLAS_GRANT_ID}/notetakers/${data.botId}`, {
         method: "GET",
         headers: {
-          "Authorization": `Token ${process.env.RECALL_API_KEY}`
+          "Authorization": `Bearer ${process.env.NYLAS_API_KEY}`
         }
       });
       
       if (!response.ok) return null;
-      const bot = await response.json();
+      const result = await response.json();
+      const bot = result.data;
       
       const db = await getDb();
       const { ObjectId } = await import('mongodb');
@@ -1062,33 +1055,22 @@ export const fetchRecallDataFn = createServerFn({ method: 'POST' })
       const updateData: any = {};
       let hasUpdates = false;
 
-      // Extract MP4
-      if (bot.video_url) {
-        updateData.recordingUrl = bot.video_url;
+      // Extract transcript
+      if (bot.media?.transcript_url) {
+        updateData.transcriptUrl = bot.media.transcript_url;
         hasUpdates = true;
       }
       
-      // Fetch Transcript if available
-      let transcriptText = "";
-      if (bot.status === "done") {
-        const transcriptRes = await fetch(`https://us-west-2.recall.ai/api/v1/bot/${data.botId}/transcript`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Token ${process.env.RECALL_API_KEY}`
-          }
-        });
-        if (transcriptRes.ok) {
-          const tData = await transcriptRes.json();
-          // Typically returns array of words or utterances
-          if (Array.isArray(tData)) {
-            transcriptText = tData.map((utterance: any) => `${utterance.speaker}: ${utterance.text}`).join("\n");
-          } else if (tData.text) {
-             transcriptText = tData.text;
-          } else {
-             transcriptText = JSON.stringify(tData);
-          }
-          hasUpdates = true;
-        }
+      // Extract MP4
+      if (bot.media?.recording_url) {
+        updateData.recordingUrl = bot.media.recording_url;
+        hasUpdates = true;
+      }
+      
+      // Extract Summary & Action Items
+      if (bot.media?.summary) {
+        updateData.summary = bot.media.summary;
+        hasUpdates = true;
       }
 
       if (hasUpdates) {
@@ -1098,9 +1080,9 @@ export const fetchRecallDataFn = createServerFn({ method: 'POST' })
         );
       }
       
-      return { botStatus: bot.status, videoUrl: bot.video_url, transcript: transcriptText };
+      return bot;
     } catch (e) {
-      console.error(e);
+      console.error("[Think10] Failed to fetch Nylas bot data:", e);
       return null;
     }
   });

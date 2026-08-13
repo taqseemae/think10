@@ -44,7 +44,7 @@ import { Route as AdminQualityRouteImport } from './routes/admin.quality'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
-import { Route as ApiRecallWebhookRouteImport } from './routes/api.recall-webhook'
+import { Route as ApiNylasWebhookRouteImport } from './routes/api.nylas-webhook'
 import { Route as ConsultantIndexRouteImport } from './routes/consultant.index'
 import { Route as ConsultantAvailabilityRouteImport } from './routes/consultant.availability'
 import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
@@ -244,9 +244,9 @@ const AdvisoryAreasSlugRoute = AdvisoryAreasSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => AdvisoryAreasRoute,
 } as any)
-const ApiRecallWebhookRoute = ApiRecallWebhookRouteImport.update({
-  id: '/api/recall-webhook',
-  path: '/api/recall-webhook',
+const ApiNylasWebhookRoute = ApiNylasWebhookRouteImport.update({
+  id: '/api/nylas-webhook',
+  path: '/api/nylas-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConsultantIndexRoute = ConsultantIndexRouteImport.update({
@@ -396,7 +396,7 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
-  '/api/recall-webhook': typeof ApiRecallWebhookRoute
+  '/api/nylas-webhook': typeof ApiNylasWebhookRoute
   '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -453,7 +453,7 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
-  '/api/recall-webhook': typeof ApiRecallWebhookRoute
+  '/api/nylas-webhook': typeof ApiNylasWebhookRoute
   '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -514,7 +514,7 @@ export interface FileRoutesById {
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
-  '/api/recall-webhook': typeof ApiRecallWebhookRoute
+  '/api/nylas-webhook': typeof ApiNylasWebhookRoute
   '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -576,7 +576,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
-    | '/api/recall-webhook'
+    | '/api/nylas-webhook'
     | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -633,7 +633,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
-    | '/api/recall-webhook'
+    | '/api/nylas-webhook'
     | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -693,7 +693,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
-    | '/api/recall-webhook'
+    | '/api/nylas-webhook'
     | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -742,7 +742,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   ZyneRoute: typeof ZyneRoute
-  ApiRecallWebhookRoute: typeof ApiRecallWebhookRoute
+  ApiNylasWebhookRoute: typeof ApiNylasWebhookRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
 }
 
@@ -993,11 +993,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdvisoryAreasSlugRouteImport
       parentRoute: typeof AdvisoryAreasRoute
     }
-    '/api/recall-webhook': {
-      id: '/api/recall-webhook'
-      path: '/api/recall-webhook'
-      fullPath: '/api/recall-webhook'
-      preLoaderRoute: typeof ApiRecallWebhookRouteImport
+    '/api/nylas-webhook': {
+      id: '/api/nylas-webhook'
+      path: '/api/nylas-webhook'
+      fullPath: '/api/nylas-webhook'
+      preLoaderRoute: typeof ApiNylasWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consultant/': {
@@ -1305,7 +1305,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   ZyneRoute: ZyneRoute,
-  ApiRecallWebhookRoute: ApiRecallWebhookRoute,
+  ApiNylasWebhookRoute: ApiNylasWebhookRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
 }
 export const routeTree = rootRouteImport
