@@ -18,8 +18,10 @@ function ConsultantConsultations() {
   const [isFetchingData, setIsFetchingData] = useState(false);
   const [isCallingBot, setIsCallingBot] = useState(false);
 
-  // For demo, just grab the first CONFIRMED booking, or the first booking if none are confirmed
-  const activeSession = bookings.find(b => b.status === "CONFIRMED") || bookings[0];
+  // Pick the most recently created CONFIRMED booking, or the most recent overall
+  const activeSession = [...bookings]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .find(b => b.status === "CONFIRMED") || bookings[0];
 
   const handleJoinMeeting = async () => {
     // Step 1: Check if meetLink exists

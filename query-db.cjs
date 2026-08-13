@@ -2,18 +2,17 @@ const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
 async function run() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error('No MONGODB_URI in .env');
-
-  const client = new MongoClient(uri);
-  try {
-    await client.connect();
-    const db = client.db('think10'); // Assuming database name or default
-    const latestBooking = await db.collection('bookings').find({ topic: "Instant Test Meeting" }).sort({ _id: -1 }).limit(1).toArray();
-    console.log(JSON.stringify(latestBooking, null, 2));
-  } finally {
-    await client.close();
-  }
+  const client = new MongoClient(process.env.MONGO_DB);
+  await client.connect();
+  const db = client.db();
+  const bookings = await db.collection('bookings').find().sort({ createdAt: -1 }).limit(3).toArray();
+  bookings.forEach(b => {
+    console.log(`Booking: ${b.topic}`);
+    console.log(`Meet Link: ${b.meetLink}`);
+    console.log(`Bot ID: ${b.recallBotId}`);
+    console.log(`Bot Error: ${b.botError}`);
+    console.log('---');
+  });
+  await client.close();
 }
-
-run().catch(console.error);
+run();
