@@ -302,11 +302,24 @@ export const getUserBookingsFn = createServerFn({ method: 'GET' })
 
 export const getConsultantBookingsFn = createServerFn({ method: 'GET' })
   .validator((d: string) => d)
-  .handler(async ({ data: consultantId }) => {
+  .handler(async ({ data: payload }) => {
     const token = await requireAuth();
-    if (token.uid !== consultantId) throw new Error('Unauthorized');
+    // payload can be "uid" or "uid||email"
+    const [uid, email] = payload.split('||');
+    if (token.uid !== uid) throw new Error('Unauthorized');
     const db = await getDb();
-    const docs = await db.collection('bookings').find({ $or: [{ consultantId }, { expertSlug: consultantId }] }).sort({ createdAt: -1 }).toArray();
+    // Match bookings where consultant is identified by:
+    //   1. consultantEmail (most reliable - stored during booking creation)
+    //   2. consultantId === uid (legacy: used to store slug, now may store uid)
+    //   3. expertSlug === uid (legacy slug match)
+    const orConditions: any[] = [
+      { consultantId: uid },
+      { expertSlug: uid },
+    ];
+    if (email) {
+      orConditions.push({ consultantEmail: email });
+    }
+    const docs = await db.collection('bookings').find({ $or: orConditions }).sort({ createdAt: -1 }).toArray();
     return docs.map(d => {
       const { _id, ...rest } = d;
       return { ...rest, id: _id.toString(), when: d.when || new Date(d.startTime).toLocaleString() };

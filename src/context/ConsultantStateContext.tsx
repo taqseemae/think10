@@ -54,7 +54,8 @@ export const ConsultantStateProvider: React.FC<{ children: React.ReactNode }> = 
     setLoading(true);
 
     import("@/lib/server-actions").then(({ getConsultantBookingsFn }) => {
-      getConsultantBookingsFn({ data: currentUser.uid })
+      // Pass uid AND email so server can match bookings by either consultantId(slug) or consultantEmail
+      getConsultantBookingsFn({ data: `${currentUser.uid}||${currentUser.email || ''}` })
         .then((myBookings: any[]) => {
           // Unique clients
           const uniqueClientIds = new Set(myBookings.map((b: any) => b.userId).filter(Boolean));
