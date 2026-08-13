@@ -970,12 +970,7 @@ async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: 
   const payload: any = {
     meeting_url: meetLink,
     bot_name: "Think10 AI Notetaker",
-    // Use SSO login group to bypass Google Meet waiting room automatically
-    ...(process.env.RECALL_LOGIN_GROUP_ID ? {
-      google_meet: {
-        google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID,
-      }
-    } : {}),
+    // No SSO — bot joins as guest, consultant admits manually
     metadata: { bookingId },
     recording_config: {
       transcript: {
