@@ -968,6 +968,7 @@ async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: s
     meeting_link: meetLink,
     name: "Think10 AI Notetaker",
     meeting_settings: {
+      transcription: true,
       summary: true,
       action_items: true
     }
