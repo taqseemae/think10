@@ -241,7 +241,19 @@ export const createBookingFn = createServerFn({ method: 'POST' })
     const res = await db.collection('bookings').insertOne(bookingData);
     const bookingIdStr = res.insertedId.toString();
 
-    // Fireflies.ai will automatically join the Google Meet session based on the Calendar event.
+    // Schedule the Recall bot automatically
+    try {
+      if (meetLink) {
+        const isInstant = data.topic === "Instant Test Meeting";
+        await _scheduleRecallBot(bookingIdStr, meetLink, isInstant ? undefined : data.startTime);
+      }
+    } catch (e: any) {
+      console.warn('[Think10] Failed to schedule Recall bot:', e);
+      await db.collection('bookings').updateOne(
+        { _id: res.insertedId },
+        { $set: { botError: e.message || 'Unknown error' } }
+      );
+    }
     
     try {
       const { sendBookingConfirmationToUser, sendBookingNotificationToConsultant } = await import('@/lib/email');
@@ -936,113 +948,139 @@ export const deleteActionItemFn = createServerFn({ method: 'POST' })
 
 
 
-// --- Fireflies.ai Integration ---
+// --- Recall.ai Integration ---
+
+async function _scheduleRecallBot(bookingId: string, meetLink: string, joinAt?: string) {
+  if (!process.env.RECALL_API_KEY) {
+    console.warn("RECALL_API_KEY is not set. Cannot invite bot.");
+    return null;
+  }
+
+  const payload: any = {
+    meeting_url: meetLink,
+    bot_name: "Think10 AI Notetaker",
+    ...(process.env.RECALL_LOGIN_GROUP_ID ? { 
+      google_meet: { 
+        google_login_group_id: process.env.RECALL_LOGIN_GROUP_ID
+      } 
+    } : {}),
+    metadata: { bookingId },
+    recording_config: {
+      transcript: {
+        provider: {
+          recallai_streaming: {}
+        }
+      }
+    }
+  };
+
+  if (joinAt) {
+    try {
+      const targetTime = new Date(joinAt).getTime();
+      payload.join_at = new Date(targetTime).toISOString();
+    } catch (e) {
+      console.warn("[Think10] Failed to parse joinAt time, using current time", e);
+      payload.join_at = new Date().toISOString();
+    }
+  } else {
+    payload.join_at = new Date().toISOString();
+  }
+
+  const response = await fetch("https://us-west-2.recall.ai/api/v1/bot", {
+    method: "POST",
+    headers: {
+      "Authorization": `Token ${process.env.RECALL_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error("Failed to invite Recall bot:", err, "Payload:", JSON.stringify(payload));
+    throw new Error("Recall API Error: " + err);
+  }
+
+  const bot = await response.json();
+  
+  const db = await (await import('@/lib/mongodb')).getDb();
+  const { ObjectId } = await import('mongodb');
+  await db.collection('bookings').updateOne(
+    { _id: new ObjectId(bookingId) },
+    { $set: { recallBotId: bot.id } }
+  );
+  
+  return bot;
+}
 
 export const callBotNowFn = createServerFn({ method: 'POST' })
   .validator((d: { bookingId: string; meetLink: string }) => d)
   .handler(async ({ data }) => {
-    // Fireflies automatically joins meetings from the connected calendar.
-    // Manual invocation is not supported or required via their API.
-    console.log("callBotNowFn invoked: Fireflies joins automatically via Calendar integration.");
-    return { success: true, message: "Fireflies joins automatically." };
+    return await _scheduleRecallBot(data.bookingId, data.meetLink);
   });
 
-export const fetchFirefliesDataFn = createServerFn({ method: 'POST' })
-  .validator((d: { bookingId: string; title: string }) => d)
+export const inviteRecallBotFn = createServerFn({ method: 'POST' })
+  .validator((d: { bookingId: string; meetLink: string }) => d)
   .handler(async ({ data }) => {
     const token = await requireAuth();
-    if (!process.env.FIREFLIES_API_KEY) {
-      console.warn("FIREFLIES_API_KEY is not set.");
-      return null;
+    try {
+      return await _scheduleRecallBot(data.bookingId, data.meetLink);
+    } catch (e) {
+      console.error(e);
+      throw new Error("Failed to invite bot");
     }
+  });
+
+export const fetchRecallDataFn = createServerFn({ method: 'POST' })
+  .validator((d: { bookingId: string; botId: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    if (!process.env.RECALL_API_KEY) return null;
 
     try {
-      // 1. Find the meeting transcript ID by title
-      const searchRes = await fetch("https://api.fireflies.ai/graphql", {
-        method: "POST",
+      const response = await fetch(`https://us-west-2.recall.ai/api/v1/bot/${data.botId}`, {
+        method: "GET",
         headers: {
-          "Authorization": `Bearer ${process.env.FIREFLIES_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          query: `
-            query Transcripts($title: String!) {
-              transcripts(title: $title, limit: 1) {
-                id
-                title
-              }
-            }
-          `,
-          variables: { title: data.title }
-        })
+          "Authorization": `Token ${process.env.RECALL_API_KEY}`
+        }
       });
       
-      if (!searchRes.ok) {
-        console.error("Fireflies API Error:", await searchRes.text());
-        return null;
-      }
+      if (!response.ok) return null;
+      const bot = await response.json();
       
-      const searchData = await searchRes.json();
-      const transcripts = searchData?.data?.transcripts;
-      if (!transcripts || transcripts.length === 0) {
-         return null; // Meeting not found or not processed yet
-      }
-      
-      const transcriptId = transcripts[0].id;
-      
-      // 2. Fetch transcript details (video_url, sentences)
-      const detailsRes = await fetch("https://api.fireflies.ai/graphql", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.FIREFLIES_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          query: `
-            query Transcript($id: String!) {
-              transcript(id: $id) {
-                id
-                video_url
-                sentences {
-                  text
-                  speaker_name
-                }
-              }
-            }
-          `,
-          variables: { id: transcriptId }
-        })
-      });
-      
-      if (!detailsRes.ok) return null;
-      const detailsData = await detailsRes.json();
-      const transcriptObj = detailsData?.data?.transcript;
-      if (!transcriptObj) return null;
-      
-      const db = await (await import('@/lib/mongodb')).getDb();
+      const db = await getDb();
       const { ObjectId } = await import('mongodb');
       
       const updateData: any = {};
       let hasUpdates = false;
 
-      if (transcriptObj.video_url) {
-        updateData.recordingUrl = transcriptObj.video_url;
+      // Extract MP4
+      if (bot.video_url) {
+        updateData.recordingUrl = bot.video_url;
         hasUpdates = true;
       }
       
-      if (transcriptObj.sentences && transcriptObj.sentences.length > 0) {
-        const transcriptText = transcriptObj.sentences
-          .map((s: any) => `${s.speaker_name || 'Unknown'}: ${s.text}`)
-          .join('\n');
-        
-        // Use a generic summary prompt if no structured action items exist
-        const aiPrompt = `Summarize this meeting transcript and list action items:\n\n${transcriptText}`;
-        
-        updateData.report = {
-          summary: transcriptText.substring(0, 1000) + '...', // Simple fallback
-          actionItems: []
-        };
-        hasUpdates = true;
+      // Fetch Transcript if available
+      let transcriptText = "";
+      if (bot.status === "done") {
+        const transcriptRes = await fetch(`https://us-west-2.recall.ai/api/v1/bot/${data.botId}/transcript`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Token ${process.env.RECALL_API_KEY}`
+          }
+        });
+        if (transcriptRes.ok) {
+          const tData = await transcriptRes.json();
+          // Typically returns array of words or utterances
+          if (Array.isArray(tData)) {
+            transcriptText = tData.map((utterance: any) => `${utterance.speaker}: ${utterance.text}`).join("\n");
+          } else if (tData.text) {
+             transcriptText = tData.text;
+          } else {
+             transcriptText = JSON.stringify(tData);
+          }
+          hasUpdates = true;
+        }
       }
 
       if (hasUpdates) {
@@ -1052,9 +1090,9 @@ export const fetchFirefliesDataFn = createServerFn({ method: 'POST' })
         );
       }
       
-      return updateData;
+      return { botStatus: bot.status, videoUrl: bot.video_url, transcript: transcriptText };
     } catch (e) {
-      console.error("[Think10] Error fetching Fireflies data:", e);
+      console.error(e);
       return null;
     }
   });
