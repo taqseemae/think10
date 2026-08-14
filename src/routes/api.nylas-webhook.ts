@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/nylas-webhook")({
 
           const botData = event.data?.object;
           if (!botData || !botData.id) {
-            console.error("[Nylas Webhook] ❌ No bot_id found in payload");
+            console.error("[Nylas Webhook] ❌ No bot_id found in payload. Raw payload:", rawBody);
             return new Response("OK", { status: 200 });
           }
 
@@ -77,12 +77,15 @@ export const Route = createFileRoute("/api/nylas-webhook")({
           let hasUpdates = false;
 
           // Nylas events might be 'notetaker.created', 'notetaker.updated', 'notetaker.deleted', 'notetaker.media'
-          // Just extract whatever is available in the object
+          // Extract status from meeting_state, state, or status
+          const currentStatus = botData.meeting_state || botData.state || botData.status;
           
-          if (botData.status) {
-             updateData.botStatus = botData.status;
+          if (currentStatus) {
+             console.log(`[Nylas Webhook] Bot status updated to: ${currentStatus}. Full botData:`, JSON.stringify(botData));
+             updateData.botStatus = currentStatus;
              hasUpdates = true;
-             if (botData.status === 'in_waiting_room') {
+             // Some APIs use 'in_waiting_room', others use 'waiting' or 'failed_entry'
+             if (currentStatus === 'in_waiting_room' || currentStatus === 'waiting') {
                console.log("[Nylas Webhook] 🔔 Bot is in waiting room — consultant must admit it");
              }
           }
