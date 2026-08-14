@@ -29,18 +29,39 @@ export const Route = createFileRoute("/api/nylas-media/$bookingId")({
             console.error("[Nylas Media Refresh Error]", err);
             
             // Fallback to the stale URL if Nylas API fails (just in case it hasn't expired)
-            if (booking.recordingUrl) {
-                return Response.redirect(booking.recordingUrl, 302);
+            let fallbackUrl = booking.recordingUrl;
+            if (fallbackUrl && typeof fallbackUrl === 'object') {
+               fallbackUrl = fallbackUrl.url || fallbackUrl.download_url || fallbackUrl.link;
+            }
+            if (fallbackUrl && typeof fallbackUrl === 'string') {
+                return Response.redirect(fallbackUrl, 302);
             }
             return new Response("Failed to fetch fresh media from Nylas", { status: 500 });
           }
           
           const data = await response.json();
-          const freshRecordingUrl = data.data?.recording;
+          let freshRecordingUrl = data.data?.recording;
           
-          if (!freshRecordingUrl) {
+          // Handle case where data.data is an array (Nylas v3 format)
+          if (Array.isArray(data.data)) {
+             const recItem = data.data.find((item: any) => item.type === 'recording' || item.media_type === 'recording');
+             if (recItem) freshRecordingUrl = recItem.url || recItem.download_url || recItem.link;
+          }
+          
+          // Nylas might return an object { url: "..." } instead of a string
+          if (freshRecordingUrl && typeof freshRecordingUrl === 'object') {
+             freshRecordingUrl = freshRecordingUrl.url || freshRecordingUrl.download_url || freshRecordingUrl.link;
+          }
+          
+          if (!freshRecordingUrl || typeof freshRecordingUrl !== 'string') {
              // Fallback
-             if (booking.recordingUrl) return Response.redirect(booking.recordingUrl, 302);
+             let fallbackUrl = booking.recordingUrl;
+             if (fallbackUrl && typeof fallbackUrl === 'object') {
+                fallbackUrl = fallbackUrl.url || fallbackUrl.download_url || fallbackUrl.link;
+             }
+             if (fallbackUrl && typeof fallbackUrl === 'string') {
+                 return Response.redirect(fallbackUrl, 302);
+             }
              return new Response("Media not ready yet", { status: 404 });
           }
           
