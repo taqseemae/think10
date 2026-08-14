@@ -81,9 +81,14 @@ export async function createZoomMeeting(topic: string, startTime?: string, durat
   }
 
   const meetingData = await response.json();
+  let joinUrl = meetingData.join_url || '';
+  if (joinUrl.includes("zoom.us")) {
+    joinUrl = joinUrl.replace(/https:\/\/[a-z0-9]+\.zoom\.us/i, "https://zoom.us");
+  }
+
   return {
-    joinUrl: meetingData.join_url,
-    startUrl: meetingData.start_url,
+    joinUrl,
+    startUrl: meetingData.start_url || '',
     id: meetingData.id?.toString() || '',
   };
 }
