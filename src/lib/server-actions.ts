@@ -937,17 +937,7 @@ async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: s
     name: "Think10 AI Notetaker"
   };
 
-  if (joinAt) {
-    try {
-      const targetTime = new Date(joinAt).getTime();
-      const now = Date.now();
-      if (targetTime > now + 60000) {
-        payload.join_time = Math.floor(targetTime / 1000); // Nylas expects unix timestamp in seconds
-      }
-    } catch (e) {
-      console.warn("[Think10] Failed to parse joinAt time", e);
-    }
-  }
+  // Always join immediately on demand (omit join_time so Nylas dispatches instantly)
 
   const response = await fetch(`https://api.us.nylas.com/v3/grants/${process.env.NYLAS_GRANT_ID}/notetakers`, {
     method: "POST",
