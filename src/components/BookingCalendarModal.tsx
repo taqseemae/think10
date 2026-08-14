@@ -534,19 +534,19 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                   {booking ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Creating your Google Meet session...
+                      Creating your Zoom Meeting session...
                     </>
                   ) : (
                     <>
                       <Video className="h-4 w-4" />
-                      Confirm Booking & Generate Meet Link
+                      Confirm Booking & Generate Zoom Link
                     </>
                   )}
                 </button>
               </div>
             )}
             <p className="text-center text-[10px] text-[color:var(--t10-grey)]">
-              A Google Calendar invite will be sent to your email after confirmation.
+              A Zoom Meeting invite will be sent to your email after confirmation.
             </p>
           </div>
         )}
@@ -560,7 +560,7 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
             <div>
               <h3 className="text-lg font-bold text-[color:var(--t10-navy)]">Session Confirmed! 🎉</h3>
               <p className="text-xs text-[color:var(--t10-grey)] mt-1">
-                Your strategy session has been booked. A calendar invite has been sent to your email.
+                Your strategy session has been booked. A Zoom invite has been created for your session.
               </p>
             </div>
 
@@ -586,7 +586,7 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
               <div className="flex items-start gap-2 text-xs border-t border-[color:var(--t10-border)] pt-3">
                 <Video className="h-4 w-4 text-[color:var(--t10-emerald)] mt-0.5 shrink-0" />
                 <div>
-                  <span className="text-[color:var(--t10-grey)] block">Google Meet Link:</span>
+                  <span className="text-[color:var(--t10-grey)] block">Zoom Meeting Link:</span>
                   <a
                     href={bookingResult.meetLink}
                     target="_blank"
@@ -607,7 +607,7 @@ export function BookingCalendarModal({ expert, onClose, onSuccess }: BookingCale
                 className="flex items-center justify-center gap-2 rounded-lg bg-[color:var(--t10-emerald)] py-3 text-sm font-bold text-white hover:bg-[color:var(--t10-green)] transition-all shadow"
               >
                 <Video className="h-4 w-4" />
-                Open Google Meet
+                Join Zoom Meeting
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
               <button

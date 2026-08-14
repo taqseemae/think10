@@ -262,7 +262,7 @@ function Page() {
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 rounded bg-[color:var(--t10-emerald)] px-3 py-1.5 font-bold text-white hover:bg-[color:var(--t10-green)] transition-all shadow-sm"
                       >
-                        <Video className="h-3.5 w-3.5" /> Join Google Meet
+                        <Video className="h-3.5 w-3.5" /> Join Zoom Meeting
                       </a>
                     ) : (
                       <button

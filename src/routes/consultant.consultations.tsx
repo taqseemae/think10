@@ -151,15 +151,15 @@ function ConsultantConsultations() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">🔔</span>
             <div>
-              <p className="font-bold text-sm">AI Notetaker is waiting in the Google Meet lobby!</p>
-              <p className="text-xs text-orange-100">Please join your Google Meet and click <strong>"Admit"</strong> (or "Allow") to let the bot in.</p>
+              <p className="font-bold text-sm">AI Notetaker is connecting to the Zoom meeting!</p>
+              <p className="text-xs text-orange-100">Please join your Zoom call to let the session begin.</p>
             </div>
           </div>
           <button
             onClick={() => window.open(activeSession.meetLink, "_blank")}
             className="bg-white text-orange-600 font-bold text-xs px-4 py-2 rounded-lg hover:bg-orange-50 transition shrink-0"
           >
-            Open Meet & Admit →
+            Open Zoom Call →
           </button>
         </div>
       )}
@@ -168,14 +168,14 @@ function ConsultantConsultations() {
         <div className="bg-blue-600 text-white rounded-xl px-4 py-3 flex items-center justify-between shrink-0 text-sm">
           <div className="flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="font-semibold">AI Notetaker is connecting to Google Meet...</span>
+            <span className="font-semibold">AI Notetaker is connecting to Zoom...</span>
           </div>
           {activeSession.meetLink && (
             <button
               onClick={() => window.open(activeSession.meetLink, "_blank")}
               className="bg-white text-blue-700 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-50 transition shrink-0"
             >
-              Join Call Now →
+              Join Zoom Call Now →
             </button>
           )}
         </div>
@@ -184,7 +184,7 @@ function ConsultantConsultations() {
       {(activeSession.botStatus === "in_call" || activeSession.botStatus === "attending" || activeSession.botStatus === "recording_active") && (
         <div className="bg-emerald-600 text-white rounded-xl px-4 py-2 flex items-center gap-2 shrink-0 text-sm">
           <span>🎙️</span>
-          <span className="font-semibold">AI Notetaker is recording this session.</span>
+          <span className="font-semibold">AI Notetaker is recording this Zoom session.</span>
         </div>
       )}
 
@@ -192,7 +192,7 @@ function ConsultantConsultations() {
         <div className="bg-rose-600 text-white rounded-xl px-4 py-3 flex items-center justify-between shrink-0 text-sm">
           <div className="flex items-center gap-2">
             <span>⚠️</span>
-            <span>AI Notetaker could not enter the meeting lobby. Make sure you are in Google Meet first and click "Call Bot Now".</span>
+            <span>AI Notetaker could not enter the Zoom room. Click "Call Bot Now" to retry.</span>
           </div>
         </div>
       )}
@@ -219,11 +219,11 @@ function ConsultantConsultations() {
                  </div>
                  <h3 className="text-xl font-bold text-neutral-900 mb-2">Ready to join your session?</h3>
                  <p className="text-neutral-500 mb-4">
-                   You are using Google Meet for this consultation. Click the button below to join the meeting.
+                   You are using Zoom Meeting for this consultation. Click the button below to join the meeting.
                  </p>
                  <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg mb-8 flex items-start gap-2 text-left">
                    <div className="mt-0.5">ℹ️</div>
-                   <div>The <strong>Think10 AI Notetaker</strong> will join the meeting lobby shortly after you start the call. When you see it waiting, click <strong>"Admit"</strong> in Google Meet to let it in.</div>
+                   <div>The <strong>Think10 AI Notetaker</strong> will automatically join the Zoom meeting.</div>
                  </div>
                  {activeSession.meetLink ? (
                    <button 
@@ -231,7 +231,7 @@ function ConsultantConsultations() {
                      className="inline-flex items-center gap-2 bg-[color:var(--t10-emerald)] text-white px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity"
                    >
                      <Video className="w-5 h-5" />
-                     Join Google Meet
+                     Join Zoom Meeting
                    </button>
                  ) : (
                    <p className="text-red-500 font-medium">No meeting link provided.</p>

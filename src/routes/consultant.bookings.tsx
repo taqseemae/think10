@@ -145,7 +145,7 @@ function ConsultantBookings() {
                           rel="noreferrer"
                           className="text-sm font-medium text-[color:var(--t10-emerald)] hover:underline flex items-center gap-1"
                         >
-                          <Video className="w-4 h-4" /> Join Google Meet
+                          <Video className="w-4 h-4" /> Join Zoom Meeting
                         </a>
                         <Link
                           to="/consultant/consultations"

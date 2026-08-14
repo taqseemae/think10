@@ -78,7 +78,7 @@ export async function sendBookingConfirmationToUser(data: BookingEmailData): Pro
           </div>
           
           <a href="${data.googleMeetLink}" style="display: inline-block; background: #059669; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 24px;">
-            Join Google Meet →
+            Join Zoom Meeting →
           </a>
           
           <p style="color: #888; font-size: 13px;">You can also view and manage your sessions in your <a href="https://think10.ae/dashboard/sessions" style="color: #059669;">Think10 Dashboard</a>.</p>
@@ -121,7 +121,7 @@ export async function sendBookingNotificationToConsultant(data: BookingEmailData
           </div>
           
           <a href="${data.googleMeetLink}" style="display: inline-block; background: #059669; color: white; padding: 12px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-bottom: 24px;">
-            Join Google Meet →
+            Join Zoom Meeting →
           </a>
           
           <p style="color: #888; font-size: 13px;">Manage your sessions in your <a href="https://think10.ae/consultant/bookings" style="color: #059669;">Consultant Dashboard</a>.</p>
