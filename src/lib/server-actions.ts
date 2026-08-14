@@ -932,8 +932,14 @@ async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: s
     throw new Error("NYLAS_API_KEY or NYLAS_GRANT_ID is not set in environment variables.");
   }
 
+  // Normalize Zoom URLs (e.g. us05web.zoom.us -> zoom.us) for Nylas API compatibility
+  let cleanLink = meetLink;
+  if (cleanLink.includes("zoom.us")) {
+    cleanLink = cleanLink.replace(/https:\/\/[a-z0-9]+\.zoom\.us/i, "https://zoom.us");
+  }
+
   const payload: any = {
-    meeting_link: meetLink,
+    meeting_link: cleanLink,
     name: "Think10 AI Notetaker"
   };
 
