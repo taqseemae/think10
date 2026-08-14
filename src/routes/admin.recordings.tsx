@@ -10,9 +10,9 @@ export const Route = createFileRoute("/admin/recordings")({
 function AdminRecordingsPage() {
   const { bookings } = useAdminState();
   
-  // Filter only completed bookings that have a report or recording
+  // Filter bookings that have a report or recording
   const recordedSessions = bookings.filter(
-    (b: any) => b.status === "completed" && (b.report || b.recordingUrl)
+    (b: any) => b.report || b.recordingUrl
   );
 
   const downloadMeetingPDF = (booking: any) => {
@@ -108,7 +108,7 @@ function AdminRecordingsPage() {
               <div className="relative aspect-video bg-neutral-900 flex items-center justify-center border-b border-[color:var(--t10-border)]">
                 {session.recordingUrl ? (
                   <video 
-                    src={session.recordingUrl} 
+                    src={`/api/nylas-media/${session.id}`} 
                     controls 
                     className="w-full h-full object-cover"
                     preload="metadata"
@@ -164,7 +164,7 @@ function AdminRecordingsPage() {
                 <div className="grid grid-cols-2 gap-2 mt-auto">
                   {session.recordingUrl && (
                     <a
-                      href={session.recordingUrl}
+                      href={`/api/nylas-media/${session.id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="col-span-2 flex items-center justify-center gap-1.5 rounded-lg bg-[color:var(--t10-emerald)]/10 px-3 py-2 text-[11px] font-bold text-[color:var(--t10-emerald)] hover:bg-[color:var(--t10-emerald)]/20 transition-colors"
