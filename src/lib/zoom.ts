@@ -5,12 +5,12 @@
  */
 
 async function getZoomAccessToken(): Promise<string> {
-  const accountId = process.env.ZOOM_ACCOUNT_ID;
-  const clientId = process.env.ZOOM_CLIENT_ID;
-  const clientSecret = process.env.ZOOM_CLIENT_SECRET;
+  const accountId = process.env.ZOOM_ACCOUNT_ID?.trim();
+  const clientId = process.env.ZOOM_CLIENT_ID?.trim();
+  const clientSecret = process.env.ZOOM_CLIENT_SECRET?.trim();
 
   if (!accountId || !clientId || !clientSecret) {
-    throw new Error("Zoom credentials (ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET) are missing.");
+    throw new Error(`Zoom environment variables missing! Received: accountId=${!!accountId}, clientId=${!!clientId}, clientSecret=${!!clientSecret}`);
   }
 
   const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -25,31 +25,37 @@ async function getZoomAccessToken(): Promise<string> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('[Zoom Auth Error]', errorText);
-    throw new Error(`Failed to authenticate with Zoom: ${response.statusText} - ${errorText}`);
+    console.error('[Zoom Auth Error]', response.status, errorText);
+    throw new Error(`Zoom Token Error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
   return data.access_token;
 }
 
-export async function createZoomMeeting(topic: string, startTime: string, durationMinutes: number = 60): Promise<{ joinUrl: string; startUrl: string; id: string }> {
+export async function createZoomMeeting(topic: string, startTime?: string, durationMinutes: number = 60): Promise<{ joinUrl: string; startUrl: string; id: string }> {
   const token = await getZoomAccessToken();
 
+  let formattedStartTime = new Date().toISOString();
+  if (startTime) {
+    try {
+      const parsed = new Date(startTime);
+      if (!isNaN(parsed.getTime())) {
+        formattedStartTime = parsed.toISOString();
+      }
+    } catch {}
+  }
+
   const payload = {
-    topic: `Think10 Strategy Session: ${topic}`,
+    topic: `Think10 Strategy Session: ${topic || 'Consultation'}`,
     type: 2, // Scheduled meeting
-    start_time: new Date(startTime).toISOString(),
+    start_time: formattedStartTime,
     duration: durationMinutes,
-    timezone: 'Asia/Dubai',
     settings: {
       host_video: true,
       participant_video: true,
-      join_before_host: true, // Allow participant and bot to join before host
-      jbh_time: 0, // Join anytime before host
-      waiting_room: false, // Turn off waiting room so bot enters automatically without needing admission!
-      auto_recording: 'none', // Nylas AI Notetaker handles recording
-      approval_type: 2, // Automatically approve attendees
+      join_before_host: true, // Allow participants & bots to join before host
+      waiting_room: false, // Turn off waiting room so bot enters automatically!
     },
   };
 
@@ -64,8 +70,8 @@ export async function createZoomMeeting(topic: string, startTime: string, durati
 
   if (!response.ok) {
     const err = await response.text();
-    console.error('[Zoom Create Meeting Error]', err);
-    throw new Error(`Zoom Meeting Creation Failed: ${err}`);
+    console.error('[Zoom Create Meeting Error]', response.status, err);
+    throw new Error(`Zoom API Error (${response.status}): ${err}`);
   }
 
   const meetingData = await response.json();
