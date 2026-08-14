@@ -123,19 +123,6 @@ function ConsultantConsultations() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-bold">{activeSession.topic || "Strategy Session"}</h2>
-            {bookings.length > 1 && (
-              <select
-                value={activeSession.id}
-                onChange={(e) => setSelectedSessionId(e.target.value)}
-                className="bg-neutral-800 text-xs font-semibold text-white border border-neutral-700 rounded px-2.5 py-1 outline-none cursor-pointer"
-              >
-                {bookings.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.topic || "Session"} ({b.status})
-                  </option>
-                ))}
-              </select>
-            )}
           </div>
           <p className="text-neutral-400 text-sm flex items-center gap-2 mt-1">
             {activeSession.status === "COMPLETED" ? (
@@ -299,11 +286,6 @@ function ConsultantConsultations() {
               className={`flex-1 py-3 text-sm font-semibold border-b-2 ${activeTab === "Notes" ? "border-[color:var(--t10-emerald)] text-[color:var(--t10-emerald)]" : "border-transparent text-neutral-500 hover:text-neutral-700"}`}>
               Notes & AI
             </button>
-            <button 
-              onClick={() => setActiveTab("Action Plan")}
-              className={`flex-1 py-3 text-sm font-semibold border-b-2 ${activeTab === "Action Plan" ? "border-[color:var(--t10-emerald)] text-[color:var(--t10-emerald)]" : "border-transparent text-neutral-500 hover:text-neutral-700"}`}>
-              Action Plan
-            </button>
           </div>
 
           {/* Panel Content (Brief Tab) */}
@@ -357,40 +339,6 @@ function ConsultantConsultations() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 ></textarea>
-                <h3 className="font-bold text-neutral-900 mb-2">Automated Recording</h3>
-                <p className="text-xs text-neutral-500 mb-4">
-                  The AI Notetaker automatically joins at the scheduled time. If you started early, use the button below to call it now.
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleCallBotNow}
-                    disabled={isCallingBot}
-                    className="flex-1 bg-[color:var(--t10-emerald)] text-white hover:bg-[color:var(--t10-green)] rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
-                  >
-                    {isCallingBot ? <Loader2 className="w-4 h-4 animate-spin" /> : <Video className="w-4 h-4" />}
-                    Call Bot Now
-                  </button>
-                  {activeSession.nylasBotId && (
-                    <button
-                      onClick={handleFetchNylasData}
-                      disabled={isFetchingData}
-                      className="flex-1 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 rounded-lg p-3 text-sm font-medium flex justify-center items-center gap-2 transition-colors"
-                    >
-                      {isFetchingData ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                      Check Status
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activeTab === "Action Plan" && (
-              <div>
-                <h3 className="font-bold text-neutral-900 mb-4">AI Suggested Actions</h3>
-                <p className="text-xs text-neutral-500 mb-4">These will be generated automatically when you draft the post-call report.</p>
-                <div className="p-4 border border-dashed border-neutral-300 rounded-lg text-center text-neutral-400 text-sm">
-                  Waiting for session completion...
-                </div>
               </div>
             )}
           </div>

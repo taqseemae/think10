@@ -127,9 +127,9 @@ function AdminRecordingsPage() {
                   <div className="mt-2 space-y-1.5">
                     <p className="text-xs text-[color:var(--t10-grey)] flex items-center gap-1.5">
                       <span className="grid h-4 w-4 place-items-center rounded-full bg-blue-100 text-[8px] font-bold text-blue-700 shrink-0">
-                        {(session.expertName || "Advisor").split(" ").map((s: string) => s[0]).join("")}
+                        {(session.expertName || session.consultantName || "Advisor").split(" ").map((s: string) => s[0]).join("")}
                       </span>
-                      <span className="font-semibold text-neutral-600">Advisor:</span> {session.expertName}
+                      <span className="font-semibold text-neutral-600">Advisor:</span> {session.expertName || session.consultantName || "Think10 Advisor"}
                     </p>
                     {session.userName && (
                       <p className="text-xs text-[color:var(--t10-grey)] flex items-center gap-1.5">

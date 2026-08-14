@@ -78,6 +78,34 @@ export const Route = createFileRoute("/api/nylas-media/$bookingId")({
           );
           
           // 302 Redirect to the fresh video stream URL
+          if (mediaType === "transcript") {
+             const fileRes = await fetch(targetUrl);
+             if (fileRes.ok) {
+                const textContent = await fileRes.text();
+                let parsedText = textContent;
+                try {
+                   const json = JSON.parse(textContent);
+                   if (json.transcript && typeof json.transcript === "string") {
+                       parsedText = json.transcript;
+                   } else if (Array.isArray(json)) {
+                       parsedText = json.map(s => `[${s.speaker || 'Speaker'}]: ${s.text}`).join('\n');
+                   } else if (json.segments && Array.isArray(json.segments)) {
+                       parsedText = json.segments.map((s: any) => `[${s.speaker || 'Speaker'}]: ${s.text}`).join('\n');
+                   } else {
+                       parsedText = JSON.stringify(json, null, 2);
+                   }
+                } catch (e) {
+                   // Already plain text
+                }
+                return new Response(parsedText, {
+                   headers: {
+                       "Content-Type": "text/plain;charset=utf-8",
+                       "Content-Disposition": `attachment; filename="Think10_Transcript_${bookingId}.txt"`
+                   }
+                });
+             }
+          }
+
           return Response.redirect(targetUrl, 302);
           
         } catch (error) {
