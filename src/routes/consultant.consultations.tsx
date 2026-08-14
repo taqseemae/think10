@@ -18,8 +18,11 @@ function ConsultantConsultations() {
   const [isFetchingData, setIsFetchingData] = useState(false);
   const [isCallingBot, setIsCallingBot] = useState(false);
 
-  // Pick the most recently created CONFIRMED booking, or the most recent overall
-  const activeSession = [...bookings]
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+
+  // Pick selected session, or default to most recent CONFIRMED, or first booking
+  const selectedBooking = bookings.find(b => b.id === selectedSessionId);
+  const activeSession = selectedBooking || [...bookings]
     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
     .find(b => b.status === "CONFIRMED") || bookings[0];
 
@@ -33,13 +36,10 @@ function ConsultantConsultations() {
   }, [activeSession?.id, activeSession?.status]);
 
   const handleJoinMeeting = async () => {
-    // Step 1: Check if meetLink exists
     if (!activeSession?.meetLink) {
       alert("❌ No meeting link found on this booking! Please make sure a Zoom link is set.");
       return;
     }
-    
-    // Open the meeting link in a new tab
     window.open(activeSession.meetLink, "_blank");
   };
 
@@ -82,12 +82,10 @@ function ConsultantConsultations() {
     }
   };
 
-
   const handleDraftReport = async () => {
     if (!activeSession) return;
     setIsGenerating(true);
     try {
-      // First try to fetch the latest recall data to ensure we have the transcript and video
       let finalLink = activeSession.recordingUrl || "";
       let fullTranscript = notes;
 
@@ -95,9 +93,7 @@ function ConsultantConsultations() {
         const data = await fetchNylasDataFn({ data: { bookingId: activeSession.id, botId: activeSession.nylasBotId } });
         if (data?.media?.recording_url) finalLink = data.media.recording_url;
         if (data?.media?.transcript_url) {
-           // We will fetch the transcript URL contents or rely on summary if available
            let transcriptContent = data.media.summary || data.media.transcript_url;
-           // Combine bot transcript with manual notes
            fullTranscript = `Consultant Notes:\n${notes}\n\nAutomated Transcript/Summary:\n${transcriptContent}`;
         }
       }
@@ -122,13 +118,28 @@ function ConsultantConsultations() {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col gap-4">
-      {/* Top Banner */}
-      <div className="bg-neutral-900 rounded-xl p-4 flex justify-between items-center text-white shrink-0">
+      {/* Top Banner & Session Selector */}
+      <div className="bg-neutral-900 rounded-xl p-4 flex flex-wrap justify-between items-center text-white shrink-0 gap-4">
         <div>
-          <h2 className="text-lg font-bold">{activeSession.topic || "Strategy Session"}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-bold">{activeSession.topic || "Strategy Session"}</h2>
+            {bookings.length > 1 && (
+              <select
+                value={activeSession.id}
+                onChange={(e) => setSelectedSessionId(e.target.value)}
+                className="bg-neutral-800 text-xs font-semibold text-white border border-neutral-700 rounded px-2.5 py-1 outline-none cursor-pointer"
+              >
+                {bookings.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.topic || "Session"} ({b.status})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <p className="text-neutral-400 text-sm flex items-center gap-2 mt-1">
             {activeSession.status === "COMPLETED" ? (
-              <>Session Completed</>
+              <span className="text-emerald-400 font-semibold">✓ Completed Session Record</span>
             ) : (
               <>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -197,21 +208,62 @@ function ConsultantConsultations() {
         </div>
       )}
 
-
       <div className="flex-1 flex flex-col lg:flex-row gap-4 min-h-0">
         
-        {/* Main Video Area */}
+        {/* Main Video & Media Area */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          <div className="flex-1 bg-neutral-100 rounded-xl border border-neutral-200 overflow-hidden relative group flex flex-col items-center justify-center p-8 text-center">
+          <div className="flex-1 bg-neutral-100 rounded-xl border border-neutral-200 overflow-hidden relative group flex flex-col items-center justify-center p-6 text-center">
             {activeSession.status === "COMPLETED" ? (
-               activeSession.recordingUrl ? (
-                 <video src={activeSession.recordingUrl} controls className="w-full h-full object-contain bg-black" />
-               ) : (
-                 <div className="text-neutral-500 flex flex-col items-center">
-                   <Video className="w-12 h-12 mb-4 opacity-50" />
-                   <p>No recording available for this session.</p>
+               <div className="w-full h-full flex flex-col justify-between space-y-4">
+                 {activeSession.recordingUrl ? (
+                   <div className="flex-1 rounded-xl overflow-hidden bg-black relative flex items-center justify-center">
+                     <video src={activeSession.recordingUrl} controls className="w-full h-full max-h-[360px] object-contain" />
+                   </div>
+                 ) : (
+                   <div className="flex-1 text-neutral-500 flex flex-col items-center justify-center bg-white rounded-xl border border-neutral-200">
+                     <Video className="w-12 h-12 mb-3 text-neutral-400" />
+                     <p className="font-semibold text-neutral-700">Completed Session Record</p>
+                     <p className="text-xs text-neutral-400 mt-1">Recording is being processed or available in report.</p>
+                   </div>
+                 )}
+
+                 {/* Download Bar for Completed Session */}
+                 <div className="bg-white border border-neutral-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+                   <div className="flex items-center gap-2 font-bold text-neutral-800">
+                     <FileText className="w-4 h-4 text-emerald-600" />
+                     <span>Session Artifacts & Downloads</span>
+                   </div>
+                   <div className="flex gap-2">
+                     {activeSession.recordingUrl && (
+                       <a
+                         href={activeSession.recordingUrl}
+                         target="_blank"
+                         rel="noreferrer"
+                         className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition flex items-center gap-1"
+                       >
+                         Download MP4 Video
+                       </a>
+                     )}
+                     <button
+                       onClick={() => {
+                         const text = activeSession.transcript || activeSession.report?.summary || "No transcript content available.";
+                         const blob = new Blob([`Think10 Strategy Consultation Transcript\nTopic: ${activeSession.topic}\nDate: ${activeSession.when}\n\n${text}`], { type: "text/plain;charset=utf-8" });
+                         const url = URL.createObjectURL(blob);
+                         const a = document.createElement("a");
+                         a.href = url;
+                         a.download = `Think10_Transcript_${activeSession.id}.txt`;
+                         document.body.appendChild(a);
+                         a.click();
+                         document.body.removeChild(a);
+                         URL.revokeObjectURL(url);
+                       }}
+                       className="px-3 py-1.5 bg-neutral-900 text-white rounded-lg font-bold hover:bg-neutral-800 transition flex items-center gap-1"
+                     >
+                       Download TXT Transcript
+                     </button>
+                   </div>
                  </div>
-               )
+               </div>
             ) : (
                  <div className="max-w-md">
                  <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -223,7 +275,7 @@ function ConsultantConsultations() {
                  </p>
                  <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm p-3 rounded-lg mb-8 flex items-start gap-2 text-left">
                    <div className="mt-0.5">ℹ️</div>
-                   <div>The <strong>Think10 AI Notetaker</strong> will automatically join the Zoom meeting.</div>
+                   <div>The <strong>Think10Bot</strong> will automatically join the Zoom meeting.</div>
                  </div>
                  {activeSession.meetLink ? (
                    <button 

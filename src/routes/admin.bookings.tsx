@@ -341,24 +341,57 @@ function BookingsAdminPage() {
                   </ul>
                 </div>
 
-                {/* Media options */}
+                {/* Media & Downloads options */}
                 {selectedReportBooking.recordingUrl && (
                   <div className="mt-4 border-t border-[color:var(--t10-border)] pt-4 space-y-3">
-                    <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
-                      <Video className="h-4 w-4 text-[color:var(--t10-emerald)]" /> Session Recording
-                    </span>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[color:var(--t10-navy)] uppercase tracking-wider text-[10px] flex items-center gap-1">
+                        <Video className="h-4 w-4 text-[color:var(--t10-emerald)]" /> HD Session Recording
+                      </span>
+                      <a
+                        href={selectedReportBooking.recordingUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] font-bold text-[color:var(--t10-emerald)] hover:underline flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" /> Download MP4 Video
+                      </a>
+                    </div>
                     <div className="rounded-xl overflow-hidden bg-black border border-neutral-800">
                       <video 
                         src={selectedReportBooking.recordingUrl} 
                         controls 
-                        className="w-full h-auto max-h-[300px] object-contain"
+                        className="w-full h-auto max-h-[280px] object-contain"
                       />
                     </div>
                   </div>
                 )}
-                <div className="flex gap-4 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold text-[color:var(--t10-navy)]">
-                  <button onClick={() => downloadMeetingPDF(selectedReportBooking)} className="flex items-center gap-2 rounded bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 hover:bg-neutral-300 w-full justify-center">
-                    <Download className="h-4 w-4" /> Export Report Details (.pdf)
+
+                {/* Download Options */}
+                <div className="grid grid-cols-2 gap-3 border-t border-[color:var(--t10-border)] pt-4 text-xs font-semibold">
+                  <button
+                    onClick={() => downloadMeetingPDF(selectedReportBooking)}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-[color:var(--t10-navy)] px-4 py-2.5 text-xs font-bold text-white hover:bg-neutral-800 transition-colors shadow-sm cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" /> Download PDF Report
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const text = selectedReportBooking.transcript || selectedReportBooking.report?.summary || "No transcript available.";
+                      const blob = new Blob([`Think10 Strategy Session Transcript\nTopic: ${selectedReportBooking.topic}\nAdvisor: ${selectedReportBooking.expertName}\nDate: ${selectedReportBooking.when}\n\n=== TRANSCRIPT ===\n${text}`], { type: "text/plain;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `Think10_Transcript_${selectedReportBooking.id}.txt`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center justify-center gap-2 rounded-lg border border-[color:var(--t10-border)] bg-neutral-100 px-4 py-2.5 text-xs font-bold text-[color:var(--t10-navy)] hover:bg-neutral-200 transition-colors cursor-pointer"
+                  >
+                    <FileText className="h-4 w-4" /> Download TXT Transcript
                   </button>
                 </div>
               </div>
