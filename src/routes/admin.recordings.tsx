@@ -16,7 +16,10 @@ function AdminRecordingsPage() {
   );
 
   const downloadMeetingPDF = (booking: any) => {
-    if (!booking.report) return;
+    if (!booking.report) {
+      alert("The AI Strategy Report (PDF) is not generated yet for this session. The consultant needs to complete their review first.");
+      return;
+    }
     const doc = new jsPDF();
     let yPos = 20;
     
@@ -64,18 +67,7 @@ function AdminRecordingsPage() {
     doc.save(`Think10_Report_${booking.id}.pdf`);
   };
 
-  const downloadTranscript = (booking: any) => {
-    const text = booking.transcript || booking.report?.summary || "No transcript available.";
-    const blob = new Blob([`Think10 Strategy Session Transcript\nTopic: ${booking.topic}\nAdvisor: ${booking.expertName || "Advisor"}\nDate: ${booking.when}\n\n=== TRANSCRIPT ===\n${text}`], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Think10_Transcript_${booking.id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  // downloadTranscript removed: using Nylas media API directly now
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -173,21 +165,33 @@ function AdminRecordingsPage() {
                     </a>
                   )}
                   
-                  <button
-                    onClick={() => downloadMeetingPDF(session)}
-                    className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-white px-2 py-2 text-[11px] font-bold text-[color:var(--t10-navy)] hover:bg-neutral-50 transition-colors"
-                    title="Download Report (PDF)"
-                  >
-                    <Download className="h-3.5 w-3.5" /> PDF
-                  </button>
+                  {session.report ? (
+                    <button
+                      onClick={() => downloadMeetingPDF(session)}
+                      className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-white px-2 py-2 text-[11px] font-bold text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-lightgrey)] transition-colors"
+                      title="Download Report (PDF)"
+                    >
+                      <Download className="h-3.5 w-3.5" /> Report PDF
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => downloadMeetingPDF(session)}
+                      className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-neutral-50 px-2 py-2 text-[11px] font-bold text-neutral-400 hover:bg-neutral-100 transition-colors"
+                      title="Report Not Ready"
+                    >
+                      <Download className="h-3.5 w-3.5" /> Report PDF
+                    </button>
+                  )}
                   
-                  <button
-                    onClick={() => downloadTranscript(session)}
-                    className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-white px-2 py-2 text-[11px] font-bold text-[color:var(--t10-navy)] hover:bg-neutral-50 transition-colors"
-                    title="Download Transcript (TXT)"
+                  <a
+                    href={`/api/nylas-media/${session.id}?type=transcript`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-white px-2 py-2 text-[11px] font-bold text-[color:var(--t10-navy)] hover:bg-[color:var(--t10-lightgrey)] transition-colors"
+                    title="Download Transcript (TXT/JSON)"
                   >
-                    <FileText className="h-3.5 w-3.5" /> TXT
-                  </button>
+                    <FileText className="h-3.5 w-3.5" /> Transcript
+                  </a>
                 </div>
               </div>
             </div>
