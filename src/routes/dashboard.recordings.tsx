@@ -1,0 +1,191 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useDashboardState, type BookingSession } from "@/context/DashboardStateContext";
+import { Video, Download, FileText, Calendar, BookOpen, AlertCircle, PlayCircle } from "lucide-react";
+import { jsPDF } from "jspdf";
+
+export const Route = createFileRoute("/dashboard/recordings")({
+  component: DashboardRecordingsPage,
+});
+
+function DashboardRecordingsPage() {
+  const { bookings } = useDashboardState();
+  
+  // Filter only completed bookings that have a report or recording
+  const recordedSessions = bookings.filter(
+    (b) => b.status === "completed" && (b.report || b.recordingUrl)
+  );
+
+  const downloadMeetingPDF = (booking: BookingSession) => {
+    if (!booking.report) return;
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    doc.setFontSize(20);
+    doc.text(`Think10 Strategy Session Report`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(14);
+    doc.text(`Topic: ${booking.topic}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Consultant: ${booking.expertName}`, 20, yPos);
+    yPos += 10;
+    doc.text(`Date: ${booking.when}`, 20, yPos);
+    yPos += 15;
+    
+    doc.setFontSize(16);
+    doc.text(`Executive Summary`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    const splitSummary = doc.splitTextToSize(booking.report.summary || "", 170);
+    doc.text(splitSummary, 20, yPos);
+    yPos += (splitSummary.length * 7) + 10;
+    
+    doc.setFontSize(16);
+    doc.text(`Recommendations`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.recommendations?.forEach((rec: string, idx: number) => {
+      const splitRec = doc.splitTextToSize(`${idx + 1}. ${rec}`, 170);
+      doc.text(splitRec, 20, yPos);
+      yPos += (splitRec.length * 7) + 5;
+    });
+    yPos += 5;
+    
+    doc.setFontSize(16);
+    doc.text(`Action Items`, 20, yPos);
+    yPos += 10;
+    doc.setFontSize(12);
+    booking.report.actionItems?.forEach((act: string, idx: number) => {
+      const splitAct = doc.splitTextToSize(`[ ] ${act}`, 170);
+      doc.text(splitAct, 20, yPos);
+      yPos += (splitAct.length * 7) + 5;
+    });
+    
+    doc.save(`Think10_Report_${booking.id}.pdf`);
+  };
+
+  const downloadTranscript = (booking: BookingSession) => {
+    const text = booking.transcript || booking.report?.summary || "No transcript available.";
+    const blob = new Blob([`Think10 Strategy Session Transcript\nTopic: ${booking.topic}\nAdvisor: ${booking.expertName}\nDate: ${booking.when}\n\n=== TRANSCRIPT ===\n${text}`], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Think10_Transcript_${booking.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-[color:var(--t10-navy)] flex items-center gap-2">
+            <Video className="h-6 w-6 text-[color:var(--t10-emerald)]" />
+            Recordings & Transcripts
+          </h2>
+          <p className="text-sm text-neutral-500 mt-1">Access HD video recordings, AI-generated reports, and transcripts from your past advisory sessions.</p>
+        </div>
+      </div>
+
+      {recordedSessions.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-neutral-300 bg-white p-12 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100">
+            <Video className="h-8 w-8 text-neutral-400" />
+          </div>
+          <h3 className="mt-4 text-lg font-bold text-neutral-900">No Recordings Yet</h3>
+          <p className="mt-2 text-sm text-neutral-500 max-w-md mx-auto">
+            Once you complete a strategy session with an advisor, the HD recording and AI transcript will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {recordedSessions.map((session) => (
+            <div key={session.id} className="rounded-2xl border border-[color:var(--t10-border)] bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
+              
+              {/* Video Thumbnail Area */}
+              <div className="relative aspect-video bg-neutral-900 flex items-center justify-center border-b border-[color:var(--t10-border)]">
+                {session.recordingUrl ? (
+                  <video 
+                    src={session.recordingUrl} 
+                    controls 
+                    className="w-full h-full object-cover"
+                    preload="metadata"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center space-y-2 text-neutral-500">
+                    <Video className="h-8 w-8 opacity-50" />
+                    <span className="text-xs font-semibold uppercase tracking-wider">Audio / Report Only</span>
+                  </div>
+                )}
+                
+                {/* Overlay Badges */}
+                <div className="absolute top-3 left-3 flex gap-2">
+                  <span className="rounded bg-black/60 backdrop-blur-sm px-2 py-1 text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-1">
+                    <Calendar className="h-3 w-3" /> {session.when}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card Content */}
+              <div className="p-5 flex-1 flex flex-col">
+                <div className="mb-4">
+                  <h3 className="font-bold text-[color:var(--t10-navy)] line-clamp-1" title={session.topic}>{session.topic}</h3>
+                  <p className="text-xs text-[color:var(--t10-grey)] mt-1 flex items-center gap-1.5">
+                    <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-600 text-[9px] font-bold text-white shrink-0">
+                      {(session.expertName || "Advisor").split(" ").map((s) => s[0]).join("")}
+                    </span>
+                    Advisor: {session.expertName}
+                  </p>
+                </div>
+
+                {/* AI Summary Snippet */}
+                {session.report?.summary && (
+                  <div className="rounded-lg bg-[color:var(--t10-offwhite)] p-3 mb-4 flex-1">
+                    <p className="text-[10px] font-bold text-[color:var(--t10-grey)] uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <BookOpen className="h-3 w-3" /> Executive Summary
+                    </p>
+                    <p className="text-xs text-[color:var(--t10-navy)] line-clamp-3 leading-relaxed">
+                      {session.report.summary}
+                    </p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-2 mt-auto">
+                  {session.recordingUrl && (
+                    <a
+                      href={session.recordingUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="col-span-2 flex items-center justify-center gap-1.5 rounded-lg bg-[color:var(--t10-emerald)]/10 px-3 py-2 text-[11px] font-bold text-[color:var(--t10-emerald)] hover:bg-[color:var(--t10-emerald)]/20 transition-colors"
+                    >
+                      <PlayCircle className="h-4 w-4" /> Open Full Video
+                    </a>
+                  )}
+                  
+                  <button
+                    onClick={() => downloadMeetingPDF(session)}
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-white px-2 py-2 text-[11px] font-bold text-[color:var(--t10-navy)] hover:bg-neutral-50 transition-colors"
+                    title="Download Report (PDF)"
+                  >
+                    <Download className="h-3.5 w-3.5" /> PDF
+                  </button>
+                  
+                  <button
+                    onClick={() => downloadTranscript(session)}
+                    className="flex items-center justify-center gap-1.5 rounded-lg border border-[color:var(--t10-border)] bg-white px-2 py-2 text-[11px] font-bold text-[color:var(--t10-navy)] hover:bg-neutral-50 transition-colors"
+                    title="Download Transcript (TXT)"
+                  >
+                    <FileText className="h-3.5 w-3.5" /> TXT
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

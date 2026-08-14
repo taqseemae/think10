@@ -22,6 +22,7 @@ import {
   EyeOff,
   RefreshCw,
   UserCog,
+  Video,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -74,6 +75,7 @@ function AdminLayout() {
     { to: "/admin/customers", icon: Users, label: "Customers" },
     { to: "/admin/consultants", icon: Briefcase, label: "Consultants" },
     { to: "/admin/bookings", icon: CalendarCheck, label: "Bookings & Delivery" },
+    { to: "/admin/recordings", icon: Video, label: "Recordings" },
     { to: "/admin/finance", icon: CircleDollarSign, label: "Revenue & Finance" },
     { to: "/admin/quality", icon: ShieldAlert, label: "Quality, Risk & Support" },
     { to: "/admin/crm", icon: Building2, label: "Enterprise CRM" },
