@@ -213,7 +213,7 @@ function ConsultantConsultations() {
         {/* Main Video & Media Area */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <div className="flex-1 bg-neutral-100 rounded-xl border border-neutral-200 overflow-hidden relative group flex flex-col items-center justify-center p-6 text-center">
-            {activeSession.status === "COMPLETED" ? (
+            {activeSession.status === "COMPLETED" || activeSession.recordingUrl ? (
                <div className="w-full h-full flex flex-col justify-between space-y-4">
                  {activeSession.recordingUrl ? (
                    <div className="flex-1 rounded-xl overflow-hidden bg-black relative flex items-center justify-center">
