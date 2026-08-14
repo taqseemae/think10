@@ -62,6 +62,7 @@ export async function createZoomMeeting(topic: string, startTime?: string, durat
       jbh_time: 0, // Join anytime
       waiting_room: false, // Disables waiting room completely!
       mute_upon_entry: false,
+      auto_recording: 'cloud', // Natively record to Zoom Cloud automatically!
     },
   };
 
