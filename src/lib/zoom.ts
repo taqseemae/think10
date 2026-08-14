@@ -46,16 +46,22 @@ export async function createZoomMeeting(topic: string, startTime?: string, durat
     } catch {}
   }
 
+  // Generate a 6-digit passcode so Zoom does NOT force Waiting Room ON
+  const passcode = Math.floor(100000 + Math.random() * 900000).toString();
+
   const payload = {
     topic: `Think10 Strategy Session: ${topic || 'Consultation'}`,
     type: 2, // Scheduled meeting
     start_time: formattedStartTime,
     duration: durationMinutes,
+    password: passcode, // Passcode satisfies Zoom security policy so waiting_room: false is respected!
     settings: {
       host_video: true,
       participant_video: true,
       join_before_host: true, // Allow participants & bots to join before host
-      waiting_room: false, // Turn off waiting room so bot enters automatically!
+      jbh_time: 0, // Join anytime
+      waiting_room: false, // Disables waiting room completely!
+      mute_upon_entry: false,
     },
   };
 
