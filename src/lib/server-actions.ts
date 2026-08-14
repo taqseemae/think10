@@ -928,8 +928,8 @@ export const deleteActionItemFn = createServerFn({ method: 'POST' })
 
 async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: string) {
   if (!process.env.NYLAS_API_KEY || !process.env.NYLAS_GRANT_ID) {
-    console.warn("NYLAS_API_KEY or NYLAS_GRANT_ID is not set. Cannot invite bot.");
-    return null;
+    console.error("[Nylas Bot Error] NYLAS_API_KEY or NYLAS_GRANT_ID is not set in environment variables.");
+    throw new Error("NYLAS_API_KEY or NYLAS_GRANT_ID is not set in environment variables.");
   }
 
   const payload: any = {
