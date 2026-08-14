@@ -145,14 +145,14 @@ function ConsultantConsultations() {
         )}
       </div>
 
-      {/* Bot Waiting Room Alert — shown when bot is pending admission */}
-      {activeSession.botStatus === "in_waiting_room" && activeSession.meetLink && (
+      {/* Bot Status Banners */}
+      {(activeSession.botStatus === "in_waiting_room" || activeSession.botStatus === "waiting_for_entry" || activeSession.botStatus === "waiting") && activeSession.meetLink && (
         <div className="bg-orange-500 text-white rounded-xl p-4 flex items-center justify-between shrink-0 animate-pulse">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🔔</span>
             <div>
-              <p className="font-bold text-sm">AI Notetaker is waiting in the lobby!</p>
-              <p className="text-xs text-orange-100">Open your Google Meet and click <strong>"Admit"</strong> to let the bot join.</p>
+              <p className="font-bold text-sm">AI Notetaker is waiting in the Google Meet lobby!</p>
+              <p className="text-xs text-orange-100">Please join your Google Meet and click <strong>"Admit"</strong> (or "Allow") to let the bot in.</p>
             </div>
           </div>
           <button
@@ -164,10 +164,36 @@ function ConsultantConsultations() {
         </div>
       )}
 
-      {activeSession.botStatus === "in_call" && (
+      {(activeSession.botStatus === "connecting" || activeSession.botStatus === "dispatched") && (
+        <div className="bg-blue-600 text-white rounded-xl px-4 py-3 flex items-center justify-between shrink-0 text-sm">
+          <div className="flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="font-semibold">AI Notetaker is connecting to Google Meet...</span>
+          </div>
+          {activeSession.meetLink && (
+            <button
+              onClick={() => window.open(activeSession.meetLink, "_blank")}
+              className="bg-white text-blue-700 font-bold text-xs px-3 py-1.5 rounded-lg hover:bg-blue-50 transition shrink-0"
+            >
+              Join Call Now →
+            </button>
+          )}
+        </div>
+      )}
+
+      {(activeSession.botStatus === "in_call" || activeSession.botStatus === "attending" || activeSession.botStatus === "recording_active") && (
         <div className="bg-emerald-600 text-white rounded-xl px-4 py-2 flex items-center gap-2 shrink-0 text-sm">
           <span>🎙️</span>
           <span className="font-semibold">AI Notetaker is recording this session.</span>
+        </div>
+      )}
+
+      {(activeSession.botStatus === "failed_entry" || activeSession.botStatus === "kicked") && (
+        <div className="bg-rose-600 text-white rounded-xl px-4 py-3 flex items-center justify-between shrink-0 text-sm">
+          <div className="flex items-center gap-2">
+            <span>⚠️</span>
+            <span>AI Notetaker could not enter the meeting lobby. Make sure you are in Google Meet first and click "Call Bot Now".</span>
+          </div>
         </div>
       )}
 
