@@ -122,21 +122,23 @@ function AdminRecordingsPage() {
 
               {/* Card Content */}
               <div className="p-5 flex-1 flex flex-col">
-                <div className="mb-4">
+                <div className="mb-4 border-b border-neutral-100 pb-3">
                   <h3 className="font-bold text-[color:var(--t10-navy)] line-clamp-1" title={session.topic}>{session.topic}</h3>
-                  <div className="flex flex-col gap-1 mt-2 text-xs text-[color:var(--t10-grey)]">
-                    <p className="flex items-center gap-1.5">
-                      <span className="grid h-4 w-4 place-items-center rounded-full bg-blue-600 text-[8px] font-bold text-white shrink-0">
-                        {(session.expertName || "A").split(" ").map((s: string) => s[0]).join("")}
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-xs text-[color:var(--t10-grey)] flex items-center gap-1.5">
+                      <span className="grid h-4 w-4 place-items-center rounded-full bg-blue-100 text-[8px] font-bold text-blue-700 shrink-0">
+                        {(session.expertName || "Advisor").split(" ").map((s: string) => s[0]).join("")}
                       </span>
-                      <span className="font-semibold text-neutral-700">Expert:</span> {session.expertName || "Advisor"}
+                      <span className="font-semibold text-neutral-600">Advisor:</span> {session.expertName}
                     </p>
-                    <p className="flex items-center gap-1.5">
-                      <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-600 text-[8px] font-bold text-white shrink-0">
-                        <User className="h-2 w-2" />
-                      </span>
-                      <span className="font-semibold text-neutral-700">Client:</span> {session.userId || "Client"}
-                    </p>
+                    {session.userName && (
+                      <p className="text-xs text-[color:var(--t10-grey)] flex items-center gap-1.5">
+                        <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-100 text-[8px] font-bold text-emerald-700 shrink-0">
+                          {session.userName.split(" ").map((s: string) => s[0]).join("")}
+                        </span>
+                        <span className="font-semibold text-neutral-600">Client:</span> {session.userName}
+                      </p>
+                    )}
                   </div>
                 </div>
 

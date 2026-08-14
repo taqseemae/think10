@@ -85,6 +85,8 @@ export type SessionReport = {
 export type BookingSession = {
   id: string;
   userId?: string;
+  userName?: string;
+  userEmail?: string;
   expertSlug: string;
   expertName: string;
   expertRole: string;

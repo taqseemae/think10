@@ -217,7 +217,7 @@ function ConsultantConsultations() {
                <div className="w-full h-full flex flex-col justify-between space-y-4">
                  {activeSession.recordingUrl ? (
                    <div className="flex-1 rounded-xl overflow-hidden bg-black relative flex items-center justify-center">
-                     <video src={activeSession.recordingUrl} controls className="w-full h-full max-h-[360px] object-contain" />
+                     <video src={`/api/nylas-media/${activeSession.id}`} controls className="w-full h-full max-h-[360px] object-contain" />
                    </div>
                  ) : (
                    <div className="flex-1 text-neutral-500 flex flex-col items-center justify-center bg-white rounded-xl border border-neutral-200">
@@ -236,7 +236,7 @@ function ConsultantConsultations() {
                    <div className="flex gap-2">
                      {activeSession.recordingUrl && (
                        <a
-                         href={activeSession.recordingUrl}
+                         href={`/api/nylas-media/${activeSession.id}`}
                          target="_blank"
                          rel="noreferrer"
                          className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 transition flex items-center gap-1"
@@ -244,23 +244,14 @@ function ConsultantConsultations() {
                          Download MP4 Video
                        </a>
                      )}
-                     <button
-                       onClick={() => {
-                         const text = activeSession.transcript || activeSession.report?.summary || "No transcript content available.";
-                         const blob = new Blob([`Think10 Strategy Consultation Transcript\nTopic: ${activeSession.topic}\nDate: ${activeSession.when}\n\n${text}`], { type: "text/plain;charset=utf-8" });
-                         const url = URL.createObjectURL(blob);
-                         const a = document.createElement("a");
-                         a.href = url;
-                         a.download = `Think10_Transcript_${activeSession.id}.txt`;
-                         document.body.appendChild(a);
-                         a.click();
-                         document.body.removeChild(a);
-                         URL.revokeObjectURL(url);
-                       }}
+                     <a
+                       href={`/api/nylas-media/${activeSession.id}?type=transcript`}
+                       target="_blank"
+                       rel="noreferrer"
                        className="px-3 py-1.5 bg-neutral-900 text-white rounded-lg font-bold hover:bg-neutral-800 transition flex items-center gap-1"
                      >
                        Download TXT Transcript
-                     </button>
+                     </a>
                    </div>
                  </div>
                </div>
@@ -321,6 +312,10 @@ function ConsultantConsultations() {
               <>
                 <h3 className="font-bold text-neutral-900 mb-4">Customer Context</h3>
                 <div className="space-y-6 text-sm">
+                  <div>
+                    <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Client</h4>
+                    <p className="text-neutral-800 font-medium">{activeSession.userName || activeSession.userEmail || "Platform Client"}</p>
+                  </div>
                   <div>
                     <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Topic</h4>
                     <p className="text-neutral-800">{activeSession.topic}</p>

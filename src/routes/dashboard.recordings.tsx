@@ -121,14 +121,24 @@ function DashboardRecordingsPage() {
 
               {/* Card Content */}
               <div className="p-5 flex-1 flex flex-col">
-                <div className="mb-4">
+                <div className="mb-4 border-b border-neutral-100 pb-3">
                   <h3 className="font-bold text-[color:var(--t10-navy)] line-clamp-1" title={session.topic}>{session.topic}</h3>
-                  <p className="text-xs text-[color:var(--t10-grey)] mt-1 flex items-center gap-1.5">
-                    <span className="grid h-5 w-5 place-items-center rounded-full bg-blue-600 text-[9px] font-bold text-white shrink-0">
-                      {(session.expertName || "Advisor").split(" ").map((s) => s[0]).join("")}
-                    </span>
-                    Advisor: {session.expertName}
-                  </p>
+                  <div className="mt-2 space-y-1.5">
+                    <p className="text-xs text-[color:var(--t10-grey)] flex items-center gap-1.5">
+                      <span className="grid h-4 w-4 place-items-center rounded-full bg-blue-100 text-[8px] font-bold text-blue-700 shrink-0">
+                        {(session.expertName || "Advisor").split(" ").map((s) => s[0]).join("")}
+                      </span>
+                      <span className="font-semibold text-neutral-600">Advisor:</span> {session.expertName}
+                    </p>
+                    {session.userName && (
+                      <p className="text-xs text-[color:var(--t10-grey)] flex items-center gap-1.5">
+                        <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-100 text-[8px] font-bold text-emerald-700 shrink-0">
+                          {session.userName.split(" ").map((s) => s[0]).join("")}
+                        </span>
+                        <span className="font-semibold text-neutral-600">Client:</span> {session.userName}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* AI Summary Snippet */}
