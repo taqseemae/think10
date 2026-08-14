@@ -940,7 +940,7 @@ async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: s
 
   const payload: any = {
     meeting_link: cleanLink,
-    name: "Think10 AI Notetaker"
+    name: "Think10Bot"
   };
 
   // Always join immediately on demand (omit join_time so Nylas dispatches instantly)

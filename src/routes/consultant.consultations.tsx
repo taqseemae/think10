@@ -35,7 +35,7 @@ function ConsultantConsultations() {
   const handleJoinMeeting = async () => {
     // Step 1: Check if meetLink exists
     if (!activeSession?.meetLink) {
-      alert("❌ No meeting link found on this booking! Please make sure a Google Meet link is set.");
+      alert("❌ No meeting link found on this booking! Please make sure a Zoom link is set.");
       return;
     }
     
