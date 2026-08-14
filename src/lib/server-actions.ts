@@ -181,48 +181,63 @@ export const createBookingFn = createServerFn({ method: 'POST' })
 
     let meetLink = '';
     let googleEventId = '';
-    
-    try {
-      const { getCalendarClient } = await import('@/lib/google-auth');
-      const calendar = await getCalendarClient();
-      const attendees = [
-        { email: data.userEmail, displayName: data.userName },
-        { email: data.consultantEmail, displayName: data.consultantName },
-      ];
-      
-      const botEmail = process.env.NYLAS_BOT_EMAIL || 'info@taqseem.ae';
-      attendees.push({ email: botEmail, displayName: 'Think10 Bot' });
 
-      const event = await calendar.events.insert({
-        calendarId: 'primary',
-        conferenceDataVersion: 1,
-        sendUpdates: 'all',
-        requestBody: {
-          summary: `Think10 Strategy Session: ${data.topic}`,
-          description: `Strategy session between ${data.userName} and ${data.consultantName}\nTopic: ${data.topic}`,
-          start: { dateTime: data.startTime, timeZone: data.timezone },
-          end: { dateTime: data.endTime, timeZone: data.timezone },
-          attendees,
-          guestsCanModify: true,
-          guestsCanInviteOthers: true,
-          conferenceData: {
-            createRequest: {
-              requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-              conferenceSolutionKey: { type: 'hangoutsMeet' },
+    // First try Zoom if Zoom environment variables are configured
+    if (process.env.ZOOM_CLIENT_ID && process.env.ZOOM_CLIENT_SECRET && process.env.ZOOM_ACCOUNT_ID) {
+      try {
+        const { createZoomMeeting } = await import('@/lib/zoom');
+        const zoomMeeting = await createZoomMeeting(data.topic, data.startTime);
+        meetLink = zoomMeeting.joinUrl;
+        console.log('[Think10] Successfully generated Zoom meeting link:', meetLink);
+      } catch (zoomError: any) {
+        console.warn('[Think10] Zoom API failed, falling back to Google Meet:', zoomError?.message);
+      }
+    }
+    
+    // Fallback to Google Meet if Zoom was not configured or failed
+    if (!meetLink) {
+      try {
+        const { getCalendarClient } = await import('@/lib/google-auth');
+        const calendar = await getCalendarClient();
+        const attendees = [
+          { email: data.userEmail, displayName: data.userName },
+          { email: data.consultantEmail, displayName: data.consultantName },
+        ];
+        
+        const botEmail = process.env.NYLAS_BOT_EMAIL || 'info@taqseem.ae';
+        attendees.push({ email: botEmail, displayName: 'Think10 Bot' });
+
+        const event = await calendar.events.insert({
+          calendarId: 'primary',
+          conferenceDataVersion: 1,
+          sendUpdates: 'all',
+          requestBody: {
+            summary: `Think10 Strategy Session: ${data.topic}`,
+            description: `Strategy session between ${data.userName} and ${data.consultantName}\nTopic: ${data.topic}`,
+            start: { dateTime: data.startTime, timeZone: data.timezone },
+            end: { dateTime: data.endTime, timeZone: data.timezone },
+            attendees,
+            guestsCanModify: true,
+            guestsCanInviteOthers: true,
+            conferenceData: {
+              createRequest: {
+                requestId: `t10-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+                conferenceSolutionKey: { type: 'hangoutsMeet' },
+              },
             },
           },
-        },
-      });
-      googleEventId = event.data.id || '';
-      const meetEntry = event.data.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video');
-      meetLink = meetEntry?.uri || event.data.hangoutLink || '';
-      
-      if (!meetLink) {
-        throw new Error('Google Calendar did not generate a Meet link. Please ensure your Workspace account supports Meet generation.');
+        });
+        googleEventId = event.data.id || '';
+        const meetEntry = event.data.conferenceData?.entryPoints?.find((ep: any) => ep.entryPointType === 'video');
+        meetLink = meetEntry?.uri || event.data.hangoutLink || '';
+        
+        if (!meetLink) {
+          throw new Error('Google Calendar did not generate a Meet link. Please ensure your Workspace account supports Meet generation.');
+        }
+      } catch (calendarError: any) {
+        console.warn('[Think10] Google Calendar API error:', calendarError?.message);
+        throw new Error(`Meeting link generation failed: ${calendarError?.message}. Please check Zoom or Google settings.`);
       }
-    } catch (calendarError: any) {
-      console.warn('[Think10] Google Calendar API error:', calendarError?.message);
-      throw new Error(`Google Meet generation failed: ${calendarError?.message}. Please ensure Google Account is connected in Admin.`);
     }
 
     const bookingData = {
