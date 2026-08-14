@@ -966,14 +966,7 @@ async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: s
 
   const payload: any = {
     meeting_link: meetLink,
-    name: "Think10 AI Notetaker",
-    meeting_settings: {
-      video_recording: true,
-      audio_recording: true,
-      transcription: true,
-      summary: true,
-      action_items: true
-    }
+    name: "Think10 AI Notetaker"
   };
 
   if (joinAt) {
@@ -1059,14 +1052,14 @@ export const fetchNylasDataFn = createServerFn({ method: 'POST' })
       let hasUpdates = false;
 
       // Extract transcript
-      if (bot.media?.transcript_url) {
-        updateData.transcriptUrl = bot.media.transcript_url;
+      if (bot.media?.transcript) {
+        updateData.transcriptUrl = bot.media.transcript;
         hasUpdates = true;
       }
       
       // Extract MP4
-      if (bot.media?.recording_url) {
-        updateData.recordingUrl = bot.media.recording_url;
+      if (bot.media?.recording) {
+        updateData.recordingUrl = bot.media.recording;
         hasUpdates = true;
       }
       

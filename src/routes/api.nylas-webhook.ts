@@ -88,12 +88,12 @@ export const Route = createFileRoute("/api/nylas-webhook")({
           }
 
           if (botData.media) {
-            if (botData.media.recording_url) {
-              updateData.recordingUrl = botData.media.recording_url;
+            if (botData.media.recording) {
+              updateData.recordingUrl = botData.media.recording;
               hasUpdates = true;
             }
-            if (botData.media.transcript_url) {
-              updateData.transcriptUrl = botData.media.transcript_url;
+            if (botData.media.transcript) {
+              updateData.transcriptUrl = botData.media.transcript;
               hasUpdates = true;
             }
             if (botData.media.summary) {
