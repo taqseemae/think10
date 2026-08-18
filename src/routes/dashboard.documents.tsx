@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useDashboardState, type LibraryDocument } from "@/context/DashboardStateContext";
+import { uploadFileAction } from "@/lib/server-actions";
 import { EXPERTS } from "@/data/think10";
 import { useState } from "react";
 import {
@@ -37,40 +38,52 @@ function Page() {
     setUploadProgress(20);
     setUploadError("");
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
     try {
-      const backendUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
-      const res = await fetch(`${backendUrl}/api/upload-file`, {
-        method: "POST",
-        body: formData,
-      });
-      setUploadProgress(60);
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      setUploadProgress(100);
+      const reader = new FileReader();
+      reader.readAsDataURL(selectedFile);
       
-      setTimeout(() => {
-        uploadDocument(
-          docName.endsWith(".pdf") || docName.endsWith(".xlsx") || docName.includes(".") ? docName : `${docName}.pdf`,
-          `${Math.round(data.size / 1024)} KB`,
-          docCategory,
-          data.url
-        );
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string;
+          setUploadProgress(60);
+          
+          const data = await uploadFileAction({ data: { fileName: selectedFile.name, base64Data } });
+          setUploadProgress(100);
+          
+          setTimeout(() => {
+            uploadDocument(
+              docName.endsWith(".pdf") || docName.endsWith(".xlsx") || docName.includes(".") ? docName : `${docName}.pdf`,
+              `${Math.round(data.size / 1024)} KB`,
+              docCategory,
+              data.url
+            );
+            setIsUploading(false);
+            setUploadProgress(0);
+            setDocName("");
+            setSelectedFile(null);
+            setShowUploadModal(false);
+          }, 300);
+        } catch (err: any) {
+          console.error(err);
+          setUploadError(err.message || "Failed to upload document. Please try again.");
+          setIsUploading(false);
+          setUploadProgress(0);
+        }
+      };
+      
+      reader.onerror = () => {
+        setUploadError("Failed to read file.");
         setIsUploading(false);
         setUploadProgress(0);
-        setDocName("");
-        setSelectedFile(null);
-        setShowUploadModal(false);
-      }, 300);
+      };
     } catch (err: any) {
       console.error(err);
-      setUploadError(err.message || "Failed to upload document. Please try again.");
+      setUploadError(err.message || "Failed to process document.");
       setIsUploading(false);
       setUploadProgress(0);
     }
   };
+
 
   return (
     <div className="rounded-2xl border border-[color:var(--t10-border)] bg-white p-6 shadow-sm space-y-6 animate-fade-in">

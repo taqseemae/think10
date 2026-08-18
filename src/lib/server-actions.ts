@@ -3,6 +3,8 @@ import { getDb } from '@/lib/mongodb';
 import { requireAuth, requireAdmin, requireConsultant } from './auth-server';
 import type { BookingSession, SupportTicket, BusinessProfile, HealthScores } from '@/context/DashboardStateContext';
 import type { AdminRole } from '@/context/AdminStateContext';
+import fs from 'fs';
+import path from 'path';
 
 export type UserDocument = {
   id?: string;
@@ -442,6 +444,46 @@ export const getUserTicketsFn = createServerFn({ method: 'GET' })
       const { _id, ...rest } = d;
       return { ...rest, id: _id.toString() };
     }) as unknown as SupportTicket[];
+  });
+
+export const deleteSupportTicketAction = createServerFn({ method: 'POST' })
+  .validator((d: { ticketId: string }) => d)
+  .handler(async ({ data }) => {
+    requireAdmin();
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    await db.collection('supportTickets').deleteOne({ _id: new ObjectId(data.ticketId) });
+    return { success: true };
+  });
+
+// ─── FILE UPLOAD ────────────────────────────────────────────────────────────────
+
+import fs from 'fs';
+import path from 'path';
+
+export const uploadFileAction = createServerFn({ method: 'POST' })
+  .validator((d: { fileName: string; base64Data: string }) => d)
+  .handler(async ({ data }) => {
+    try {
+      const { fileName, base64Data } = data;
+      
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const uniqueFileName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const filePath = path.join(uploadDir, uniqueFileName);
+      
+      const base64DataClean = base64Data.replace(/^data:([a-zA-Z0-9+\/.-]+);base64,/, "");
+      
+      fs.writeFileSync(filePath, Buffer.from(base64DataClean, 'base64'));
+      
+      return { url: `/uploads/${uniqueFileName}`, size: Buffer.byteLength(base64DataClean, 'base64') };
+    } catch (e: any) {
+      console.error("Upload File Action Error:", e);
+      throw new Error(e.message || "Failed to upload file");
+    }
   });
 
 export const updateSupportTicketStatusFn = createServerFn({ method: 'POST' })

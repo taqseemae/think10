@@ -80,21 +80,21 @@ export function ConsultantProfile() {
   };
 
   const uploadFileToBackend = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-      const backendUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
-      const res = await fetch(`${backendUrl}/api/upload-file`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) throw new Error("Upload failed");
-      const data = await res.json();
-      return data.url;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
+    return new Promise<string | null>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = async () => {
+        try {
+          const { uploadFileAction } = await import("@/lib/server-actions");
+          const base64Data = reader.result as string;
+          const data = await uploadFileAction({ data: { fileName: file.name, base64Data } });
+          resolve(data.url);
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = (err) => reject(err);
+    });
   };
 
   const handleCvFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
