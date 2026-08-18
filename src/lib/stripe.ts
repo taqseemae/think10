@@ -1,4 +1,7 @@
 import Stripe from 'stripe';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder';
 
