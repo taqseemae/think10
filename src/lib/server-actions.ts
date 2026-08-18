@@ -1153,7 +1153,7 @@ export const fetchNylasDataFn = createServerFn({ method: 'POST' })
 // --- Library Documents ---
 export const getLibraryDocumentsFn = createServerFn({ method: 'GET' })
   .handler(async () => {
-    const { token } = await requireAuth();
+    const token = await requireAuth();
     const db = await getDb();
     const docs = await db.collection('libraryDocuments').find({ userId: token.uid }).sort({ uploadedAt: -1 }).toArray();
     return docs.map(d => {
@@ -1165,7 +1165,7 @@ export const getLibraryDocumentsFn = createServerFn({ method: 'GET' })
 export const saveLibraryDocumentFn = createServerFn({ method: 'POST' })
   .validator((d: { name: string; size: string; type: string; url?: string }) => d)
   .handler(async ({ data }) => {
-    const { token } = await requireAuth();
+    const token = await requireAuth();
     const db = await getDb();
     const newDoc = {
       userId: token.uid,
@@ -1183,7 +1183,7 @@ export const saveLibraryDocumentFn = createServerFn({ method: 'POST' })
 export const deleteLibraryDocumentFn = createServerFn({ method: 'POST' })
   .validator((d: { id: string }) => d)
   .handler(async ({ data }) => {
-    const { token } = await requireAuth();
+    const token = await requireAuth();
     const db = await getDb();
     const { ObjectId } = await import('mongodb');
     await db.collection('libraryDocuments').deleteOne({ _id: new ObjectId(data.id), userId: token.uid });
@@ -1193,7 +1193,7 @@ export const deleteLibraryDocumentFn = createServerFn({ method: 'POST' })
 export const toggleLibraryDocumentShareFn = createServerFn({ method: 'POST' })
   .validator((d: { id: string; expertSlug: string }) => d)
   .handler(async ({ data }) => {
-    const { token } = await requireAuth();
+    const token = await requireAuth();
     const db = await getDb();
     const { ObjectId } = await import('mongodb');
     
