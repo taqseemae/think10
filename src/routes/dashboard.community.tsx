@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useDashboardState } from "@/context/DashboardStateContext";
-import { EXPERTS } from "@/data/think10";
+import { getPublicConsultantsFn } from "@/lib/server-actions";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   MessageSquare,
@@ -39,6 +40,11 @@ function CommunityPage() {
   } = useDashboardState();
 
   const [activeTab, setActiveTab] = useState<"BOARD" | "EVENTS" | "SUPPORT" | "PRIVACY">("BOARD");
+
+  const { data: experts = [] } = useQuery({
+    queryKey: ["public-consultants"],
+    queryFn: () => getPublicConsultantsFn()
+  });
 
   // Local posting states
   const [boardTopic, setBoardTopic] = useState("Launch");
@@ -268,13 +274,13 @@ function CommunityPage() {
               <p className="text-[10px] text-neutral-400 italic">No connection privileges.</p>
             ) : (
               <div className="space-y-3">
-                {EXPERTS.map((exp) => {
+                {experts.map((exp: any) => {
                   const conn = connections[exp.slug] || "CONNECT";
                   return (
                     <div key={exp.slug} className="flex items-center justify-between gap-2 text-[10px]">
                       <div className="min-w-0">
                         <p className="font-bold truncate">{exp.name}</p>
-                        <p className="text-neutral-400 truncate">{exp.role}</p>
+                        <p className="text-neutral-400 truncate">{exp.role || "Consultant"}</p>
                       </div>
                       <button
                         onClick={() => toggleConnection(exp.slug)}
@@ -285,6 +291,9 @@ function CommunityPage() {
                     </div>
                   );
                 })}
+                {experts.length === 0 && (
+                  <p className="text-xs text-neutral-500 py-4 italic">No approved consultants found.</p>
+                )}
               </div>
             )}
           </div>

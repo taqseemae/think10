@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useDashboardState, type LibraryDocument } from "@/context/DashboardStateContext";
-import { uploadFileAction } from "@/lib/server-actions";
-import { EXPERTS } from "@/data/think10";
+import { uploadFileAction, getPublicConsultantsFn } from "@/lib/server-actions";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import {
   FileText,
@@ -23,6 +23,11 @@ function Page() {
   const [docName, setDocName] = useState("");
   const [docCategory, setDocCategory] = useState<LibraryDocument["type"]>("Finance");
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  const { data: experts = [] } = useQuery({
+    queryKey: ["public-consultants"],
+    queryFn: () => getPublicConsultantsFn()
+  });
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState("");
@@ -148,7 +153,7 @@ function Page() {
                       <span className="text-[10px] text-neutral-400 italic">Private (No access)</span>
                     ) : (
                       doc.sharedWith.map((slug) => {
-                        const exp = EXPERTS.find((e) => e.slug === slug);
+                        const exp = experts.find((e: any) => e.slug === slug);
                         return exp ? (
                           <span
                             key={slug}
@@ -312,13 +317,13 @@ function Page() {
               </p>
 
               <div className="divide-y divide-[color:var(--t10-border)]">
-                {EXPERTS.map((exp) => {
+                {experts.map((exp: any) => {
                   const isShared = activeShareDoc.sharedWith.includes(exp.slug);
                   return (
                     <label key={exp.slug} className="flex items-center justify-between py-2.5 cursor-pointer select-none">
                       <div className="space-y-0.5">
                         <span className="font-bold text-[color:var(--t10-navy)]">{exp.name}</span>
-                        <span className="block text-[10px] text-neutral-400">{exp.role}</span>
+                        <span className="block text-[10px] text-neutral-400">{exp.role || "Consultant"}</span>
                       </div>
                       <input
                         type="checkbox"
@@ -329,6 +334,9 @@ function Page() {
                     </label>
                   );
                 })}
+                {experts.length === 0 && (
+                  <p className="text-xs text-neutral-500 py-4 italic">No approved consultants found.</p>
+                )}
               </div>
             </div>
           </div>
