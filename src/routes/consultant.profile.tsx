@@ -60,13 +60,6 @@ export function ConsultantProfile() {
   const [expLetterFileName, setExpLetterFileName] = useState<string | null>(null);
   const [expLetterUrl, setExpLetterUrl] = useState<string | null>(null);
 
-  const [uploadingState, setUploadingState] = useState<{ [key: string]: boolean }>({
-    cv: false,
-    cert: false,
-    emiratesId: false,
-    expLetter: false,
-  });
-
   const [saving, setSaving] = useState(false);
   const [aiCompiling, setAiCompiling] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -90,7 +83,7 @@ export function ConsultantProfile() {
     const formData = new FormData();
     formData.append("file", file);
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const backendUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
       const res = await fetch(`${backendUrl}/api/upload-file`, {
         method: "POST",
         body: formData,
@@ -107,52 +100,36 @@ export function ConsultantProfile() {
   const handleCvFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadingState(prev => ({ ...prev, cv: true }));
+      setCvFileName(file.name);
       const url = await uploadFileToBackend(file);
-      if (url) {
-        setCvFileName(file.name);
-        setCvUrl(url);
-      }
-      setUploadingState(prev => ({ ...prev, cv: false }));
+      if (url) setCvUrl(url);
     }
   };
 
   const handleCertFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadingState(prev => ({ ...prev, cert: true }));
+      setCertFileName(file.name);
       const url = await uploadFileToBackend(file);
-      if (url) {
-        setCertFileName(file.name);
-        setCertUrl(url);
-      }
-      setUploadingState(prev => ({ ...prev, cert: false }));
+      if (url) setCertUrl(url);
     }
   };
 
   const handleEmiratesIdFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadingState(prev => ({ ...prev, emiratesId: true }));
+      setEmiratesIdFileName(file.name);
       const url = await uploadFileToBackend(file);
-      if (url) {
-        setEmiratesIdFileName(file.name);
-        setEmiratesIdUrl(url);
-      }
-      setUploadingState(prev => ({ ...prev, emiratesId: false }));
+      if (url) setEmiratesIdUrl(url);
     }
   };
 
   const handleExpLetterFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadingState(prev => ({ ...prev, expLetter: true }));
+      setExpLetterFileName(file.name);
       const url = await uploadFileToBackend(file);
-      if (url) {
-        setExpLetterFileName(file.name);
-        setExpLetterUrl(url);
-      }
-      setUploadingState(prev => ({ ...prev, expLetter: false }));
+      if (url) setExpLetterUrl(url);
     }
   };
 
@@ -484,10 +461,6 @@ export function ConsultantProfile() {
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                     <Check className="h-3 w-3" /> {cvFileName}
                   </span>
-                ) : uploadingState.cv ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 text-xs font-bold cursor-wait">
-                    Uploading...
-                  </span>
                 ) : (
                   <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--t10-navy)] text-white text-xs font-bold cursor-pointer hover:bg-neutral-800 transition-colors">
                     <Upload className="h-3.5 w-3.5" /> Upload CV
@@ -507,10 +480,6 @@ export function ConsultantProfile() {
                 {certFileName ? (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                     <Check className="h-3 w-3" /> {certFileName}
-                  </span>
-                ) : uploadingState.cert ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 text-xs font-bold cursor-wait">
-                    Uploading...
                   </span>
                 ) : (
                   <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--t10-emerald)] text-white text-xs font-bold cursor-pointer hover:bg-[color:var(--t10-green)] transition-colors">
@@ -532,10 +501,6 @@ export function ConsultantProfile() {
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                     <Check className="h-3 w-3" /> {emiratesIdFileName}
                   </span>
-                ) : uploadingState.emiratesId ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 text-xs font-bold cursor-wait">
-                    Uploading...
-                  </span>
                 ) : (
                   <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 text-white text-xs font-bold cursor-pointer hover:bg-orange-700 transition-colors">
                     <Upload className="h-3.5 w-3.5" /> Upload ID
@@ -555,10 +520,6 @@ export function ConsultantProfile() {
                 {expLetterFileName ? (
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
                     <Check className="h-3 w-3" /> {expLetterFileName}
-                  </span>
-                ) : uploadingState.expLetter ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-200 text-neutral-600 text-xs font-bold cursor-wait">
-                    Uploading...
                   </span>
                 ) : (
                   <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--t10-navy)] text-white text-xs font-bold cursor-pointer hover:bg-neutral-800 transition-colors">

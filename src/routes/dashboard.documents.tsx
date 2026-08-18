@@ -24,6 +24,7 @@ function Page() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState("");
 
   // Sharing controls dropdown target
   const [activeShareDoc, setActiveShareDoc] = useState<LibraryDocument | null>(null);
@@ -34,12 +35,13 @@ function Page() {
 
     setIsUploading(true);
     setUploadProgress(20);
+    setUploadError("");
 
     const formData = new FormData();
     formData.append("file", selectedFile);
 
     try {
-      const backendUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      const backendUrl = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
       const res = await fetch(`${backendUrl}/api/upload-file`, {
         method: "POST",
         body: formData,
@@ -62,8 +64,9 @@ function Page() {
         setSelectedFile(null);
         setShowUploadModal(false);
       }, 300);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setUploadError(err.message || "Failed to upload document. Please try again.");
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -235,6 +238,12 @@ function Page() {
                   <option value="General">General Context</option>
                 </select>
               </label>
+
+              {uploadError && (
+                <div className="rounded-md bg-red-50 p-3 text-[11px] font-semibold text-red-600 border border-red-200">
+                  {uploadError}
+                </div>
+              )}
 
               {isUploading && (
                 <div className="space-y-1">
