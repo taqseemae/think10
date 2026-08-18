@@ -458,8 +458,6 @@ export const deleteSupportTicketAction = createServerFn({ method: 'POST' })
 
 // ─── FILE UPLOAD ────────────────────────────────────────────────────────────────
 
-import fs from 'fs';
-import path from 'path';
 
 export const uploadFileAction = createServerFn({ method: 'POST' })
   .validator((d: { fileName: string; base64Data: string }) => d)

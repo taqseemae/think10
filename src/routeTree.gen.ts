@@ -46,6 +46,7 @@ import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
 import { Route as ApiNylasWebhookRouteImport } from './routes/api.nylas-webhook'
+import { Route as ApiStripeWebhookRouteImport } from './routes/api.stripe-webhook'
 import { Route as ConsultantIndexRouteImport } from './routes/consultant.index'
 import { Route as ConsultantAvailabilityRouteImport } from './routes/consultant.availability'
 import { Route as ConsultantBookingsRouteImport } from './routes/consultant.bookings'
@@ -257,6 +258,11 @@ const ApiNylasWebhookRoute = ApiNylasWebhookRouteImport.update({
   path: '/api/nylas-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiStripeWebhookRoute = ApiStripeWebhookRouteImport.update({
+  id: '/api/stripe-webhook',
+  path: '/api/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConsultantIndexRoute = ConsultantIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -416,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/api/nylas-webhook': typeof ApiNylasWebhookRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -476,6 +483,7 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/api/nylas-webhook': typeof ApiNylasWebhookRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -540,6 +548,7 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
   '/api/nylas-webhook': typeof ApiNylasWebhookRoute
+  '/api/stripe-webhook': typeof ApiStripeWebhookRoute
   '/consultant/availability': typeof ConsultantAvailabilityRoute
   '/consultant/bookings': typeof ConsultantBookingsRoute
   '/consultant/clients': typeof ConsultantClientsRoute
@@ -605,6 +614,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/advisory-areas/$slug'
     | '/api/nylas-webhook'
+    | '/api/stripe-webhook'
     | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -665,6 +675,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/advisory-areas/$slug'
     | '/api/nylas-webhook'
+    | '/api/stripe-webhook'
     | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -728,6 +739,7 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/advisory-areas/$slug'
     | '/api/nylas-webhook'
+    | '/api/stripe-webhook'
     | '/consultant/availability'
     | '/consultant/bookings'
     | '/consultant/clients'
@@ -779,6 +791,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ZyneRoute: typeof ZyneRoute
   ApiNylasWebhookRoute: typeof ApiNylasWebhookRoute
+  ApiStripeWebhookRoute: typeof ApiStripeWebhookRoute
   ApiNylasMediaBookingIdRoute: typeof ApiNylasMediaBookingIdRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
 }
@@ -1042,6 +1055,13 @@ declare module '@tanstack/react-router' {
       path: '/api/nylas-webhook'
       fullPath: '/api/nylas-webhook'
       preLoaderRoute: typeof ApiNylasWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stripe-webhook': {
+      id: '/api/stripe-webhook'
+      path: '/api/stripe-webhook'
+      fullPath: '/api/stripe-webhook'
+      preLoaderRoute: typeof ApiStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/consultant/': {
@@ -1368,6 +1388,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ZyneRoute: ZyneRoute,
   ApiNylasWebhookRoute: ApiNylasWebhookRoute,
+  ApiStripeWebhookRoute: ApiStripeWebhookRoute,
   ApiNylasMediaBookingIdRoute: ApiNylasMediaBookingIdRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
 }
