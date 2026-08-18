@@ -1149,3 +1149,67 @@ export const fetchNylasDataFn = createServerFn({ method: 'POST' })
       return null;
     }
   });
+
+// --- Library Documents ---
+export const getLibraryDocumentsFn = createServerFn({ method: 'GET' })
+  .handler(async () => {
+    const { token } = await requireAuth();
+    const db = await getDb();
+    const docs = await db.collection('libraryDocuments').find({ userId: token.uid }).sort({ uploadedAt: -1 }).toArray();
+    return docs.map(d => {
+      const { _id, ...rest } = d;
+      return { ...rest, id: _id.toString() };
+    });
+  });
+
+export const saveLibraryDocumentFn = createServerFn({ method: 'POST' })
+  .validator((d: { name: string; size: string; type: string; url?: string }) => d)
+  .handler(async ({ data }) => {
+    const { token } = await requireAuth();
+    const db = await getDb();
+    const newDoc = {
+      userId: token.uid,
+      name: data.name,
+      size: data.size,
+      type: data.type,
+      uploadedAt: new Date().toISOString(),
+      sharedWith: [],
+      url: data.url
+    };
+    const res = await db.collection('libraryDocuments').insertOne(newDoc);
+    return { ...newDoc, id: res.insertedId.toString() };
+  });
+
+export const deleteLibraryDocumentFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: string }) => d)
+  .handler(async ({ data }) => {
+    const { token } = await requireAuth();
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    await db.collection('libraryDocuments').deleteOne({ _id: new ObjectId(data.id), userId: token.uid });
+    return { success: true };
+  });
+
+export const toggleLibraryDocumentShareFn = createServerFn({ method: 'POST' })
+  .validator((d: { id: string; expertSlug: string }) => d)
+  .handler(async ({ data }) => {
+    const { token } = await requireAuth();
+    const db = await getDb();
+    const { ObjectId } = await import('mongodb');
+    
+    const doc = await db.collection('libraryDocuments').findOne({ _id: new ObjectId(data.id), userId: token.uid });
+    if (!doc) throw new Error("Document not found");
+    
+    let newSharedWith = doc.sharedWith || [];
+    if (newSharedWith.includes(data.expertSlug)) {
+      newSharedWith = newSharedWith.filter((s: string) => s !== data.expertSlug);
+    } else {
+      newSharedWith.push(data.expertSlug);
+    }
+    
+    await db.collection('libraryDocuments').updateOne(
+      { _id: new ObjectId(data.id) },
+      { $set: { sharedWith: newSharedWith } }
+    );
+    return { success: true, sharedWith: newSharedWith };
+  });

@@ -526,6 +526,20 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Documents
   const [documents, setDocuments] = useState<LibraryDocument[]>([]);
+  const [documentsLoaded, setDocumentsLoaded] = useState(false);
+
+  useEffect(() => {
+    if (currentUser?.uid && !documentsLoaded) {
+      import("@/lib/server-actions").then(({ getLibraryDocumentsFn }) => {
+        getLibraryDocumentsFn()
+          .then((docs) => {
+            setDocuments(docs as LibraryDocument[]);
+            setDocumentsLoaded(true);
+          })
+          .catch(console.error);
+      });
+    }
+  }, [currentUser?.uid, documentsLoaded]);
 
   // Community Posts
   const [posts, setPosts] = useState<CommunityPost[]>([]);
@@ -1148,26 +1162,26 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Documents functions
   const uploadDocument = (name: string, size: string, type: LibraryDocument["type"], url?: string) => {
-    const newDoc: LibraryDocument = {
-      id: "doc_" + Math.random().toString(36).substr(2, 9),
-      name,
-      size,
-      type,
-      uploadedAt: new Date().toISOString(),
-      sharedWith: [],
-      url,
-    };
-    setDocuments((prev) => [newDoc, ...prev]);
-    setFloatingAlert({
-      id: "doc_up_" + Date.now(),
-      type: "success",
-      message: `'${name}' successfully uploaded to library. Zyne now has access.`,
-      dismissible: true,
+    import("@/lib/server-actions").then(({ saveLibraryDocumentFn }) => {
+      saveLibraryDocumentFn({ data: { name, size, type, url } })
+        .then((newDoc) => {
+          setDocuments((prev) => [newDoc as LibraryDocument, ...prev]);
+          setFloatingAlert({
+            id: "doc_up_" + Date.now(),
+            type: "success",
+            message: `'${name}' successfully uploaded to library. Zyne now has access.`,
+            dismissible: true,
+          });
+        })
+        .catch(console.error);
     });
   };
 
   const deleteDocument = (id: string) => {
     setDocuments((prev) => prev.filter((d) => d.id !== id));
+    import("@/lib/server-actions").then(({ deleteLibraryDocumentFn }) => {
+      deleteLibraryDocumentFn({ data: { id } }).catch(console.error);
+    });
   };
 
   const toggleDocumentShare = (docId: string, expertSlug: string) => {
@@ -1180,6 +1194,10 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
         return { ...d, sharedWith: shared };
       })
     );
+    
+    import("@/lib/server-actions").then(({ toggleLibraryDocumentShareFn }) => {
+      toggleLibraryDocumentShareFn({ data: { id: docId, expertSlug } }).catch(console.error);
+    });
   };
 
   // Community Forum functions
