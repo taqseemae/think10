@@ -41,6 +41,7 @@ import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminGoogleConnectRouteImport } from './routes/admin.google-connect'
 import { Route as AdminGrowthRouteImport } from './routes/admin.growth'
 import { Route as AdminQualityRouteImport } from './routes/admin.quality'
+import { Route as AdminRecordingsRouteImport } from './routes/admin.recordings'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdvisoryAreasSlugRouteImport } from './routes/advisory-areas.$slug'
@@ -61,11 +62,13 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard.billing
 import { Route as DashboardBusinessProfileRouteImport } from './routes/dashboard.business-profile'
 import { Route as DashboardCommunityRouteImport } from './routes/dashboard.community'
 import { Route as DashboardDocumentsRouteImport } from './routes/dashboard.documents'
+import { Route as DashboardRecordingsRouteImport } from './routes/dashboard.recordings'
 import { Route as DashboardSessionsRouteImport } from './routes/dashboard.sessions'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 import { Route as DashboardZyneRouteImport } from './routes/dashboard.zyne'
 import { Route as ExpertsSlugRouteImport } from './routes/experts.$slug'
 import { Route as ResourcesSlugRouteImport } from './routes/resources.$slug'
+import { Route as ApiNylasMediaBookingIdRouteImport } from './routes/api.nylas-media.$bookingId'
 import { Route as AuthGoogleCallbackRouteImport } from './routes/auth.google.callback'
 
 const IndexRoute = IndexRouteImport.update({
@@ -229,6 +232,11 @@ const AdminQualityRoute = AdminQualityRouteImport.update({
   path: '/quality',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRecordingsRoute = AdminRecordingsRouteImport.update({
+  id: '/recordings',
+  path: '/recordings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -330,6 +338,11 @@ const DashboardDocumentsRoute = DashboardDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardRecordingsRoute = DashboardRecordingsRouteImport.update({
+  id: '/recordings',
+  path: '/recordings',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
   id: '/sessions',
   path: '/sessions',
@@ -354,6 +367,11 @@ const ResourcesSlugRoute = ResourcesSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
   getParentRoute: () => ResourcesRoute,
+} as any)
+const ApiNylasMediaBookingIdRoute = ApiNylasMediaBookingIdRouteImport.update({
+  id: '/api/nylas-media/$bookingId',
+  path: '/api/nylas-media/$bookingId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthGoogleCallbackRoute = AuthGoogleCallbackRouteImport.update({
   id: '/auth/google/callback',
@@ -393,6 +411,7 @@ export interface FileRoutesByFullPath {
   '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
+  '/admin/recordings': typeof AdminRecordingsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
@@ -411,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
+  '/dashboard/recordings': typeof DashboardRecordingsRoute
   '/dashboard/sessions': typeof DashboardSessionsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/zyne': typeof DashboardZyneRoute
@@ -419,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/consultant/': typeof ConsultantIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/nylas-media/$bookingId': typeof ApiNylasMediaBookingIdRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -450,6 +471,7 @@ export interface FileRoutesByTo {
   '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
+  '/admin/recordings': typeof AdminRecordingsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
@@ -468,6 +490,7 @@ export interface FileRoutesByTo {
   '/dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
+  '/dashboard/recordings': typeof DashboardRecordingsRoute
   '/dashboard/sessions': typeof DashboardSessionsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/zyne': typeof DashboardZyneRoute
@@ -476,6 +499,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/consultant': typeof ConsultantIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/api/nylas-media/$bookingId': typeof ApiNylasMediaBookingIdRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRoutesById {
@@ -511,6 +535,7 @@ export interface FileRoutesById {
   '/admin/google-connect': typeof AdminGoogleConnectRoute
   '/admin/growth': typeof AdminGrowthRoute
   '/admin/quality': typeof AdminQualityRoute
+  '/admin/recordings': typeof AdminRecordingsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/users': typeof AdminUsersRoute
   '/advisory-areas/$slug': typeof AdvisoryAreasSlugRoute
@@ -529,6 +554,7 @@ export interface FileRoutesById {
   '/dashboard/business-profile': typeof DashboardBusinessProfileRoute
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/documents': typeof DashboardDocumentsRoute
+  '/dashboard/recordings': typeof DashboardRecordingsRoute
   '/dashboard/sessions': typeof DashboardSessionsRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/zyne': typeof DashboardZyneRoute
@@ -537,6 +563,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/consultant/': typeof ConsultantIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/api/nylas-media/$bookingId': typeof ApiNylasMediaBookingIdRoute
   '/auth/google/callback': typeof AuthGoogleCallbackRoute
 }
 export interface FileRouteTypes {
@@ -573,6 +600,7 @@ export interface FileRouteTypes {
     | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
+    | '/admin/recordings'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
@@ -591,6 +619,7 @@ export interface FileRouteTypes {
     | '/dashboard/business-profile'
     | '/dashboard/community'
     | '/dashboard/documents'
+    | '/dashboard/recordings'
     | '/dashboard/sessions'
     | '/dashboard/settings'
     | '/dashboard/zyne'
@@ -599,6 +628,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/consultant/'
     | '/dashboard/'
+    | '/api/nylas-media/$bookingId'
     | '/auth/google/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -630,6 +660,7 @@ export interface FileRouteTypes {
     | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
+    | '/admin/recordings'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
@@ -648,6 +679,7 @@ export interface FileRouteTypes {
     | '/dashboard/business-profile'
     | '/dashboard/community'
     | '/dashboard/documents'
+    | '/dashboard/recordings'
     | '/dashboard/sessions'
     | '/dashboard/settings'
     | '/dashboard/zyne'
@@ -656,6 +688,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/consultant'
     | '/dashboard'
+    | '/api/nylas-media/$bookingId'
     | '/auth/google/callback'
   id:
     | '__root__'
@@ -690,6 +723,7 @@ export interface FileRouteTypes {
     | '/admin/google-connect'
     | '/admin/growth'
     | '/admin/quality'
+    | '/admin/recordings'
     | '/admin/settings'
     | '/admin/users'
     | '/advisory-areas/$slug'
@@ -708,6 +742,7 @@ export interface FileRouteTypes {
     | '/dashboard/business-profile'
     | '/dashboard/community'
     | '/dashboard/documents'
+    | '/dashboard/recordings'
     | '/dashboard/sessions'
     | '/dashboard/settings'
     | '/dashboard/zyne'
@@ -716,6 +751,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/consultant/'
     | '/dashboard/'
+    | '/api/nylas-media/$bookingId'
     | '/auth/google/callback'
   fileRoutesById: FileRoutesById
 }
@@ -743,6 +779,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ZyneRoute: typeof ZyneRoute
   ApiNylasWebhookRoute: typeof ApiNylasWebhookRoute
+  ApiNylasMediaBookingIdRoute: typeof ApiNylasMediaBookingIdRoute
   AuthGoogleCallbackRoute: typeof AuthGoogleCallbackRoute
 }
 
@@ -972,6 +1009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQualityRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/recordings': {
+      id: '/admin/recordings'
+      path: '/recordings'
+      fullPath: '/admin/recordings'
+      preLoaderRoute: typeof AdminRecordingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/settings': {
       id: '/admin/settings'
       path: '/settings'
@@ -1112,6 +1156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDocumentsRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/recordings': {
+      id: '/dashboard/recordings'
+      path: '/recordings'
+      fullPath: '/dashboard/recordings'
+      preLoaderRoute: typeof DashboardRecordingsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/sessions': {
       id: '/dashboard/sessions'
       path: '/sessions'
@@ -1147,6 +1198,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResourcesSlugRouteImport
       parentRoute: typeof ResourcesRoute
     }
+    '/api/nylas-media/$bookingId': {
+      id: '/api/nylas-media/$bookingId'
+      path: '/api/nylas-media/$bookingId'
+      fullPath: '/api/nylas-media/$bookingId'
+      preLoaderRoute: typeof ApiNylasMediaBookingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/google/callback': {
       id: '/auth/google/callback'
       path: '/auth/google/callback'
@@ -1167,6 +1225,7 @@ interface AdminRouteChildren {
   AdminGoogleConnectRoute: typeof AdminGoogleConnectRoute
   AdminGrowthRoute: typeof AdminGrowthRoute
   AdminQualityRoute: typeof AdminQualityRoute
+  AdminRecordingsRoute: typeof AdminRecordingsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1182,6 +1241,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminGoogleConnectRoute: AdminGoogleConnectRoute,
   AdminGrowthRoute: AdminGrowthRoute,
   AdminQualityRoute: AdminQualityRoute,
+  AdminRecordingsRoute: AdminRecordingsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -1236,6 +1296,7 @@ interface DashboardRouteChildren {
   DashboardBusinessProfileRoute: typeof DashboardBusinessProfileRoute
   DashboardCommunityRoute: typeof DashboardCommunityRoute
   DashboardDocumentsRoute: typeof DashboardDocumentsRoute
+  DashboardRecordingsRoute: typeof DashboardRecordingsRoute
   DashboardSessionsRoute: typeof DashboardSessionsRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardZyneRoute: typeof DashboardZyneRoute
@@ -1249,6 +1310,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardBusinessProfileRoute: DashboardBusinessProfileRoute,
   DashboardCommunityRoute: DashboardCommunityRoute,
   DashboardDocumentsRoute: DashboardDocumentsRoute,
+  DashboardRecordingsRoute: DashboardRecordingsRoute,
   DashboardSessionsRoute: DashboardSessionsRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardZyneRoute: DashboardZyneRoute,
@@ -1306,6 +1368,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ZyneRoute: ZyneRoute,
   ApiNylasWebhookRoute: ApiNylasWebhookRoute,
+  ApiNylasMediaBookingIdRoute: ApiNylasMediaBookingIdRoute,
   AuthGoogleCallbackRoute: AuthGoogleCallbackRoute,
 }
 export const routeTree = rootRouteImport

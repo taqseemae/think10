@@ -744,6 +744,7 @@ export const createStripeCheckoutSessionFn = createServerFn({ method: 'POST' })
         planRole: data.planRole,
         uid: token.uid,
         isZyneToken: data.isZyneToken ? 'true' : 'false',
+        purchaseType: data.isSubscription ? 'subscription' : (data.isZyneToken ? 'zyne_tokens' : 'credit'),
       }
     });
 
@@ -943,7 +944,9 @@ async function _scheduleNylasBot(bookingId: string, meetLink: string, joinAt?: s
     name: "Think10Bot"
   };
 
-  // Always join immediately on demand (omit join_time so Nylas dispatches instantly)
+  if (joinAt) {
+    payload.join_time = Math.floor(new Date(joinAt).getTime() / 1000);
+  }
 
   const response = await fetch(`https://api.us.nylas.com/v3/grants/${process.env.NYLAS_GRANT_ID}/notetakers`, {
     method: "POST",
