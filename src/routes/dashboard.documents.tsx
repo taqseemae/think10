@@ -23,38 +23,49 @@ function Page() {
   const [docCategory, setDocCategory] = useState<LibraryDocument["type"]>("Finance");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Sharing controls dropdown target
   const [activeShareDoc, setActiveShareDoc] = useState<LibraryDocument | null>(null);
 
-  const handleUploadSubmit = (e: React.FormEvent) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!docName.trim()) return;
+    if (!docName.trim() || !selectedFile) return;
 
     setIsUploading(true);
-    setUploadProgress(0);
+    setUploadProgress(20);
 
-    // Simulate progress animation
-    const interval = setInterval(() => {
-      setUploadProgress((p) => {
-        if (p >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            uploadDocument(
-              docName.endsWith(".pdf") || docName.endsWith(".xlsx") ? docName : `${docName}.pdf`,
-              "245 KB",
-              docCategory
-            );
-            setIsUploading(false);
-            setUploadProgress(0);
-            setDocName("");
-            setShowUploadModal(false);
-          }, 300);
-          return 100;
-        }
-        return p + 20;
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/upload-file", {
+        method: "POST",
+        body: formData,
       });
-    }, 150);
+      setUploadProgress(60);
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setUploadProgress(100);
+      
+      setTimeout(() => {
+        uploadDocument(
+          docName.endsWith(".pdf") || docName.endsWith(".xlsx") || docName.includes(".") ? docName : `${docName}.pdf`,
+          `${Math.round(data.size / 1024)} KB`,
+          docCategory,
+          data.url
+        );
+        setIsUploading(false);
+        setUploadProgress(0);
+        setDocName("");
+        setSelectedFile(null);
+        setShowUploadModal(false);
+      }, 300);
+    } catch (err) {
+      console.error(err);
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -103,7 +114,13 @@ function Page() {
               <tr key={doc.id} className="hover:bg-neutral-50/50">
                 <td className="py-3 flex items-center gap-2 font-medium">
                   <FileText className="h-4.5 w-4.5 text-[color:var(--t10-emerald)]" />
-                  <span>{doc.name}</span>
+                  {doc.url ? (
+                    <a href={doc.url} target="_blank" rel="noopener noreferrer" className="hover:underline text-[color:var(--t10-navy)]">
+                      {doc.name}
+                    </a>
+                  ) : (
+                    <span>{doc.name}</span>
+                  )}
                 </td>
                 <td className="py-3 font-semibold text-neutral-600">{doc.type}</td>
                 <td className="py-3 text-neutral-500">{doc.size}</td>
@@ -172,6 +189,23 @@ function Page() {
 
             <form onSubmit={handleUploadSubmit} className="space-y-4 text-xs">
               <label className="block">
+                <span className="mb-1 block font-semibold text-[color:var(--t10-navy)]">Select File</span>
+                <input
+                  type="file"
+                  required
+                  disabled={isUploading}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedFile(file);
+                      if (!docName) setDocName(file.name);
+                    }
+                  }}
+                  className="w-full rounded-md border border-[color:var(--t10-border)] px-3 py-2"
+                />
+              </label>
+
+              <label className="block">
                 <span className="mb-1 block font-semibold text-[color:var(--t10-navy)]">Document Name</span>
                 <input
                   type="text"
@@ -218,10 +252,10 @@ function Page() {
 
               <button
                 type="submit"
-                disabled={isUploading || !docName.trim()}
+                disabled={isUploading || !docName.trim() || !selectedFile}
                 className="w-full rounded-lg bg-[color:var(--t10-emerald)] py-2 text-center text-xs font-bold text-white hover:bg-[color:var(--t10-green)] disabled:opacity-50 transition-all shadow"
               >
-                {isUploading ? "Uploading..." : "Simulate Encrypted Upload"}
+                {isUploading ? "Uploading..." : "Encrypt & Upload Document"}
               </button>
             </form>
           </div>

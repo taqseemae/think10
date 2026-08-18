@@ -361,6 +361,66 @@ ${data.transcript}`;
     return reportData;
   });
 
+export const parseCvWithGeminiFn = createServerFn({ method: 'POST' })
+  .validator((d: { fileUrl: string }) => d)
+  .handler(async ({ data }) => {
+    const token = await requireAuth();
+    const { GoogleGenAI } = await import('@google/genai');
+    
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY });
+    
+    const fileRes = await fetch(data.fileUrl);
+    if (!fileRes.ok) throw new Error('Failed to fetch CV file from server');
+    const arrayBuffer = await fileRes.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+    
+    const mimeType = data.fileUrl.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'text/plain';
+    
+    const prompt = `You are an expert HR assistant. Analyze the provided CV/Resume document.
+Extract the following information and return it strictly as a JSON object:
+{
+  "title": "A strong professional title (max 50 chars)",
+  "bio": "A professional executive biography (2-3 paragraphs)",
+  "experienceYears": 10,
+  "primaryArea": "The main industry or domain",
+  "languages": ["English", "Arabic", etc]
+}
+If any information is missing, infer a sensible default or leave blank.`;
+
+    let parsedData = {
+      title: "Senior Consultant",
+      bio: "Experienced professional.",
+      experienceYears: 5,
+      primaryArea: "General Business",
+      languages: ["English"]
+    };
+
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [
+          prompt,
+          { inlineData: { data: base64Data, mimeType } }
+        ],
+        config: {
+          responseMimeType: 'application/json',
+        }
+      });
+
+      let text = response.text || '{}';
+      if (text.startsWith('```json')) text = text.replace(/^```json\n/, '').replace(/\n```$/, '');
+      else if (text.startsWith('```')) text = text.replace(/^```\n/, '').replace(/\n```$/, '');
+      
+      const aiData = JSON.parse(text);
+      parsedData = { ...parsedData, ...aiData };
+    } catch (e) {
+      console.error("Failed to parse CV with Gemini", e);
+      throw new Error("AI CV Parsing failed. Please ensure the file is a PDF or try again later.");
+    }
+    
+    return parsedData;
+  });
+
 // --- Tickets ---
 export const createSupportTicketFn = createServerFn({ method: 'POST' })
   .validator((d: Omit<SupportTicket, "id">) => d)

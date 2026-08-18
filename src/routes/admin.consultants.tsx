@@ -263,11 +263,13 @@ function ConsultantsAdminPage() {
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-indigo-600" />
                     <div>
-                      <p className="text-xs font-bold text-neutral-900">Uploaded Resume / CV Document</p>
-                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.cvFileName || "Consultant_Executive_CV.pdf"}</p>
+                      <p className="text-xs font-bold text-neutral-900">Resume / CV Document</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.cvFileName || "Not Uploaded"}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Uploaded</span>
+                  {reviewingConsultant.consultantProfile?.cvUrl ? (
+                    <a href={reviewingConsultant.consultantProfile.cvUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[color:var(--t10-emerald)] hover:underline">View</a>
+                  ) : <span className="text-xs font-bold text-neutral-400">Missing</span>}
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
@@ -275,10 +277,38 @@ function ConsultantsAdminPage() {
                     <Award className="h-5 w-5 text-emerald-600" />
                     <div>
                       <p className="text-xs font-bold text-neutral-900">Trade License / Certifications</p>
-                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.certFileName || "TradeLicense_Verified_Doc.pdf"}</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.certFileName || "Not Uploaded"}</p>
                     </div>
                   </div>
-                  <span className="text-xs font-bold text-[color:var(--t10-emerald)]">Uploaded</span>
+                  {reviewingConsultant.consultantProfile?.certUrl ? (
+                    <a href={reviewingConsultant.consultantProfile.certUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[color:var(--t10-emerald)] hover:underline">View</a>
+                  ) : <span className="text-xs font-bold text-neutral-400">Missing</span>}
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert className="h-5 w-5 text-orange-600" />
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900">Emirates ID (Required)</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.emiratesIdFileName || "Not Uploaded"}</p>
+                    </div>
+                  </div>
+                  {reviewingConsultant.consultantProfile?.emiratesIdUrl ? (
+                    <a href={reviewingConsultant.consultantProfile.emiratesIdUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[color:var(--t10-emerald)] hover:underline">View</a>
+                  ) : <span className="text-xs font-bold text-red-500">Missing</span>}
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-neutral-200 bg-white">
+                  <div className="flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <p className="text-xs font-bold text-neutral-900">Experience Letter</p>
+                      <p className="text-[10px] text-neutral-500">{reviewingConsultant.consultantProfile?.expLetterFileName || "Not Uploaded"}</p>
+                    </div>
+                  </div>
+                  {reviewingConsultant.consultantProfile?.expLetterUrl ? (
+                    <a href={reviewingConsultant.consultantProfile.expLetterUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-[color:var(--t10-emerald)] hover:underline">View</a>
+                  ) : <span className="text-xs font-bold text-neutral-400">Optional</span>}
                 </div>
               </div>
             </div>

@@ -52,7 +52,13 @@ export function ConsultantProfile() {
   
   // Asset & Document Upload States
   const [cvFileName, setCvFileName] = useState<string | null>(null);
+  const [cvUrl, setCvUrl] = useState<string | null>(null);
   const [certFileName, setCertFileName] = useState<string | null>(null);
+  const [certUrl, setCertUrl] = useState<string | null>(null);
+  const [emiratesIdFileName, setEmiratesIdFileName] = useState<string | null>(null);
+  const [emiratesIdUrl, setEmiratesIdUrl] = useState<string | null>(null);
+  const [expLetterFileName, setExpLetterFileName] = useState<string | null>(null);
+  const [expLetterUrl, setExpLetterUrl] = useState<string | null>(null);
 
   const [saving, setSaving] = useState(false);
   const [aiCompiling, setAiCompiling] = useState(false);
@@ -73,17 +79,56 @@ export function ConsultantProfile() {
     e.target.value = '';
   };
 
-  const handleCvFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setCvFileName(file.name);
+  const uploadFileToBackend = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("http://localhost:5000/api/upload-file", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      return data.url;
+    } catch (e) {
+      console.error(e);
+      return null;
     }
   };
 
-  const handleCertFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCvFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCvFileName(file.name);
+      const url = await uploadFileToBackend(file);
+      if (url) setCvUrl(url);
+    }
+  };
+
+  const handleCertFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setCertFileName(file.name);
+      const url = await uploadFileToBackend(file);
+      if (url) setCertUrl(url);
+    }
+  };
+
+  const handleEmiratesIdFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEmiratesIdFileName(file.name);
+      const url = await uploadFileToBackend(file);
+      if (url) setEmiratesIdUrl(url);
+    }
+  };
+
+  const handleExpLetterFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setExpLetterFileName(file.name);
+      const url = await uploadFileToBackend(file);
+      if (url) setExpLetterUrl(url);
     }
   };
 
@@ -99,7 +144,13 @@ export function ConsultantProfile() {
       setPrimaryArea(userDoc.consultantProfile.primaryArea || "Supply Chain & Logistics");
       setTags(userDoc.consultantProfile.topics || []);
       if (userDoc.consultantProfile.cvFileName) setCvFileName(userDoc.consultantProfile.cvFileName);
+      if (userDoc.consultantProfile.cvUrl) setCvUrl(userDoc.consultantProfile.cvUrl);
       if (userDoc.consultantProfile.certFileName) setCertFileName(userDoc.consultantProfile.certFileName);
+      if (userDoc.consultantProfile.certUrl) setCertUrl(userDoc.consultantProfile.certUrl);
+      if (userDoc.consultantProfile.emiratesIdFileName) setEmiratesIdFileName(userDoc.consultantProfile.emiratesIdFileName);
+      if (userDoc.consultantProfile.emiratesIdUrl) setEmiratesIdUrl(userDoc.consultantProfile.emiratesIdUrl);
+      if (userDoc.consultantProfile.expLetterFileName) setExpLetterFileName(userDoc.consultantProfile.expLetterFileName);
+      if (userDoc.consultantProfile.expLetterUrl) setExpLetterUrl(userDoc.consultantProfile.expLetterUrl);
     }
     if (userDoc?.photoURL && !avatarUrl) {
       setAvatarUrl(userDoc.photoURL);
@@ -111,28 +162,27 @@ export function ConsultantProfile() {
 
   // AI Profile Compiler
   const handleAiCompileProfile = async () => {
+    if (!cvUrl) {
+      setErrorMsg("Please upload your CV first to use the AI Auto-Compiler.");
+      return;
+    }
     setAiCompiling(true);
     setErrorMsg("");
     try {
-      // Simulate Gemini AI formatting & compiling executive consultant profile
-      await new Promise((r) => setTimeout(r, 1200));
-
-      if (!title || title.length < 3) {
-        setTitle("Senior GCC Retail & E-commerce Advisory Strategist");
-      }
+      const { parseCvWithGeminiFn } = await import("@/lib/server-actions");
+      const parsedData = await parseCvWithGeminiFn({ data: { fileUrl: cvUrl } });
       
-      const compiledBio =
-        bio && bio.length > 20
-          ? `${bio}\n\nKey Strengths: GCC commercial law compliance, unit economics auditing, Amazon UAE/noon margin optimization, and 3PL logistics setup.`
-          : `Experienced GCC business strategist specializing in ${primaryArea}. Scaled multi-channel retail operations across Dubai, Abu Dhabi, and KSA with proven ROI in margin optimization and supply chain management.`;
-
-      setBio(compiledBio);
-
-      if (tags.length === 0) {
-        setTags(["Amazon UAE", "noon.com", "Unit Economics", "Supply Chain", "Mainland Licensing"]);
+      if (parsedData.title) setTitle(parsedData.title);
+      if (parsedData.bio) setBio(parsedData.bio);
+      if (parsedData.experienceYears) setExperienceYears(parsedData.experienceYears);
+      if (parsedData.primaryArea) setPrimaryArea(parsedData.primaryArea);
+      if (parsedData.languages && parsedData.languages.length > 0) {
+        setLanguages(parsedData.languages.join(", "));
       }
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
-      setErrorMsg("Failed to auto-compile profile with AI.");
+      setErrorMsg(err.message || "Failed to auto-compile profile with AI.");
     } finally {
       setAiCompiling(false);
     }
@@ -163,7 +213,13 @@ export function ConsultantProfile() {
             primaryArea,
             topics: tags,
             cvFileName,
+            cvUrl,
             certFileName,
+            certUrl,
+            emiratesIdFileName,
+            emiratesIdUrl,
+            expLetterFileName,
+            expLetterUrl,
             avatarUrl,
           },
         },
@@ -428,6 +484,46 @@ export function ConsultantProfile() {
                   <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--t10-emerald)] text-white text-xs font-bold cursor-pointer hover:bg-[color:var(--t10-green)] transition-colors">
                     <Upload className="h-3.5 w-3.5" /> Upload Certificate
                     <input type="file" accept=".pdf,.jpg,.png" onChange={handleCertFile} className="hidden" />
+                  </label>
+                )}
+              </div>
+              
+              {/* Emirates ID Box */}
+              <div className="rounded-xl border border-dashed border-neutral-300 p-4 text-center bg-neutral-50/50 hover:bg-neutral-50 transition-all flex flex-col items-center justify-center space-y-2">
+                <Award className="h-7 w-7 text-emerald-600" />
+                <div>
+                  <p className="text-xs font-bold text-neutral-900">Emirates ID (Required)</p>
+                  <p className="text-[10px] text-neutral-500 mt-0.5">PDF or Image (.pdf, .jpg, .png)</p>
+                </div>
+
+                {emiratesIdFileName ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                    <Check className="h-3 w-3" /> {emiratesIdFileName}
+                  </span>
+                ) : (
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-600 text-white text-xs font-bold cursor-pointer hover:bg-orange-700 transition-colors">
+                    <Upload className="h-3.5 w-3.5" /> Upload ID
+                    <input type="file" accept=".pdf,.jpg,.png" onChange={handleEmiratesIdFile} className="hidden" />
+                  </label>
+                )}
+              </div>
+
+              {/* Experience Letter Box */}
+              <div className="rounded-xl border border-dashed border-neutral-300 p-4 text-center bg-neutral-50/50 hover:bg-neutral-50 transition-all flex flex-col items-center justify-center space-y-2">
+                <FileText className="h-7 w-7 text-indigo-600" />
+                <div>
+                  <p className="text-xs font-bold text-neutral-900">Experience Letter (Optional)</p>
+                  <p className="text-[10px] text-neutral-500 mt-0.5">PDF or Word (.pdf, .docx)</p>
+                </div>
+
+                {expLetterFileName ? (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                    <Check className="h-3 w-3" /> {expLetterFileName}
+                  </span>
+                ) : (
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[color:var(--t10-navy)] text-white text-xs font-bold cursor-pointer hover:bg-neutral-800 transition-colors">
+                    <Upload className="h-3.5 w-3.5" /> Upload Letter
+                    <input type="file" accept=".pdf,.docx" onChange={handleExpLetterFile} className="hidden" />
                   </label>
                 )}
               </div>

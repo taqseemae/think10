@@ -134,6 +134,7 @@ export type LibraryDocument = {
   type: "Finance" | "Brand" | "Marketplaces" | "Legal" | "Operations" | "General";
   uploadedAt: string;
   sharedWith: string[]; // expertSlugs
+  url?: string;
 };
 
 export type CommunityPost = {
@@ -243,7 +244,7 @@ interface DashboardContextType {
 
   // Documents
   documents: LibraryDocument[];
-  uploadDocument: (name: string, size: string, type: LibraryDocument["type"]) => void;
+  uploadDocument: (name: string, size: string, type: LibraryDocument["type"], url?: string) => void;
   deleteDocument: (id: string) => void;
   toggleDocumentShare: (docId: string, expertSlug: string) => void;
 
@@ -1146,14 +1147,15 @@ export const DashboardStateProvider: React.FC<{ children: React.ReactNode }> = (
   };
 
   // Documents functions
-  const uploadDocument = (name: string, size: string, type: LibraryDocument["type"]) => {
+  const uploadDocument = (name: string, size: string, type: LibraryDocument["type"], url?: string) => {
     const newDoc: LibraryDocument = {
-      id: "doc_" + Date.now(),
+      id: "doc_" + Math.random().toString(36).substr(2, 9),
       name,
       size,
       type,
-      uploadedAt: new Date().toISOString().replace("T", " ").substr(0, 16),
+      uploadedAt: new Date().toISOString(),
       sharedWith: [],
+      url,
     };
     setDocuments((prev) => [newDoc, ...prev]);
     setFloatingAlert({

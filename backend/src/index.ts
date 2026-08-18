@@ -43,6 +43,14 @@ app.post('/api/upload-video', upload.single('video'), (req, res) => {
   res.json({ url: fileUrl });
 });
 
+app.post('/api/upload-file', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded.' });
+  }
+  const fileUrl = `http://localhost:${port}/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl, originalName: req.file.originalname, size: req.file.size });
+});
+
 // ── Firebase Admin Initialization ─────────────────────────────────────────────
 import admin from 'firebase-admin';
 if (!admin.apps.length) {
